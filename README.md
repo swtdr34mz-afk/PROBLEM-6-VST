@@ -58,6 +58,7 @@ Läuft auf Apple Silicon und Intel (macOS 10.13 und neuer), Windows 10/11 64-bit
   again replaces one, and deleting a file there removes it.
 - **HIGH-PASS VELOCITY and KEYBOARD** are the plugin's own (two more host parameters): on the FM-1 the high-pass
   follows the low-pass's. A factory program sets them as its low-pass's, so it sounds as on the FM-1; WRITE keeps them.
+  So is FILTER ENVELOPE's VELOCITY (velocity to the envelope, for both filters; off in the factory programs).
 - **Plugin settings** (also automatable): ARP (on, MODE, RATE, OCTAVES, GATE, HOLD), SWING, LOW SPLIT (SPLIT, POINT,
   SCALE L, SCALE R, KEY, FOLLOW, LOW HOLD, BALANCE) and VOLUME.
 - **The host's tempo** drives the arp, the synced LFOs and the synced delay; while the host plays, they lock to its

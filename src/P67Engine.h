@@ -28,7 +28,7 @@ public:
     void bend(float v);
     void modWheel(float v);
     void cutoffCC(int v);
-    void hpExtra(int vel, int keytrk);
+    void hpExtra(int vel, int keytrk, int fenvVel);
     void allOff();
     void panic();
     void tempo(float bpm, float swing);

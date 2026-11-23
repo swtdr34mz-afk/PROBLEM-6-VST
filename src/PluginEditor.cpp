@@ -529,7 +529,7 @@ void Prophet67Panel::build()
                            k->getProperties().set("bipolar", true);
                            add(k, {x, y + 22, KW, 80});
                        }}}},
-        {"FILTER ENVELOPE", {Item{BW, [](int, int) {}}, K(P_FA, "ATTACK"), K(P_FD, "DECAY"), K(P_FS, "SUSTAIN"), K(P_FR, "RELEASE")}, ENV_W},
+        {"FILTER ENVELOPE", {VEL("fenv_vel"), K(P_FA, "ATTACK"), K(P_FD, "DECAY"), K(P_FS, "SUSTAIN"), K(P_FR, "RELEASE")}, ENV_W},
     });
 
     /* ---- row 4: MIXER, LOW-PASS FILTER, HIGH-PASS FILTER, AMPLIFIER ENVELOPE ---- */

@@ -27,7 +27,7 @@ static struct {
     float o1_semi, o2_semi, o1_shape, o2_shape, o1_pw, o2_pw;
     float mix1, mix2, sub, noise;
     uint8_t o2_mode;
-    float cut_oct, res_k, env_oct, hp_oct, hp_k, keytrk, fvel, hp_env_oct, hp_keytrk, hp_fvel;
+    float cut_oct, res_k, env_oct, hp_oct, hp_k, keytrk, fvel, hp_env_oct, hp_keytrk, hp_fvel, fenv_vel;
     float fs, as;                        /* sustain levels */
     float lfo_hz[2], lfo_amt[2];
     uint8_t lfo_shape[2], lfo_dest[2], lfo_sync[2], lfo_retrig[2];
@@ -180,7 +180,7 @@ static float sq_sign(float x) { return x * fm_fabsf(x); }
 
 #ifdef P67_PLUGIN
 static int hp_extra_set;
-static float hp_extra_vel, hp_extra_kt;
+static float hp_extra_vel, hp_extra_kt, fenv_extra_vel;
 #endif
 void eng_patch(const uint8_t *p)
 {
@@ -208,7 +208,9 @@ void eng_patch(const uint8_t *p)
 #ifdef P67_PLUGIN
     P.hp_keytrk = hp_extra_set ? hp_extra_kt : P.keytrk;   /* the plugin's HIGH-PASS VELOCITY and KEYBOARD (else as the LP's) */
     P.hp_fvel = hp_extra_set ? hp_extra_vel : P.fvel;
+    P.fenv_vel = hp_extra_set ? fenv_extra_vel : 0.0f;
 #else
+    P.fenv_vel = 0.0f;
     P.hp_keytrk = P.keytrk;
     P.hp_fvel = P.fvel;
 #endif
@@ -724,8 +726,9 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
             inc2 = fm_minf(inc2, 0.45f);
             /* the filters this chunk */
             vel_f = 1.0f - P.fvel + P.fvel * v->vel;
+            vel_f *= 1.0f - P.fenv_vel + P.fenv_vel * v->vel;   /* (FILTER ENVELOPE's VELOCITY, the plugin's: both filters) */
             famt = blk_env[c] * vel_f;
-            hamt = P.hp_env_oct * (1.0f - P.hp_fvel + P.hp_fvel * v->vel);
+            hamt = P.hp_env_oct * (1.0f - P.hp_fvel + P.hp_fvel * v->vel) * (1.0f - P.fenv_vel + P.fenv_vel * v->vel);
             cut = blk_cut[c] + v->ccut + v->ncut + famt * fen + P.keytrk * (p - 60.0f) * (1.0f / 12.0f);
             hp = blk_hp[c] + hamt * fen + P.hp_keytrk * (p - 60.0f) * (1.0f / 12.0f);
             if (P.pm_dfilt == PMF_LPF || P.pm_dfilt == PMF_BOTH)
@@ -1198,8 +1201,9 @@ void eng_bend(float v) { bend_v = v; }
 void eng_mod(float v) { mod_v = v; }
 void eng_cutoff_cc(int v) { cc_cut = v; }
 #ifdef P67_PLUGIN
-void eng_hp_extra(int vel, int keytrk)   /* (taken at the next patch) */
+void eng_hp_extra(int vel, int keytrk, int fenvVel)   /* (taken at the next patch) */
 {
+    fenv_extra_vel = (float)fenvVel * (1.0f / 127.0f);
     hp_extra_set = 1;
     hp_extra_vel = (float)vel * (1.0f / 127.0f);
     hp_extra_kt = keytrk == KT_FULL ? 1.0f : keytrk == KT_HALF ? 0.5f : 0.0f;

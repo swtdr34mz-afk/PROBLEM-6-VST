@@ -51,7 +51,7 @@ public:
     struct UserPreset {
         juce::String name;
         uint8_t p[NPARAM];
-        int hpVel = 0, hpKt = 0;
+        int hpVel = 0, hpKt = 0, fenvVel = 0;
     };
     std::vector<UserPreset> userPresets;
     static juce::File presetFolder();
@@ -66,7 +66,7 @@ private:
     P67Engine engine;
     uint8_t sent[NPARAM] = {};
     bool patched = false;
-    int hpVelSent = -1, hpKtSent = -1;
+    int hpVelSent = -1, hpKtSent = -1, fenvVelSent = -1;
     int program = 0;
     double rate = 44100.0;
 
