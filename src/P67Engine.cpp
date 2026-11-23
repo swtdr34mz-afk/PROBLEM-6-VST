@@ -45,6 +45,7 @@ void P67Engine::arp(bool on, int mode, int rate, int octaves, float gate) { d->e
 void P67Engine::arpKey(int note, bool down, float vel) { d->eng_arp_key(note, down ? 1 : 0, vel); }
 void P67Engine::arpHold(bool on) { d->eng_arp_hold(on ? 1 : 0); }
 bool P67Engine::arpOn() const { return d->eng_arp_on() != 0; }
+uint32_t P67Engine::arpSteps() const { return d->eng_arp_steps(); }
 int P67Engine::voices() const { return d->eng_voices(); }
 float P67Engine::voiceEnv(int v) const { return d->eng_voice_env(v); }
 

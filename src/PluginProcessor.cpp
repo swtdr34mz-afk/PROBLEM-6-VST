@@ -119,6 +119,7 @@ bool Prophet67Processor::isBusesLayoutSupported(const BusesLayout &layouts) cons
 void Prophet67Processor::prepareToPlay(double sampleRate, int)
 {
     rate = sampleRate;
+    uiMidi.reset(sampleRate);
     engine.prepare(sampleRate);
     patched = false;
     arpSent = false;
@@ -350,6 +351,10 @@ void Prophet67Processor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
         }
     }
     engine.tempo(bpm, (float)g.swing * 0.01f);
+    hostBpm.store(bpm, std::memory_order_relaxed);
+
+    uiMidi.removeNextBlockOfMessages(midi, n);
+    keyboardState.processNextMidiBuffer(midi, 0, n, true);   /* the editor's keyboard joins the MIDI in */
 
     /* MIDI on time: the block rendered up to each event */
     int done = 0;
@@ -363,6 +368,9 @@ void Prophet67Processor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
     }
     if (n > done)
         engine.render(L + done, R + done, n - done);
+    for (int v = 0; v < 7; v++)
+        voiceLevel[v].store(engine.voiceEnv(v), std::memory_order_relaxed);
+    arpSteps.store(engine.arpSteps(), std::memory_order_relaxed);
     float gain = g.volume * g.volume * 2.0f;   /* (0.7: about 0 dB) */
     buffer.applyGain(0, 0, n, gain);
     if (buffer.getNumChannels() > 1)
@@ -376,6 +384,8 @@ void Prophet67Processor::getStateInformation(juce::MemoryBlock &destData)
 {
     auto state = apvts.copyState();
     state.setProperty("program", program, nullptr);
+    state.setProperty("uiScale", (double)uiScale.load(), nullptr);
+    state.setProperty("uiPage", uiPage.load(), nullptr);
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     copyXmlToBinary(*xml, destData);
 }
@@ -386,6 +396,8 @@ void Prophet67Processor::setStateInformation(const void *data, int sizeInBytes)
     if (xml && xml->hasTagName(apvts.state.getType())) {
         auto state = juce::ValueTree::fromXml(*xml);
         program = (int)state.getProperty("program", 0);
+        uiScale = (float)(double)state.getProperty("uiScale", 0.82);
+        uiPage = (int)state.getProperty("uiPage", 0);
         apvts.replaceState(state);
     }
 }

@@ -52,10 +52,18 @@ juce_add_plugin(Prophet67
     AU_MAIN_TYPE kAudioUnitType_MusicDevice
     MICROPHONE_PERMISSION_ENABLED FALSE)
 
+juce_add_binary_data(P67Fonts SOURCES
+    fonts/FiraSans-SemiBold.ttf
+    fonts/FiraSans-Bold.ttf
+    fonts/FiraSans-ExtraBold.ttf
+    fonts/AnonymousPro-Bold.ttf)
+
 target_sources(Prophet67 PRIVATE
     src/P67Engine.cpp
     src/PluginProcessor.cpp
     src/PluginEditor.cpp
+    src/ui/Look.cpp
+    src/ui/Controls.cpp
     dsp/params.c
     dsp/presets.c)
 
@@ -72,6 +80,7 @@ target_compile_definitions(Prophet67 PUBLIC
 
 target_link_libraries(Prophet67
     PRIVATE
+        P67Fonts
         juce::juce_audio_utils
     PUBLIC
         juce::juce_recommended_config_flags

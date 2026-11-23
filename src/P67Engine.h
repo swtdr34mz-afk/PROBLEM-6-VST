@@ -36,6 +36,7 @@ public:
     void arpKey(int note, bool down, float vel);
     void arpHold(bool on);
     bool arpOn() const;
+    uint32_t arpSteps() const;          /* the arp's notes so far */
     void render(float *left, float *right, int n);   /* n frames, any count */
     int voices() const;
     float voiceEnv(int v) const;

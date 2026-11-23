@@ -1,285 +1,675 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 swtdr34mz (PROPHET 67) */
 #include "PluginEditor.h"
-#include "Sections.h"
 
-/* ------------------------------------------------------------------------------- the look --- */
-const juce::Colour P67Look::panel{0xff15171a}, P67Look::box{0xff202328}, P67Look::red{0xffd8312b},
-    P67Look::text{0xffe8e6e1}, P67Look::dim{0xff8b8f96};
+using namespace p67;
 
-P67Look::P67Look()
+namespace {
+constexpr int X0 = 56, X1 = 1504;        /* the panel's working width */
+constexpr int KW = 58, BW = 50;          /* a knob's and a button's width */
+const char *const FX_NAME[5] = {"Chorus", "Reverb", "Space", "Delay", "Dly Mod"};
+const char *const FX_CODE[5] = {"CHO", "REV", "SPC", "DLY", "MOD"};
+
+/* ---------------------------------------------------------------------------- the keyboard --- */
+class Keys : public juce::MidiKeyboardComponent
 {
-    setColour(juce::ResizableWindow::backgroundColourId, panel);
-    setColour(juce::Label::textColourId, text);
-    setColour(juce::Slider::textBoxTextColourId, text);
-    setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
-    setColour(juce::Slider::textBoxBackgroundColourId, juce::Colours::transparentBlack);
-    setColour(juce::Slider::rotarySliderFillColourId, red);
-    setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colour(0xff3a3e45));
-    setColour(juce::ComboBox::backgroundColourId, juce::Colour(0xff2a2e34));
-    setColour(juce::ComboBox::outlineColourId, juce::Colour(0xff3a3e45));
-    setColour(juce::ComboBox::textColourId, text);
-    setColour(juce::ComboBox::arrowColourId, red);
-    setColour(juce::PopupMenu::backgroundColourId, juce::Colour(0xff202328));
-    setColour(juce::PopupMenu::highlightedBackgroundColourId, red);
-    setColour(juce::ToggleButton::textColourId, text);
-    setColour(juce::ToggleButton::tickColourId, red);
-    setColour(juce::ToggleButton::tickDisabledColourId, dim);
-    setColour(juce::TextButton::buttonColourId, juce::Colour(0xff2a2e34));
-    setColour(juce::TextButton::textColourOffId, text);
-    setColour(juce::TabbedButtonBar::tabTextColourId, dim);
-    setColour(juce::TabbedButtonBar::frontTextColourId, text);
-    setColour(juce::TabbedComponent::outlineColourId, juce::Colours::transparentBlack);
-}
-
-void P67Look::drawRotarySlider(juce::Graphics &g, int x, int y, int w, int h, float pos, float a0, float a1,
-                               juce::Slider &)
-{
-    auto r = juce::Rectangle<float>((float)x, (float)y, (float)w, (float)h).reduced(4.0f);
-    float d = juce::jmin(r.getWidth(), r.getHeight());
-    auto c = r.withSizeKeepingCentre(d, d);
-    float ang = a0 + pos * (a1 - a0), rad = d * 0.5f;
-    juce::Path arc;
-    arc.addCentredArc(c.getCentreX(), c.getCentreY(), rad - 2.0f, rad - 2.0f, 0.0f, a0, a1, true);
-    g.setColour(findColour(juce::Slider::rotarySliderOutlineColourId));
-    g.strokePath(arc, juce::PathStrokeType(3.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-    juce::Path val;
-    val.addCentredArc(c.getCentreX(), c.getCentreY(), rad - 2.0f, rad - 2.0f, 0.0f, a0, ang, true);
-    g.setColour(red);
-    g.strokePath(val, juce::PathStrokeType(3.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-    auto knob = c.reduced(d * 0.2f);
-    g.setColour(juce::Colour(0xff0d0e10));
-    g.fillEllipse(knob);
-    g.setColour(juce::Colour(0xff3a3e45));
-    g.drawEllipse(knob, 1.0f);
-    juce::Point<float> p1 = c.getCentre().getPointOnCircumference(knob.getWidth() * 0.15f, ang),
-                       p2 = c.getCentre().getPointOnCircumference(knob.getWidth() * 0.48f, ang);
-    g.setColour(text);
-    g.drawLine({p1, p2}, 2.0f);
-}
-
-/* ---------------------------------------------------------------------------- a control --- */
-P67Control::P67Control(juce::AudioProcessorValueTreeState &s, const juce::String &id, const juce::String &name)
-{
-    auto *p = s.getParameter(id);
-    label.setText(name, juce::dontSendNotification);
-    label.setJustificationType(juce::Justification::centred);
-    label.setFont(juce::FontOptions(12.0f, juce::Font::bold));
-    label.setColour(juce::Label::textColourId, P67Look::dim);
-    addAndMakeVisible(label);
-    if (dynamic_cast<juce::AudioParameterBool *>(p)) {
-        toggle = std::make_unique<juce::ToggleButton>("ON");
-        addAndMakeVisible(*toggle);
-        toggleA = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(s, id, *toggle);
-    } else if (auto *c = dynamic_cast<juce::AudioParameterChoice *>(p)) {
-        menu = std::make_unique<juce::ComboBox>();
-        menu->addItemList(c->choices, 1);
-        menu->setJustificationType(juce::Justification::centred);
-        addAndMakeVisible(*menu);
-        menuA = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(s, id, *menu);
-    } else {
-        knob = std::make_unique<juce::Slider>(juce::Slider::RotaryHorizontalVerticalDrag, juce::Slider::TextBoxBelow);
-        knob->setTextBoxStyle(juce::Slider::TextBoxBelow, false, 84, 18);
-        knob->setMouseDragSensitivity(220);
-        knob->setVelocityBasedMode(false);
-        addAndMakeVisible(*knob);
-        knobA = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(s, id, *knob);
-        if (p)
-            knob->setDoubleClickReturnValue(true, p->convertFrom0to1(p->getDefaultValue()));
+public:
+    explicit Keys(juce::MidiKeyboardState &s) : MidiKeyboardComponent(s, horizontalKeyboard)
+    {
+        setBlackNoteLengthProportion(0.62f);
+        setBlackNoteWidthProportion(0.62f);
+        setWantsKeyboardFocus(false);
+        setMouseClickGrabsKeyboardFocus(false);
+        setScrollButtonsVisible(false);
+        setColour(whiteNoteColourId, juce::Colour(0xff0c0c0d));   /* (the bed between the keys) */
+        setColour(shadowColourId, juce::Colours::transparentBlack);
     }
-}
-
-void P67Control::resized()
-{
-    auto r = getLocalBounds();
-    label.setBounds(r.removeFromTop(16));
-    if (knob)
-        knob->setBounds(r);
-    if (menu)
-        menu->setBounds(r.withSizeKeepingCentre(juce::jmin(r.getWidth() - 4, 100), 24));
-    if (toggle)
-        toggle->setBounds(r.withSizeKeepingCentre(60, 24));
-}
-
-void P67Control::refresh()
-{
-    if (knob)
-        knob->updateText();
-}
-
-/* ------------------------------------------------------------------------------ a section --- */
-void P67Group::add(std::unique_ptr<P67Control> c)
-{
-    addAndMakeVisible(*c);
-    controls.add(c.release());
-}
-
-void P67Group::paint(juce::Graphics &g)
-{
-    auto r = getLocalBounds().toFloat().reduced(2.0f);
-    g.setColour(P67Look::box);
-    g.fillRoundedRectangle(r, 6.0f);
-    g.setColour(P67Look::red);
-    g.setFont(juce::FontOptions(13.0f, juce::Font::bold));
-    g.drawText(title, r.removeFromTop(22.0f).reduced(10.0f, 0.0f), juce::Justification::centredLeft);
-}
-
-void P67Group::resized()
-{
-    auto r = getLocalBounds().reduced(8, 4);
-    r.removeFromTop(20);
-    int n = controls.size(), w = n ? juce::jmin(110, r.getWidth() / n) : 0;
-    for (auto *c : controls)
-        c->setBounds(r.removeFromLeft(w));
-}
-
-/* -------------------------------------------------------------------------------- a tab --- */
-P67Group &P67Page::group(const juce::String &title)
-{
-    auto *g = groups.add(new P67Group(title));
-    addAndMakeVisible(g);
-    return *g;
-}
-
-void P67Page::resized()
-{
-    auto r = getLocalBounds().reduced(8);
-    int rows = groups.size(), h = rows ? juce::jmin(124, r.getHeight() / rows) : 0;
-    for (auto *g : groups) {
-        int w = juce::jmin(r.getWidth(), 16 + 110 * g->controls.size());
-        g->setBounds(r.removeFromTop(h).withWidth(w));
+    void drawWhiteNote(int, juce::Graphics &g, juce::Rectangle<float> a, bool down, bool, juce::Colour, juce::Colour) override
+    {
+        using namespace juce;
+        auto r = a.reduced(0.8f, 0.0f);
+        float lip = down ? 3.0f : 9.0f;
+        g.setGradientFill(ColourGradient(down ? Colour(0xffd9d6cc) : Colour(0xfff7f5ef), r.getX(), r.getY(),
+                                         down ? Colour(0xffc9c6bb) : Colour(0xffe6e3da), r.getX(), r.getBottom(), false));
+        g.fillRect(r.withTrimmedBottom(lip));
+        g.setGradientFill(ColourGradient(Colour(0xffd2cfc5), r.getX(), r.getBottom() - lip, Colour(0xffa9a69c), r.getX(), r.getBottom(), false));
+        g.fillRect(r.withTop(r.getBottom() - lip));
+        g.setGradientFill(ColourGradient(Colours::black.withAlpha(0.45f), r.getX(), r.getY(), Colours::transparentBlack, r.getX(),
+                                         r.getY() + 14.0f, false));
+        g.fillRect(r.withHeight(14.0f));
+        if (down) {
+            g.setColour(Colours::black.withAlpha(0.08f));
+            g.fillRect(r);
+        }
     }
-}
+    void drawBlackNote(int, juce::Graphics &g, juce::Rectangle<float> a, bool down, bool, juce::Colour) override
+    {
+        using namespace juce;
+        g.setColour(Colours::black.withAlpha(0.5f));
+        g.fillRect(a.translated(2.0f, 3.0f));
+        g.setColour(Colour(0xff050505));
+        g.fillRect(a);
+        auto top = a.reduced(a.getWidth() * 0.14f, 0.0f).withTrimmedBottom(down ? a.getHeight() * 0.05f : a.getHeight() * 0.12f);
+        g.setGradientFill(ColourGradient(Colour(0xff1b1b1d), top.getX(), top.getY(), Colour(0xff2e2e31), top.getX(), top.getBottom(), false));
+        g.fillRect(top);
+        g.setColour(Colours::white.withAlpha(0.16f));
+        g.fillRect(top.withWidth(1.5f).translated(1.0f, 0.0f));
+        g.setColour(Colours::white.withAlpha(0.08f));
+        g.fillRect(top.withTop(top.getBottom() - 2.0f));
+    }
+};
 
-/* ----------------------------------------------------------------------------- the editor --- */
-Prophet67Editor::Prophet67Editor(Prophet67Processor &p) : AudioProcessorEditor(&p), proc(p)
+/* ------------------------------------------------------------------- the pitch and mod wheels --- */
+class Wheel : public juce::Component
+{
+public:
+    Wheel(bool spring, std::function<void(float)> send) : spring(spring), send(std::move(send)) { pos = spring ? 0.5f : 0.0f; }
+    void paint(juce::Graphics &g) override
+    {
+        using namespace juce;
+        auto r = getLocalBounds().toFloat();
+        auto well = r.withTrimmedBottom(18.0f);
+        g.setColour(Colour(0xff030303));
+        g.fillRoundedRectangle(well, 4.0f);
+        auto glow = well.reduced(3.0f);           /* the red light in the well */
+        g.setGradientFill(ColourGradient(col::redLed.withAlpha(0.75f), glow.getCentreX(), glow.getBottom() - 6.0f,
+                                         Colours::transparentBlack, glow.getCentreX(), glow.getY() + glow.getHeight() * 0.25f, false));
+        g.fillRoundedRectangle(glow, 3.0f);
+        auto wheel = well.reduced(6.0f, 8.0f);
+        float h = wheel.getHeight();
+        for (float y = 0.0f; y < h; y += 1.0f) {  /* a cylinder, its ribs turning with the position */
+            float t = (y / h) * 2.0f - 1.0f, shade = std::sqrt(jmax(0.0f, 1.0f - t * t));
+            float rib = std::fmod((std::asin(jlimit(-1.0f, 1.0f, t)) * 9.0f + pos * 18.0f) + 100.0f, 1.0f);
+            float v = 0.05f + 0.20f * shade * (rib < 0.5f ? 1.0f : 0.55f);
+            g.setColour(Colour::fromFloatRGBA(v, v, v * 1.02f, 1.0f));
+            g.fillRect(wheel.getX(), wheel.getY() + y, wheel.getWidth(), 1.0f);
+        }
+        g.setColour(Colours::black);
+        g.drawRect(wheel, 1.0f);
+        float my = wheel.getBottom() - h * pos;   /* the marker */
+        g.setColour(Colours::white.withAlpha(0.6f));
+        g.fillRect(wheel.getX() + 2.0f, my - 1.0f, wheel.getWidth() - 4.0f, 2.0f);
+        drawLegend(g, spring ? "PITCH" : "MOD", r.removeFromBottom(14.0f), 9.5f);
+    }
+    void mouseDown(const juce::MouseEvent &e) override
+    {
+        start = pos;
+        startY = e.position.y;
+    }
+    void mouseDrag(const juce::MouseEvent &e) override
+    {
+        set(juce::jlimit(0.0f, 1.0f, start - (e.position.y - startY) / ((float)getHeight() * 0.8f)));
+    }
+    void mouseUp(const juce::MouseEvent &) override
+    {
+        if (spring)
+            set(0.5f);
+    }
+
+private:
+    void set(float p)
+    {
+        if (p == pos)
+            return;
+        pos = p;
+        send(p);
+        repaint();
+    }
+    bool spring;
+    std::function<void(float)> send;
+    float pos, start = 0.0f, startY = 0.0f;
+};
+
+/* ------------------------------------------------------------------- EFFECTS: SELECT and LEDs --- */
+class FxSelect : public juce::Component
+{
+public:
+    explicit FxSelect(Prophet67Panel &p) : panel(p) { setRepaintsOnMouseActivity(true); }
+    void paint(juce::Graphics &g) override
+    {
+        auto r = getLocalBounds().toFloat();
+        auto b = r.removeFromLeft((float)BW);
+        auto lg = b.removeFromBottom(14.0f);
+        drawButton(g, b.withSizeKeepingCentre(36.0f, 19.0f).withY(b.getY() + 34.0f), false, down, isMouseOver());
+        drawLegend(g, "SELECT", lg);
+        for (int i = 0; i < 5; i++) {
+            auto it = item(i);
+            drawLed(g, {it.getX() + 4.5f, it.getCentreY()}, 3.0f, panel.fx == i ? 1.0f : 0.0f);
+            g.setColour(col::legend);
+            g.setFont(font(Face::label, 10.5f));
+            g.drawText(FX_NAME[i], it.withTrimmedLeft(12.0f), juce::Justification::centredLeft, false);
+        }
+    }
+    void mouseDown(const juce::MouseEvent &e) override
+    {
+        if (e.position.x < (float)BW) {
+            down = true;
+            panel.selectFx((panel.fx + 1) % 5);
+        } else
+            for (int i = 0; i < 5; i++)
+                if (item(i).contains(e.position))
+                    panel.selectFx(i);
+        repaint();
+    }
+    void mouseUp(const juce::MouseEvent &) override
+    {
+        down = false;
+        repaint();
+    }
+
+private:
+    juce::Rectangle<float> item(int i) const { return {(float)BW + 4.0f, 14.0f + 13.0f * (float)i, (float)getWidth() - BW - 4.0f, 13.0f}; }
+    Prophet67Panel &panel;
+    bool down = false;
+};
+
+/* ---------------------------------------------------------- the program buttons, TENS SELECT --- */
+class ProgButton : public juce::Component
+{
+public:
+    ProgButton(Prophet67Panel &p, int digit) : panel(p), digit(digit) { setRepaintsOnMouseActivity(true); }
+    void paint(juce::Graphics &g) override
+    {
+        auto r = getLocalBounds().toFloat();
+        auto lg = r.removeFromBottom(14.0f);
+        int prog = panel.tens * 10 + digit;
+        bool on = panel.proc.getCurrentProgram() == prog, there = prog < panel.proc.getNumPrograms();
+        drawButton(g, r.reduced(2.0f, 1.0f), on, down, isMouseOver() && there, true);
+        drawLegend(g, juce::String(digit), lg, 11.0f);
+    }
+    void mouseDown(const juce::MouseEvent &) override
+    {
+        int prog = panel.tens * 10 + digit;
+        down = true;
+        if (prog < panel.proc.getNumPrograms())
+            panel.proc.setCurrentProgram(prog);
+        panel.repaint();
+    }
+    void mouseUp(const juce::MouseEvent &) override
+    {
+        down = false;
+        repaint();
+    }
+
+private:
+    Prophet67Panel &panel;
+    int digit;
+    bool down = false;
+};
+
+class TensButton : public juce::Component
+{
+public:
+    explicit TensButton(Prophet67Panel &p) : panel(p) { setRepaintsOnMouseActivity(true); }
+    void paint(juce::Graphics &g) override
+    {
+        auto r = getLocalBounds().toFloat();
+        drawLegend(g, "TENS", r.removeFromTop(14.0f));
+        auto lg = r.removeFromBottom(14.0f);
+        drawButton(g, r.reduced(4.0f, 2.0f), false, down, isMouseOver(), true);
+        drawLegend(g, "SELECT", lg);
+    }
+    void mouseDown(const juce::MouseEvent &) override
+    {
+        down = true;
+        panel.tens = (panel.tens + 1) % ((panel.proc.getNumPrograms() + 9) / 10);
+        panel.repaint();
+    }
+    void mouseUp(const juce::MouseEvent &) override
+    {
+        down = false;
+        repaint();
+    }
+
+private:
+    Prophet67Panel &panel;
+    bool down = false;
+};
+
+float textWidth(const juce::Font &f, const juce::String &t)
+{
+    juce::GlyphArrangement ga;
+    ga.addLineOfText(f, t, 0.0f, 0.0f);
+    return ga.getBoundingBox(0, -1, true).getWidth();
+}
+} // namespace
+
+/* =============================================================================== the panel === */
+Prophet67Panel::Prophet67Panel(Prophet67Processor &p) : proc(p)
 {
     setLookAndFeel(&look);
-    auto &s = proc.apvts;
-    auto P = [&](int i) { return Prophet67Processor::paramId(i); };
-    auto ctl = [&](const juce::String &id, const juce::String &name) { return std::make_unique<P67Control>(s, id, name); };
-    auto label = [](int i) {
-        juce::String n(PARAMS[i].name);
-        return i == P_O2_MODE ? juce::String("OSC 2 MODE") : n;
-    };
-    auto page = [&](const juce::String &name) -> P67Page & {
-        auto *pg = pages.add(new P67Page());
-        tabs.addTab(name, P67Look::panel, pg, false);
-        return *pg;
-    };
-    auto params = [&](P67Page &pg, const juce::String &title, int first, int count) {
-        auto &g = pg.group(title);
-        for (int i = first; i < first + count; i++)
-            g.add(ctl(P(i), label(i)));
-    };
-    auto globals = [&](P67Page &pg, const juce::String &title, std::initializer_list<std::pair<const char *, const char *>> ids) {
-        auto &g = pg.group(title);
-        for (auto &[id, name] : ids)
-            g.add(ctl(id, name));
-    };
-
-    auto &osc = page("OSC");
-    params(osc, "OSCILLATOR 1", P_O1_FREQ, 4);
-    params(osc, "OSCILLATOR 2", P_O2_FREQ, 4);
-    params(osc, "MIXER", P_MIX_O1, 4);
-    auto &flt = page("FILTER");
-    params(flt, "LOW-PASS FILTER", P_CUTOFF, 4);
-    params(flt, "HIGH-PASS / KEYBOARD", P_HPF, 4);
-    auto &env = page("ENV");
-    params(env, "FILTER ENVELOPE", P_FA, 4);
-    params(env, "AMP ENVELOPE", P_AA, 4);
-    auto &mod = page("MOD");
-    params(mod, "LFO 1", P_LFO_RATE, 4);
-    params(mod, "LFO 2", P_L2_RATE, 4);
-    params(mod, "LFO SYNC", P_L1_SYNC, 4);
-    params(mod, "POLY MOD", P_PM_FENV, 4);
-    auto &voice = page("VOICE");
-    params(voice, "VOICE", P_GLIDE, 4);
-    params(voice, "AFTERTOUCH", P_AT_DEST, 4);
-    auto &fx = page("FX");
-    params(fx, "REVERB", P_RV_TYPE, 4);
-    params(fx, "SPACE REVERB", P_SP_MOD, 4);
-    params(fx, "CHORUS / DISTORTION", P_CH_MIX, 4);
-    auto &dl = page("DELAY");
-    params(dl, "DELAY", P_DL_TIME_L, 4);
-    params(dl, "DELAY MOD", P_DL_DEPTH, 4);
-    auto &arp = page("ARP / SPLIT");
-    globals(arp, "ARPEGGIATOR", {{"arp_on", "ARP"}, {"arp_mode", "MODE"}, {"arp_rate", "RATE"}, {"arp_oct", "OCTAVES"},
-                                 {"arp_gate", "GATE"}, {"arp_hold", "HOLD"}, {"swing", "SWING"}});
-    globals(arp, "LOW SPLIT", {{"split", "SPLIT"}, {"split_point", "POINT"}, {"scale_l", "SCALE L"}, {"scale_r", "SCALE R"}});
-    globals(arp, "SPLIT KEYS", {{"key", "KEY"}, {"follow", "FOLLOW"}, {"low_hold", "LOW HOLD"}, {"balance", "BALANCE"}});
-    tabs.setTabBarDepth(30);
-    tabs.setOutline(0);
-    addAndMakeVisible(tabs);
-
-    header.add(new P67Control(s, P(P_VINTAGE), "VINTAGE"));
-    header.add(new P67Control(s, P(P_SPREAD), "SPREAD"));
-    header.add(new P67Control(s, "volume", "VOLUME"));
-    for (auto *h : header)
-        addAndMakeVisible(h);
-
-    for (int i = 0; i < proc.getNumPrograms(); i++)
-        preset.addItem(juce::String(i + 1).paddedLeft('0', 2) + "  " + proc.getProgramName(i), i + 1);
-    preset.onChange = [this] {
-        int i = preset.getSelectedId() - 1;
-        if (i >= 0 && i != proc.getCurrentProgram()) {
-            proc.setCurrentProgram(i);
-            shownProgram = i;
-        }
-    };
-    prev.onClick = [this] {
-        int n = proc.getNumPrograms();
-        preset.setSelectedId((proc.getCurrentProgram() + n - 1) % n + 1);
-    };
-    next.onClick = [this] { preset.setSelectedId((proc.getCurrentProgram() + 1) % proc.getNumPrograms() + 1); };
-    addAndMakeVisible(preset);
-    addAndMakeVisible(prev);
-    addAndMakeVisible(next);
-    preset.setSelectedId(proc.getCurrentProgram() + 1, juce::dontSendNotification);
-    shownProgram = proc.getCurrentProgram();
-
-    setSize(920, 600);
-    startTimerHz(10);
+    setOpaque(true);
+    fx = juce::jlimit(0, 4, proc.uiPage.load());
+    tens = proc.getCurrentProgram() / 10;
+    build();
+    selectFx(fx);
+    startTimerHz(15);
 }
 
-Prophet67Editor::~Prophet67Editor() { setLookAndFeel(nullptr); }
-
-void Prophet67Editor::paint(juce::Graphics &g)
+Prophet67Panel::~Prophet67Panel()
 {
-    g.fillAll(P67Look::panel);
-    auto top = getLocalBounds().removeFromTop(92).reduced(16, 0);
-    g.setColour(P67Look::text);
-    g.setFont(juce::FontOptions(28.0f, juce::Font::bold));
-    g.drawText("PROPHET 67", top.removeFromLeft(230), juce::Justification::centredLeft);
-    g.setColour(P67Look::red);
-    g.fillRect(16, 90, getWidth() - 32, 2);
-    g.setColour(P67Look::dim);
-    g.setFont(juce::FontOptions(11.0f));
-    g.drawText("7-VOICE POLYPHONIC SYNTHESIZER", 16, 64, 300, 14, juce::Justification::centredLeft);
+    stopTimer();
+    setLookAndFeel(nullptr);
+}
+
+void Prophet67Panel::build()
+{
+    auto &s = proc.apvts;
+    auto P = [](int i) { return Prophet67Processor::paramId(i); };
+    auto add = [&](juce::Component *c, juce::Rectangle<int> r) {
+        controls.add(c);
+        addAndMakeVisible(c);
+        c->setBounds(r);
+        return c;
+    };
+
+    /* a row of sections, each a run of items, spread over the panel's width */
+    struct Item {
+        int w;
+        std::function<void(int x, int y)> place;
+    };
+    struct Sec {
+        const char *title;
+        std::vector<Item> items;
+    };
+    auto row = [&](int y, std::vector<Sec> secs) {
+        int total = 0;
+        std::vector<int> w;
+        for (auto &sc : secs) {
+            int t = sc.title ? 20 : 0;
+            for (auto &it : sc.items)
+                t += it.w;
+            w.push_back(t);
+            total += t;
+        }
+        float gap = secs.size() > 1 ? (float)(X1 - X0 - total) / (float)(secs.size() - 1) : 0.0f;
+        float x = (float)X0;
+        for (size_t i = 0; i < secs.size(); i++) {
+            int sx = (int)std::lround(x);
+            if (secs[i].title)
+                sections.push_back({{sx, y, w[i], 120}, secs[i].title});
+            int cx = sx + (secs[i].title ? 10 : 0);
+            for (auto &it : secs[i].items) {
+                it.place(cx, y);
+                cx += it.w;
+            }
+            x += (float)w[i] + gap;
+        }
+    };
+    auto K = [&](int i, const char *leg) { return Item{KW, [=, &s](int x, int y) { add(new Knob(s, P(i), leg, this), {x, y + 22, KW, 80}); }}; };
+    auto GK = [&](const char *id, const char *leg) { return Item{KW, [=, &s](int x, int y) { add(new Knob(s, id, leg, this), {x, y + 22, KW, 80}); }}; };
+    auto L = [&](juce::String id, juce::StringArray names, int w, float rowH = 13.0f) {
+        return Item{w, [=, &s](int x, int y) {
+                        auto *l = new LedList(s, id, this, names);
+                        l->rowH = rowH;
+                        int h = juce::jmax(74, (int)std::ceil(rowH * (float)names.size()) + 4);
+                        add(l, {x, y + 55 - h / 2, w, h});
+                    }};
+    };
+    auto B = [&](juce::String id, const char *leg, int bit = 1) {
+        return Item{BW, [=, &s](int x, int y) { add(new p67::Button(s, id, leg, this, bit), {x, y + 48, BW, 54}); }};
+    };
+    auto BR = [&](juce::String id, const char *leg, p67::Button::IsOn on, p67::Button::Next next) {
+        return Item{BW, [=, &s](int x, int y) { add(new p67::Button(s, id, leg, this, on, next), {x, y + 48, BW, 54}); }};
+    };
+
+    /* ---- row 1 ---- */
+    row(22, {
+        {nullptr, {Item{64, [&](int x, int y) { add(new Knob(s, "volume", "MASTER VOL", this), {x, y + 22, 64, 80}); }}}},
+        {"POLY MOD", {K(P_PM_FENV, "FILTER ENV"), K(P_PM_OSC2, "OSC 2"), B(P(P_PM_DOSC), "FREQ 1", PMO_FREQ),
+                      B(P(P_PM_DOSC), "SHAPE 1", PMO_SHAPE), B(P(P_PM_DOSC), "PW 1", PMO_PW),
+                      Item{BW, [&](int x, int y) {
+                               auto *b = new p67::Button(s, P(P_PM_DFILT), "FILTER", this, [](int) { return false; },
+                                                         [](int v) { return (v + 1) % 4; });
+                               b->leds = {"LP", "HP"};
+                               add(b, {x, y + 34, BW, 70});
+                           }}}},
+        {"CLOCK", {Item{96, [&](int x, int y) {
+                       bpmDisplay = add(new SegDisplay(3, [this] { return juce::String(juce::roundToInt(proc.hostBpm.load())); }),
+                                        {x + 6, y + 34, 84, 44});
+                   }},
+                   GK("swing", "SWING")}},
+        {"ARPEGGIATOR", {B("arp_on", "ON/OFF"), GK("arp_rate", "VALUE"), L("arp_rate", {"1/8", "1/8 T", "1/16", "1/16 T", "1/32"}, 50),
+                         GK("arp_oct", "OCTAVES"), L("arp_oct", {"1", "2", "3", "4"}, 26), GK("arp_mode", "MODE"),
+                         L("arp_mode", {"Up", "Down", "Up/Down", "Random", "Played"}, 62), GK("arp_gate", "GATE")}},
+        {"AFTERTOUCH", {K(P_AT_AMT, "AMOUNT"), K(P_AT_CURVE, "CURVE"), K(P_AT_SMOOTH, "SMOOTH"), K(P_AT_DEST, "DEST"),
+                        L(P(P_AT_DEST), {"Off", "Filter", "Swell", "Power", "Vibrato", "LFO 1", "Pitch", "Poly Mod"}, 66, 10.0f)}},
+    });
+
+    /* ---- row 2 ---- */
+    /* OSC 2's mode as the P6's buttons: SYNC (osc 1 to osc 2), LOW FREQ, and KEYBOARD (LOW FREQ following the keys) */
+    auto isSync = [](int v) { return v == O2M_SYNC; };
+    auto sync = [](int v) { return v == O2M_SYNC ? O2M_NORMAL : O2M_SYNC; };
+    auto isLow = [](int v) { return v == O2M_LOW || v == O2M_LOWFIX; };
+    auto low = [](int v) { return v == O2M_LOW || v == O2M_LOWFIX ? O2M_NORMAL : O2M_LOW; };
+    auto isKeyb = [](int v) { return v != O2M_LOWFIX; };
+    auto keyb = [](int v) { return v == O2M_LOW ? O2M_LOWFIX : v == O2M_LOWFIX ? O2M_LOW : v; };
+    row(148, {
+        {"OSCILLATOR 1", {K(P_O1_FREQ, "FREQUENCY"), BR(P(P_O2_MODE), "SYNC", isSync, sync), K(P_O1_SHAPE, "SHAPE"),
+                          K(P_O1_PW, "PULSE WIDTH")}},
+        {"OSCILLATOR 2", {K(P_O2_FREQ, "FREQUENCY"), K(P_O2_FINE, "FINE"), K(P_O2_SHAPE, "SHAPE"), K(P_O2_PW, "PULSE WIDTH"),
+                          BR(P(P_O2_MODE), "LOW FREQ", isLow, low), BR(P(P_O2_MODE), "KEYBOARD", isKeyb, keyb)}},
+        {"VINTAGE", {K(P_VINTAGE, "AMOUNT")}},
+        {"MIXER", {K(P_MIX_O1, "OSC 1"), K(P_MIX_O2, "OSC 2"), K(P_O1_SUB, "SUB OCTAVE"), K(P_NOISE, "NOISE")}},
+        {"HIGH-PASS FILTER", {K(P_HPF, "CUTOFF"), K(P_HP_RESO, "RESONANCE"), K(P_HP_ENV, "ENV AMOUNT")}},
+        {"FILTER ENVELOPE", {K(P_FA, "ATTACK"), K(P_FD, "DECAY"), K(P_FS, "SUSTAIN"), K(P_FR, "RELEASE")}},
+    });
+
+    /* ---- row 3 ---- */
+    auto lfo = [&](int l) {
+        return Sec{l ? "LFO 2" : "LOW FREQUENCY OSCILLATOR 1",
+                   {K(l ? P_L2_RATE : P_LFO_RATE, "FREQUENCY"), K(l ? P_L2_SYNC : P_L1_SYNC, "SYNC"),
+                    K(l ? P_L2_SHAPE : P_LFO_SHAPE, "SHAPE"),
+                    L(P(l ? P_L2_SHAPE : P_LFO_SHAPE), {"Triangle", "Sawtooth", "Ramp", "Square", "Random"}, 62),
+                    K(l ? P_L2_AMT : P_LFO_AMT, "INITIAL AMT"),
+                    L(P(l ? P_L2_DEST : P_LFO_DEST), {"Freq 1+2", "Freq 1", "Freq 2", "PW 1+2", "Low-pass", "High-pass", "Amp"}, 66, 10.5f),
+                    B(P(l ? P_L2_RETRIG : P_L1_RETRIG), "RETRIG")}};
+    };
+    row(274, {
+        lfo(0),
+        lfo(1),
+        {"LOW-PASS FILTER", {K(P_CUTOFF, "CUTOFF"), K(P_RESO, "RESONANCE"), K(P_ENV_AMT, "ENV AMOUNT"), K(P_FVEL, "VELOCITY"),
+                             BR(P(P_KEYTRK), "KEYBOARD", [](int) { return false; }, [](int v) { return (v + 1) % NKT; }),
+                             L(P(P_KEYTRK), {"Off", "Half", "Full"}, 44)}},
+        {"MISC PARAMETERS", {Item{76, [&](int x, int y) { add(new Knob(s, P(P_SPREAD), "VOICE SPREAD", this), {x, y + 22, 76, 80}); }},
+                             Item{76, [&](int x, int y) { add(new Knob(s, P(P_BEND), "BEND RANGE", this), {x, y + 22, 76, 80}); }}}},
+    });
+
+    /* ---- row 4 ---- */
+    const int fxSets[5][4] = {{P_CH_MIX, P_CH_RATE, P_CH_DEPTH, -1},
+                              {P_RV_TYPE, P_RV_MIX, P_RV_DECAY, P_RV_TONE},
+                              {P_SP_MOD, P_SP_SHIM, P_SP_SWELL, P_SP_PRE},
+                              {P_DL_TIME_L, P_DL_TIME_R, P_DL_FB, P_DL_MIX},
+                              {P_DL_DEPTH, P_DL_RATE, P_DL_TONE, -1}};
+    const char *fxLegend[5][4] = {{"MIX", "RATE", "DEPTH", ""},
+                                  {"TYPE", "MIX", "DECAY", "TONE"},
+                                  {"MODULATE", "SHIMMER", "SWELL", "PRE-DELAY"},
+                                  {"TIME L", "TIME R", "REPEATS", "MIX"},
+                                  {"DEPTH", "RATE", "TONE", ""}};
+    row(400, {
+        {"DISTORT", {K(P_DIST, "AMOUNT")}},
+        {"EFFECTS", {Item{116, [&](int x, int y) { add(new FxSelect(*this), {x, y + 22, 116, 82}); }},
+                     Item{84, [&](int x, int y) {
+                              add(new SegDisplay(3, [this] { return juce::String(FX_CODE[fx]); }), {x + 4, y + 26, 76, 36});
+                              fxDisplay = add(new SegDisplay(3, [this] { return fxValueText(); }), {x + 4, y + 64, 76, 36});
+                          }},
+                     Item{KW * 4, [&](int x, int y) {
+                              for (int f = 0; f < 5; f++)
+                                  for (int k = 0; k < 4; k++)
+                                      if (fxSets[f][k] >= 0)
+                                          fxControls.push_back({add(new Knob(s, P(fxSets[f][k]), fxLegend[f][k], this), {x + KW * k, y + 22, KW, 80}), f});
+                          }},
+                     Item{BW, [&](int x, int y) { fxControls.push_back({add(new p67::Button(s, P(P_DL_SYNC), "SYNC", this), {x, y + 48, BW, 54}), 3}); }}}},
+        {"AMPLIFIER ENVELOPE", {K(P_AVEL, "VELOCITY"), K(P_AA, "ATTACK"), K(P_AD, "DECAY"), K(P_AS, "SUSTAIN"), K(P_AR, "RELEASE")}},
+        {"LOW SPLIT", {GK("split", "SPLIT"), L("split", {"Off", "-1 Oct", "-2 Oct", "-3 Oct"}, 52), GK("split_point", "POINT"),
+                       GK("scale_l", "SCALE L"), GK("scale_r", "SCALE R"), GK("key", "KEY"), GK("follow", "FOLLOW"),
+                       B("low_hold", "LOW HOLD"), GK("balance", "BALANCE")}},
+    });
+
+    /* ---- the program strip ---- */
+    add(new p67::Button(s, "arp_hold", "HOLD", this), {70, 556, BW, 54});
+    add(new Knob(s, P(P_GLIDE), "GLIDE AMT", this), {134, 538, KW, 80});
+    add(new p67::Button(s, P(P_UNISON), "UNISON", this), {206, 556, BW, 54});
+    auto *prog = new SegDisplay(3, [this] { return juce::String(proc.getCurrentProgram()).paddedLeft('0', 3); });
+    prog->onClick = [this] { presetMenu(); };
+    add(prog, {376, 546, 112, 52});
+    add(new TensButton(*this), {500, 544, 60, 70});
+    for (int d = 0; d < 10; d++)
+        progButtons.add(add(new ProgButton(*this, d), {584 + 44 * d, 556, 40, 48}));
+    auto *name = new SegDisplay(12, [this] {
+        auto n = proc.getProgramName(proc.getCurrentProgram()).toUpperCase();
+        return shownEdited ? n.paddedRight(' ', 12).substring(0, 12) + "." : n;
+    }, true);
+    name->onClick = [this] { presetMenu(); };
+    nameDisplay = add(name, {1034, 546, 290, 52});
+
+    /* ---- the keyboard and the wheels ---- */
+    auto *k = new Keys(proc.keyboardState);
+    keys.add(k);
+    addAndMakeVisible(k);
+    k->setBounds(168, 648, 1336, 244);
+    k->setAvailableRange(36, 84);
+    k->setKeyWidth(1336.0f / 29.0f);
+    k->setLowestVisibleKey(36);
+    auto *pitch = keys.add(new Wheel(true, [this](float v) {
+        auto m = juce::MidiMessage::pitchWheel(1, juce::jlimit(0, 16383, (int)std::lround(v * 16383.0f)));
+        m.setTimeStamp(juce::Time::getMillisecondCounterHiRes() * 0.001);
+        proc.uiMidi.addMessageToQueue(m);
+    }));
+    auto *mod = keys.add(new Wheel(false, [this](float v) {
+        auto m = juce::MidiMessage::controllerEvent(1, 1, juce::jlimit(0, 127, (int)std::lround(v * 127.0f)));
+        m.setTimeStamp(juce::Time::getMillisecondCounterHiRes() * 0.001);
+        proc.uiMidi.addMessageToQueue(m);
+    }));
+    addAndMakeVisible(pitch);
+    addAndMakeVisible(mod);
+    pitch->setBounds(72, 690, 34, 170);
+    mod->setBounds(116, 690, 34, 170);
+}
+
+void Prophet67Panel::selectFx(int f)
+{
+    fx = f;
+    proc.uiPage = f;
+    fxShown = nullptr;
+    for (auto &[c, ef] : fxControls)
+        c->setVisible(ef == f);
+    repaint(juce::Rectangle<int>(X0, 400, X1 - X0, 124));
+}
+
+juce::String Prophet67Panel::fxValueText() const
+{
+    auto *p = fxShown;
+    if (!p)
+        for (auto &[c, ef] : fxControls)
+            if (ef == fx)
+                if (auto *kn = dynamic_cast<Knob *>(c)) {
+                    p = &kn->param;
+                    break;
+                }
+    if (!p)
+        return {};
+    int v = (int)std::lround(p->convertFrom0to1(p->getValue()));
+    if (dynamic_cast<juce::AudioParameterChoice *>(p))
+        return p->getCurrentValueAsText().toUpperCase().substring(0, 3);
+    return juce::String(v).paddedLeft('0', 3);
+}
+
+/* ------------------------------------------------------------------------------ painting --- */
+static void paintWood(juce::Graphics &g, juce::Rectangle<float> r, int seed)
+{
+    using namespace juce;
+    ColourGradient base(Colour(0xff3a1f10), r.getX(), 0.0f, Colour(0xff3a1f10), r.getRight(), 0.0f, false);
+    base.addColour(0.4, Colour(0xff6a3c1f));
+    base.addColour(0.7, Colour(0xff57311a));
+    g.setGradientFill(base);
+    g.fillRect(r);
+    Random rnd(seed);
+    for (int i = 0; i < 30; i++) {
+        float x0 = r.getX() + rnd.nextFloat() * r.getWidth(), amp = 1.0f + rnd.nextFloat() * 3.5f,
+              f = 0.004f + rnd.nextFloat() * 0.01f, ph = rnd.nextFloat() * 6.28f;
+        Path p;
+        p.startNewSubPath(x0, r.getY());
+        for (float y = r.getY(); y <= r.getBottom(); y += 12.0f)
+            p.lineTo(x0 + amp * std::sin(y * f + ph) + 1.2f * std::sin(y * f * 3.7f + ph * 2.0f), y);
+        bool dark = rnd.nextFloat() < 0.7f;
+        g.setColour(dark ? Colour(0xff1e0f06).withAlpha(0.16f + 0.2f * rnd.nextFloat())
+                         : Colour(0xff9a6a42).withAlpha(0.10f + 0.12f * rnd.nextFloat()));
+        g.strokePath(p, PathStrokeType(0.5f + rnd.nextFloat() * 1.6f));
+    }
+}
+
+void Prophet67Panel::paintSection(juce::Graphics &g, const Section &s)
+{
+    using namespace juce;
+    auto r = s.r.toFloat().reduced(0.5f);
+    auto f = font(Face::title, 11.5f).withExtraKerningFactor(0.06f);
+    float tw = textWidth(f, s.title), cx = r.getCentreX(), gl = cx - tw * 0.5f - 6.0f, gr = cx + tw * 0.5f + 6.0f, rad = 6.0f;
+    Path p;
+    p.startNewSubPath(gr, r.getY());
+    p.lineTo(r.getRight() - rad, r.getY());
+    p.quadraticTo(r.getRight(), r.getY(), r.getRight(), r.getY() + rad);
+    p.lineTo(r.getRight(), r.getBottom() - rad);
+    p.quadraticTo(r.getRight(), r.getBottom(), r.getRight() - rad, r.getBottom());
+    p.lineTo(r.getX() + rad, r.getBottom());
+    p.quadraticTo(r.getX(), r.getBottom(), r.getX(), r.getBottom() - rad);
+    p.lineTo(r.getX(), r.getY() + rad);
+    p.quadraticTo(r.getX(), r.getY(), r.getX() + rad, r.getY());
+    p.lineTo(gl, r.getY());
+    g.setColour(col::frame);
+    g.strokePath(p, PathStrokeType(1.4f));
+    g.setColour(col::legend);
+    g.setFont(f);
+    g.drawText(s.title, Rectangle<float>(gl, r.getY() - 8.0f, gr - gl, 16.0f), Justification::centred, false);
+}
+
+void Prophet67Panel::paintBackground(juce::Graphics &g)
+{
+    using namespace juce;
+    auto all = Rectangle<float>(0.0f, 0.0f, (float)W, (float)H);
+    auto panel = all.reduced(40.0f, 0.0f);
+    g.setGradientFill(ColourGradient(col::panelTop, 0.0f, 0.0f, col::panelBottom, 0.0f, 640.0f, false));
+    g.fillRect(panel.withBottom(640.0f));
+    Random rnd(67);                      /* a matte finish */
+    for (int i = 0; i < 9000; i++) {
+        float x = panel.getX() + rnd.nextFloat() * panel.getWidth(), y = rnd.nextFloat() * 640.0f;
+        g.setColour((rnd.nextBool() ? Colours::white : Colours::black).withAlpha(0.025f + 0.03f * rnd.nextFloat()));
+        g.fillRect(x, y, 1.0f, 1.0f);
+    }
+    /* the keyboard's bed and the wheels' block */
+    g.setColour(Colour(0xff0f0f10));
+    g.fillRect(panel.withTop(640.0f));
+    g.setGradientFill(ColourGradient(Colour(0xff1d1e20), 56.0f, 648.0f, Colour(0xff111112), 56.0f, 892.0f, false));
+    g.fillRect(Rectangle<float>(56.0f, 648.0f, 106.0f, 244.0f));
+    g.setColour(Colours::black.withAlpha(0.7f));
+    g.fillRect(Rectangle<float>(40.0f, 638.0f, panel.getWidth(), 4.0f));
+    g.setColour(Colours::white.withAlpha(0.06f));
+    g.drawHorizontalLine(637, 40.0f, (float)W - 40.0f);
+
+    paintWood(g, all.withWidth(40.0f), 1);
+    paintWood(g, all.withLeft((float)W - 40.0f), 2);
+    for (float x : {40.0f, (float)W - 40.0f}) {
+        bool left = x < 100.0f;
+        g.setGradientFill(ColourGradient(Colours::black.withAlpha(0.5f), x, 0.0f, Colours::transparentBlack, x + (left ? 10.0f : -10.0f), 0.0f, false));
+        g.fillRect(left ? Rectangle<float>(x, 0.0f, 10.0f, (float)H) : Rectangle<float>(x - 10.0f, 0.0f, 10.0f, (float)H));
+    }
+
+    for (auto &s : sections)
+        paintSection(g, s);
+
+    /* the strip's legends */
+    drawLegend(g, "PROGRAM", Rectangle<float>(376.0f, 600.0f, 112.0f, 14.0f));
+    drawLegend(g, "PROGRAM NAME", Rectangle<float>(1034.0f, 532.0f, 290.0f, 12.0f), 9.5f);
+
+    /* the badge */
+    auto badge = Rectangle<float>(1344.0f, 552.0f, 156.0f, 42.0f);
+    g.setColour(Colours::black.withAlpha(0.6f));
+    g.fillRoundedRectangle(badge.translated(0.0f, 2.0f), 3.0f);
+    g.setGradientFill(ColourGradient(Colour(0xffc9cacb), badge.getX(), badge.getY(), Colour(0xff8f9092), badge.getX(), badge.getBottom(), false));
+    g.fillRoundedRectangle(badge, 3.0f);
+    Random brush(6);
+    for (int i = 0; i < 60; i++) {
+        g.setColour((brush.nextBool() ? Colours::white : Colours::black).withAlpha(0.05f));
+        g.drawHorizontalLine((int)(badge.getY() + brush.nextFloat() * badge.getHeight()), badge.getX() + 2.0f, badge.getRight() - 2.0f);
+    }
+    g.setColour(Colour(0xff4d4e50));
+    g.drawRoundedRectangle(badge, 3.0f, 1.0f);
+    g.setColour(Colour(0xff2b2c2e));
+    g.setFont(font(Face::logo, 24.0f).withExtraKerningFactor(0.02f));
+    g.drawText("prophet 67", badge.reduced(8.0f, 0.0f), Justification::centred, false);
+}
+
+void Prophet67Panel::paint(juce::Graphics &g)
+{
+    float sc = g.getInternalContext().getPhysicalPixelScaleFactor();
+    if (sc != backgroundScale || background.isNull()) {
+        backgroundScale = sc;
+        background = juce::Image(juce::Image::RGB, juce::jmax(1, (int)std::ceil(W * sc)), juce::jmax(1, (int)std::ceil(H * sc)), true);
+        juce::Graphics bg(background);
+        bg.addTransform(juce::AffineTransform::scale(sc));
+        paintBackground(bg);
+    }
+    g.drawImage(background, getLocalBounds().toFloat(), juce::RectanglePlacement::stretchToFit);
+
+    /* the readout: what is in hand, else nothing (as on the panel) */
+    if (shown && juce::Time::getMillisecondCounter() - shownAt < 3000) {
+        g.setColour(col::legend);
+        g.setFont(font(Face::label, 11.0f));
+        g.drawText(shown->getName(40) + ":  " + shown->getCurrentValueAsText(), readoutR, juce::Justification::centred, true);
+    }
+}
+
+/* ------------------------------------------------------------------------------- the rest --- */
+void Prophet67Panel::touched(juce::RangedAudioParameter &p)
+{
+    shown = &p;
+    shownAt = juce::Time::getMillisecondCounter();
+    for (auto &[c, ef] : fxControls)
+        if (auto *kn = dynamic_cast<Knob *>(c); kn && &kn->param == &p) {
+            fxShown = &p;
+            if (fxDisplay)
+                fxDisplay->repaint();
+        }
+    repaint(readoutR.expanded(2));
+}
+
+void Prophet67Panel::timerCallback()
+{
+    if (++tick % 3 == 0) {
+        bool e = false;
+        int prog = proc.getCurrentProgram();
+        if (prog >= 0 && prog < NPRESETS)
+            for (int i = 0; i < NPARAM && !e; i++)
+                e = (int)std::lround(proc.apvts.getRawParameterValue(Prophet67Processor::paramId(i))->load()) != FACTORY[prog].p[i];
+        if (e != shownEdited || prog != shownProgram) {
+            shownEdited = e;
+            if (prog != shownProgram)
+                tens = prog / 10;
+            shownProgram = prog;
+            repaint(juce::Rectangle<int>(360, 530, 1000, 100));
+        }
+        if (bpmDisplay)
+            bpmDisplay->repaint();
+        if (fxDisplay)
+            fxDisplay->repaint();
+    }
+    auto age = juce::Time::getMillisecondCounter() - shownAt;
+    if (shown && age > 3000 && age < 3300)
+        repaint(readoutR.expanded(2));
+}
+
+void Prophet67Panel::presetMenu()
+{
+    juce::PopupMenu m;
+    m.addSectionHeader("PROGRAMS");
+    for (int i = 0; i < proc.getNumPrograms(); i++)
+        m.addItem(i + 1, juce::String(i).paddedLeft('0', 3) + "   " + proc.getProgramName(i), true, i == proc.getCurrentProgram());
+    juce::Component::SafePointer<Prophet67Panel> self(this);
+    auto area = nameDisplay ? nameDisplay->getScreenBounds() : getScreenBounds();
+    m.showMenuAsync(juce::PopupMenu::Options().withTargetScreenArea(area).withMinimumWidth(240), [self](int r) {
+        if (self && r > 0) {
+            self->proc.setCurrentProgram(r - 1);
+            self->repaint();
+        }
+    });
+}
+
+/* ============================================================================== the editor === */
+Prophet67Editor::Prophet67Editor(Prophet67Processor &p) : AudioProcessorEditor(&p), proc(p), panel(p)
+{
+    addAndMakeVisible(panel);
+    panel.setBounds(0, 0, Prophet67Panel::W, Prophet67Panel::H);
+    const double W = Prophet67Panel::W, H = Prophet67Panel::H;
+    setResizable(true, true);
+    setResizeLimits((int)(W * 0.5), (int)(H * 0.5), (int)(W * 1.6), (int)(H * 1.6));
+    getConstrainer()->setFixedAspectRatio(W / H);
+    float s = juce::jlimit(0.5f, 1.6f, proc.uiScale.load());
+    setSize((int)std::lround(W * s), (int)std::lround(H * s));
 }
 
 void Prophet67Editor::resized()
 {
-    auto r = getLocalBounds();
-    auto top = r.removeFromTop(92).reduced(16, 4);
-    top.removeFromLeft(240);
-    auto pr = top.removeFromLeft(300).withSizeKeepingCentre(300, 28);
-    prev.setBounds(pr.removeFromLeft(28));
-    next.setBounds(pr.removeFromRight(28));
-    preset.setBounds(pr.reduced(4, 0));
-    for (int i = header.size(); --i >= 0;)
-        header[i]->setBounds(top.removeFromRight(84));
-    tabs.setBounds(r.reduced(8, 6));
-}
-
-void Prophet67Editor::timerCallback()
-{
-    if (proc.getCurrentProgram() != shownProgram) {    /* the host changed the program */
-        shownProgram = proc.getCurrentProgram();
-        preset.setSelectedId(shownProgram + 1, juce::dontSendNotification);
-    }
-    for (auto *pg : pages)                             /* the delay's times as notes or ms */
-        for (auto *g : pg->groups)
-            for (auto *c : g->controls)
-                c->refresh();
+    float s = (float)getWidth() / (float)Prophet67Panel::W;
+    panel.setTransform(juce::AffineTransform::scale(s));
+    proc.uiScale = s;
 }

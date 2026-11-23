@@ -5,7 +5,7 @@
  * channel and poly pressure, pitch bend, mod wheel, sustain, CC 74), the host's tempo and position for the arp and
  * the synced LFOs and delay, and the firmware's LOW SPLIT on the MIDI notes. */
 #pragma once
-#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_audio_utils/juce_audio_utils.h>
 #include <atomic>
 #include "P67Engine.h"
 
@@ -38,6 +38,13 @@ public:
     void getStateInformation(juce::MemoryBlock &destData) override;
     void setStateInformation(const void *data, int sizeInBytes) override;
 
+    juce::MidiKeyboardState keyboardState;   /* the editor's keyboard */
+    juce::MidiMessageCollector uiMidi;        /* the editor's wheels */
+    std::atomic<float> voiceLevel[8] = {};    /* each voice's amp envelope, for the editor's LEDs */
+    std::atomic<uint32_t> arpSteps{0};      /* for the editor: the arp's steps, the host's tempo */
+    std::atomic<float> hostBpm{120.0f};
+    std::atomic<float> uiScale{0.82f};        /* the editor's size, kept with the project */
+    std::atomic<int> uiPage{0};
     std::atomic<bool> dlSynced{false};   /* DELAY SYNC on: TIME shows notes (for the host's and the editor's text) */
     juce::AudioProcessorValueTreeState apvts;
     static juce::String paramId(int i) { return "p" + juce::String(i); }

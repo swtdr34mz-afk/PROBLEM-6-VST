@@ -61,8 +61,12 @@ Läuft auf Apple Silicon und Intel (macOS 10.13 und neuer), Windows 10/11 64-bit
 - **LOW SPLIT** works on the MIDI notes as on the FM-1's keys: below POINT the left hand is transposed by SPLIT and
   snapped to SCALE L; above it SCALE R follows KEY, the left hand's ROOT, or lies on the WHITE keys; LOW HOLD keeps the
   left hand's chord; BALANCE sets the two hands' levels.
-- The editor: the FM-1's pages as tabs (OSC, FILTER, ENV, MOD, VOICE, FX, DELAY, ARP / SPLIT), VINTAGE, SPREAD,
-  VOLUME and the preset always in view. Double-click a knob for its default. Plain on purpose, for now.
+- **The panel** is laid out and drawn after the Prophet-6's: charcoal panel, white section frames, black knobs, buttons
+  that light red, LED lists, red seven-segment displays (CLOCK shows the host's tempo; EFFECTS works as on the P6:
+  SELECT an effect, its knobs appear, the lower display shows the value), the program strip (program display, TENS
+  SELECT, 0-9, the program's name) and a four-octave keyboard with pitch and mod wheels. Under the name, the control
+  in hand shows its name and value. Double-click a knob for its default, SHIFT-drag for fine. Drag the window's corner
+  to size it (kept with the project).
 
 **Not in this version:** the FM-1's 16-bar step sequencer — in a DAW the piano roll does that job; it may come later.
 The FM-1's CPU limits do not apply, so all seven voices always play at full quality.

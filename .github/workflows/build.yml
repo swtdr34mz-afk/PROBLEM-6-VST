@@ -19,8 +19,9 @@ jobs:
         include:
           - os: windows-latest
             name: Windows
-          - os: macos-26
-            name: macOS
+          # the Mac: GitHub's macOS runners found no machine (Nov 2026); back in with these two lines
+          # - os: macos-26
+          #   name: macOS
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
