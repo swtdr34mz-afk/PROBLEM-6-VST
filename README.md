@@ -80,7 +80,7 @@ The results are under `build/Prophet67_artefacts/Release/`. GitHub Actions (`.gi
 Windows and the Mac (universal) on every push.
 
 `dsp/` is the firmware's `dsp/` with small `P67_PLUGIN` guards (any sample rate: the delay lines are scaled to it and
-sized for up to 96 kHz; no second core; no RAM placement). `src/Engine.cpp` builds those C files as the members of one
+sized for up to 96 kHz; no second core; no RAM placement). `src/P67Engine.cpp` builds those C files as the members of one
 C++ class, so each plugin instance has its own voices and effects. `shim/plat.h` stands in for the FM-1 platform.
 
 ## Licence

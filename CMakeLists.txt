@@ -53,7 +53,7 @@ juce_add_plugin(Prophet67
     MICROPHONE_PERMISSION_ENABLED FALSE)
 
 target_sources(Prophet67 PRIVATE
-    src/Engine.cpp
+    src/P67Engine.cpp
     src/PluginProcessor.cpp
     src/PluginEditor.cpp
     dsp/params.c

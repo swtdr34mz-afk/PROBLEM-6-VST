@@ -3,7 +3,7 @@
 /* The firmware's engine (dsp/engine.c, fx.c, clock.c: C) compiled as one C++ class: its file-scope state becomes the
  * members of an instance (the 'static' storage class is taken away while they are read in), its functions member
  * functions. The code is the firmware's, unchanged but for its P67_PLUGIN guards (the rate is the host's: sr_). */
-#include "Engine.h"
+#include "P67Engine.h"
 #include "plat.h"
 #include "fastmath.h"
 #include <cstring>

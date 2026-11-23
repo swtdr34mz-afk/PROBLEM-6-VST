@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 swtdr34mz (PROPHET 67) */
 /* PROPHET 67's engine for the plugin: the FM-1 firmware's sound engine (dsp/, the same code), one instance per
- * plugin. Engine.cpp builds the firmware's C engine as one class, so every instance has its own voices, effects and
+ * plugin. P67Engine.cpp builds the firmware's C engine as one class, so every instance has its own voices, effects and
  * clock. All calls from the audio thread. */
 #pragma once
 #include <cstdint>

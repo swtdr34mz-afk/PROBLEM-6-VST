@@ -1,13 +1,13 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 swtdr34mz (PROPHET 67) */
-/* PROPHET 67 as a plugin (VST3, AU) and a standalone app: the FM-1 firmware's engine (Engine.h), its parameters for
+/* PROPHET 67 as a plugin (VST3, AU) and a standalone app: the FM-1 firmware's engine (P67Engine.h), its parameters for
  * the host (automation, saved with the project), its 16 presets as the host's programs, MIDI in (notes, velocity,
  * channel and poly pressure, pitch bend, mod wheel, sustain, CC 74), the host's tempo and position for the arp and
  * the synced LFOs and delay, and the firmware's LOW SPLIT on the MIDI notes. */
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <atomic>
-#include "Engine.h"
+#include "P67Engine.h"
 
 class Prophet67Processor : public juce::AudioProcessor
 {
