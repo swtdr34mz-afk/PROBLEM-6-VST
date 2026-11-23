@@ -6,7 +6,12 @@ using namespace p67;
 
 namespace {
 constexpr int X0 = 56, X1 = 1504;        /* the panel's working width */
-constexpr int KW = 58, BW = 50;          /* a knob's and a button's width */
+constexpr int KW = 58, BW = 50;
+bool bipolarKind(int i)
+{
+    int k = PARAMS[i].kind;
+    return k == PK_BIPOLAR || k == PK_SEMI || k == PK_FINE;
+}          /* a knob's and a button's width */
 const char *const FX_NAME[5] = {"Chorus", "Reverb", "Space", "Delay", "Dly Mod"};
 const char *const FX_CODE[5] = {"CHO", "REV", "SPC", "DLY", "MOD"};
 
@@ -174,7 +179,7 @@ public:
         auto lg = r.removeFromBottom(14.0f);
         int prog = panel.tens * 10 + digit;
         bool on = panel.proc.getCurrentProgram() == prog, there = prog < panel.proc.getNumPrograms();
-        drawButton(g, r.reduced(2.0f, 1.0f), on, down, isMouseOver() && there, true);
+        drawKeycap(g, r.reduced(3.0f, 1.0f), on, true, down, isMouseOver() && there);
         drawLegend(g, juce::String(digit), lg, 11.0f);
     }
     void mouseDown(const juce::MouseEvent &) override
@@ -206,7 +211,7 @@ public:
         auto r = getLocalBounds().toFloat();
         drawLegend(g, "TENS", r.removeFromTop(14.0f));
         auto lg = r.removeFromBottom(14.0f);
-        drawButton(g, r.reduced(4.0f, 2.0f), false, down, isMouseOver(), true);
+        drawKeycap(g, r.reduced(6.0f, 2.0f), false, false, down, isMouseOver());
         drawLegend(g, "SELECT", lg);
     }
     void mouseDown(const juce::MouseEvent &) override
@@ -296,7 +301,13 @@ void Prophet67Panel::build()
             x += (float)w[i] + gap;
         }
     };
-    auto K = [&](int i, const char *leg) { return Item{KW, [=, &s](int x, int y) { add(new Knob(s, P(i), leg, this), {x, y + 22, KW, 80}); }}; };
+    auto K = [&](int i, const char *leg) {
+        return Item{KW, [=, &s](int x, int y) {
+                        auto *k = new Knob(s, P(i), leg, this);
+                        k->getProperties().set("bipolar", bipolarKind(i));
+                        add(k, {x, y + 22, KW, 80});
+                    }};
+    };
     auto GK = [&](const char *id, const char *leg) { return Item{KW, [=, &s](int x, int y) { add(new Knob(s, id, leg, this), {x, y + 22, KW, 80}); }}; };
     auto L = [&](juce::String id, juce::StringArray names, int w, float rowH = 13.0f) {
         return Item{w, [=, &s](int x, int y) {
@@ -403,7 +414,11 @@ void Prophet67Panel::build()
         {"AMPLIFIER ENVELOPE", {K(P_AVEL, "VELOCITY"), K(P_AA, "ATTACK"), K(P_AD, "DECAY"), K(P_AS, "SUSTAIN"), K(P_AR, "RELEASE")}},
         {"LOW SPLIT", {GK("split", "SPLIT"), L("split", {"Off", "-1 Oct", "-2 Oct", "-3 Oct"}, 52), GK("split_point", "POINT"),
                        GK("scale_l", "SCALE L"), GK("scale_r", "SCALE R"), GK("key", "KEY"), GK("follow", "FOLLOW"),
-                       B("low_hold", "LOW HOLD"), GK("balance", "BALANCE")}},
+                       B("low_hold", "LOW HOLD"), Item{KW, [&](int x, int y) {
+                           auto *k = new Knob(s, "balance", "BALANCE", this);
+                           k->getProperties().set("bipolar", true);
+                           add(k, {x, y + 22, KW, 80});
+                       }}}},
     });
 
     /* ---- the program strip ---- */
@@ -413,9 +428,9 @@ void Prophet67Panel::build()
     auto *prog = new SegDisplay(3, [this] { return juce::String(proc.getCurrentProgram()).paddedLeft('0', 3); });
     prog->onClick = [this] { presetMenu(); };
     add(prog, {376, 546, 112, 52});
-    add(new TensButton(*this), {500, 544, 60, 70});
+    add(new TensButton(*this), {498, 534, 56, 92});
     for (int d = 0; d < 10; d++)
-        progButtons.add(add(new ProgButton(*this, d), {584 + 44 * d, 556, 40, 48}));
+        progButtons.add(add(new ProgButton(*this, d), {576 + 45 * d, 546, 44, 72}));
     auto *name = new SegDisplay(12, [this] {
         auto n = proc.getProgramName(proc.getCurrentProgram()).toUpperCase();
         return shownEdited ? n.paddedRight(' ', 12).substring(0, 12) + "." : n;

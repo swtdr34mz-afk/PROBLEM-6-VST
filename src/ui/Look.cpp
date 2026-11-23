@@ -39,111 +39,166 @@ void Look::drawPopupMenuBackground(juce::Graphics &g, int w, int h)
 }
 
 /* ------------------------------------------------------------------------------- the knob --- */
+/* seen from above: white scale ticks around it, the black ribbed body, a chrome ring, a dark spun-metal cap and its
+ * white line */
 void Look::drawRotarySlider(juce::Graphics &g, int x, int y, int w, int h, float pos, float a0, float a1, juce::Slider &s)
 {
     using namespace juce;
     const float d = (float)jmin(w, h), R = d * 0.5f;
     const Point<float> c((float)x + (float)w * 0.5f, (float)y + (float)h * 0.5f);
     const float ang = a0 + pos * (a1 - a0);
-    const float rb = R * 0.92f;
+    const float rb = R * 0.66f;
 
-    /* its shadow on the panel */
-    g.setGradientFill(ColourGradient(Colours::black.withAlpha(0.65f), c.x, c.y + rb * 0.3f, Colours::transparentBlack, c.x,
-                                     c.y + rb * 1.5f, true));
-    g.fillEllipse(Rectangle<float>(rb * 2.7f, rb * 2.7f).withCentre(c.translated(0.0f, rb * 0.22f)));
+    /* the scale */
+    g.setColour(col::legend);
+    for (int i = 0; i <= 10; i++) {
+        float a = a0 + (a1 - a0) * (float)i / 10.0f;
+        g.drawLine(Line<float>(c.getPointOnCircumference(R * 0.77f, a), c.getPointOnCircumference(R * 0.89f, a)), jmax(1.0f, d * 0.022f));
+    }
+    if ((bool)s.getProperties()["bipolar"]) {
+        g.setFont(font(Face::title, jmax(8.0f, d * 0.17f)));
+        auto pm = c.getPointOnCircumference(R * 0.86f, a0 - 0.36f), pp = c.getPointOnCircumference(R * 0.86f, a1 + 0.36f);
+        g.drawText("-", Rectangle<float>(10.0f, 10.0f).withCentre(pm), Justification::centred, false);
+        g.drawText("+", Rectangle<float>(10.0f, 10.0f).withCentre(pp), Justification::centred, false);
+    }
 
-    /* the knurled skirt */
-    auto skirt = Rectangle<float>(rb * 2.0f, rb * 2.0f).withCentre(c);
-    g.setGradientFill(ColourGradient(Colour(0xff2c2d30), c.x, c.y - rb, Colour(0xff050506), c.x, c.y + rb, false));
-    g.fillEllipse(skirt);
-    const int ribs = d > 60.0f ? 44 : 30;
+    /* its shadow, the ribbed body */
+    g.setGradientFill(ColourGradient(Colours::black.withAlpha(0.7f), c.x, c.y + rb * 0.3f, Colours::transparentBlack, c.x, c.y + rb * 1.45f, true));
+    g.fillEllipse(Rectangle<float>(rb * 2.6f, rb * 2.6f).withCentre(c.translated(rb * 0.08f, rb * 0.2f)));
+    auto body = Rectangle<float>(rb * 2.0f, rb * 2.0f).withCentre(c);
+    g.setColour(Colour(0xff070708));
+    g.fillEllipse(body);
+    const int ribs = 40;
     for (int i = 0; i < ribs; i++) {
         float a = MathConstants<float>::twoPi * (float)i / (float)ribs;
-        float lit = 0.5f + 0.5f * std::cos(a + 0.8f);   /* lit from the top left */
-        auto p0 = c.getPointOnCircumference(rb * 0.80f, a), p1 = c.getPointOnCircumference(rb * 0.985f, a);
-        g.setColour(i & 1 ? Colours::white.withAlpha(0.03f + 0.07f * lit) : Colours::black.withAlpha(0.7f));
-        g.drawLine({p0, p1}, jmax(1.0f, d * 0.025f));
+        float lit = 0.5f + 0.5f * std::cos(a + 0.9f);
+        g.setColour(Colours::white.withAlpha(0.04f + 0.10f * lit));
+        g.drawLine(Line<float>(c.getPointOnCircumference(rb * 0.90f, a), c.getPointOnCircumference(rb * 0.995f, a)), jmax(0.8f, d * 0.016f));
     }
-    g.setColour(Colours::black);
-    g.drawEllipse(skirt, 1.0f);
 
-    /* the cap, with a soft sheen, and the white line */
-    const float rc = rb * 0.76f;
-    auto cap = Rectangle<float>(rc * 2.0f, rc * 2.0f).withCentre(c);
-    g.setGradientFill(ColourGradient(Colour(0xff2a2b2e), c.x - rc * 0.6f, c.y - rc, Colour(0xff0b0b0c), c.x + rc * 0.5f, c.y + rc, false));
-    g.fillEllipse(cap);
-    g.setGradientFill(ColourGradient(Colours::white.withAlpha(0.10f), c.x - rc * 0.3f, c.y - rc * 0.6f, Colours::transparentWhite,
-                                     c.x, c.y + rc * 0.2f, true));
-    g.fillEllipse(cap.reduced(rc * 0.1f));
-    g.setColour(Colours::black);
-    g.drawEllipse(cap, 1.0f);
-    g.setColour(Colours::white.withAlpha(0.08f));
-    g.drawEllipse(cap.reduced(1.0f), 0.8f);
-
-    auto p0 = c.getPointOnCircumference(rc * 0.30f, ang), p1 = c.getPointOnCircumference(rc * 0.97f, ang);
-    g.setColour(Colour(0xfff6f4ee));
-    g.drawLine({p0, p1}, jmax(1.6f, d * 0.045f));
-
-    if (s.isMouseButtonDown()) {
-        g.setColour(Colours::white.withAlpha(0.05f));
-        g.fillEllipse(skirt);
+    /* the chrome ring: light along a band, as turned metal catches it */
+    const float ro = rb * 0.89f, ri = rb * 0.70f;
+    const int slices = 72;
+    for (int i = 0; i < slices; i++) {
+        float a = MathConstants<float>::twoPi * (float)i / (float)slices, a2 = a + MathConstants<float>::twoPi / (float)slices + 0.01f;
+        float k = 0.5f + 0.5f * std::cos(2.0f * (a + 0.75f));          /* two bright sides */
+        float v = 0.38f + 0.55f * std::pow(k, 1.6f);
+        Path p;
+        p.addCentredArc(c.x, c.y, ro, ro, 0.0f, a, a2, true);
+        p.lineTo(c.getPointOnCircumference(ri, a2));
+        p.addCentredArc(c.x, c.y, ri, ri, 0.0f, a2, a, false);
+        p.closeSubPath();
+        g.setColour(Colour::fromFloatRGBA(v, v, v * 1.02f, 1.0f));
+        g.fillPath(p);
     }
+    g.setColour(Colours::black.withAlpha(0.6f));
+    g.drawEllipse(Rectangle<float>(ro * 2.0f, ro * 2.0f).withCentre(c), 0.8f);
+
+    /* the cap: dark spun metal */
+    for (int i = 0; i < slices; i++) {
+        float a = MathConstants<float>::twoPi * (float)i / (float)slices, a2 = a + MathConstants<float>::twoPi / (float)slices + 0.01f;
+        float k = 0.5f + 0.5f * std::cos(2.0f * (a + 0.75f));
+        float v = 0.10f + 0.16f * std::pow(k, 2.0f);
+        Path p;
+        p.addPieSegment(Rectangle<float>(ri * 2.0f, ri * 2.0f).withCentre(c), a, a2, 0.0f);
+        g.setColour(Colour::fromFloatRGBA(v, v, v * 1.03f, 1.0f));
+        g.fillPath(p);
+    }
+    g.setColour(Colours::black.withAlpha(0.8f));
+    g.drawEllipse(Rectangle<float>(ri * 2.0f, ri * 2.0f).withCentre(c), 0.8f);
+
+    auto p0 = c.getPointOnCircumference(ri * 0.18f, ang), p1 = c.getPointOnCircumference(ri * 0.96f, ang);
+    g.setColour(Colour(0xfff4f2ec));
+    g.drawLine({p0, p1}, jmax(1.4f, d * 0.035f));
 }
 
 /* --------------------------------------------------------------------------- the pieces --- */
-void drawLed(juce::Graphics &g, juce::Point<float> c, float r, float level)
+void drawLed(juce::Graphics &g, juce::Point<float> c, float r, float level)   /* a small square red LED */
 {
     using namespace juce;
     level = jlimit(0.0f, 1.0f, level);
+    auto body = Rectangle<float>(r * 2.6f, r * 1.9f).withCentre(c);
     if (level > 0.02f) {
-        g.setGradientFill(ColourGradient(col::redLed.withAlpha(0.6f * level), c.x, c.y, Colours::transparentBlack, c.x + r * 3.0f, c.y, true));
-        g.fillEllipse(Rectangle<float>(r * 6.0f, r * 6.0f).withCentre(c));
+        g.setGradientFill(ColourGradient(Colour(0xffff3a1a).withAlpha(0.6f * level), c.x, c.y, Colours::transparentBlack, c.x + r * 3.4f, c.y, true));
+        g.fillEllipse(Rectangle<float>(r * 7.0f, r * 6.0f).withCentre(c));
     }
-    auto body = Rectangle<float>(r * 2.0f, r * 2.0f).withCentre(c);
-    g.setColour(Colours::black.withAlpha(0.8f));
-    g.fillEllipse(body.expanded(0.8f));
-    g.setColour(col::ledOff.interpolatedWith(col::redLed, level));
-    g.fillEllipse(body);
-    g.setGradientFill(ColourGradient(Colours::white.withAlpha(0.12f + 0.5f * level), c.x - r * 0.3f, c.y - r * 0.4f,
-                                     Colours::transparentWhite, c.x, c.y + r * 0.6f, true));
-    g.fillEllipse(body.reduced(r * 0.2f));
+    g.setColour(Colours::black.withAlpha(0.85f));
+    g.fillRoundedRectangle(body.expanded(1.0f), 1.5f);
+    g.setGradientFill(ColourGradient(Colour(0xff5a1510).interpolatedWith(Colour(0xffffb070), level), c.x, c.y,
+                                     Colour(0xff3a0c09).interpolatedWith(Colour(0xffff2a10), level), body.getRight(), body.getBottom(), true));
+    g.fillRoundedRectangle(body, 1.2f);
+    g.setColour(Colours::white.withAlpha(0.10f + 0.2f * level));
+    g.fillRect(body.reduced(body.getWidth() * 0.2f, 0.0f).withHeight(body.getHeight() * 0.3f).translated(0.0f, 0.6f));
 }
 
-void drawButton(juce::Graphics &g, juce::Rectangle<float> r, bool on, bool down, bool over, bool light)
+void drawButton(juce::Graphics &g, juce::Rectangle<float> r, bool on, bool down, bool over, bool)
 {
     using namespace juce;
-    g.setColour(Colours::black.withAlpha(0.55f));
-    g.fillRoundedRectangle(r.translated(0.0f, 1.5f).expanded(1.0f), 2.5f);
-    Colour top = light ? Colour(0xffd4d4cf) : col::buttonTop, bottom = light ? Colour(0xffa3a39e) : col::buttonBottom;
-    if (down) {
-        top = top.darker(0.25f);
-        bottom = bottom.darker(0.25f);
+    if (on) {                            /* its light spills onto the panel */
+        g.setGradientFill(ColourGradient(Colour(0xffff3010).withAlpha(0.45f), r.getCentreX(), r.getCentreY(), Colours::transparentBlack,
+                                         r.getRight() + r.getWidth() * 0.35f, r.getCentreY(), true));
+        g.fillEllipse(r.expanded(r.getWidth() * 0.45f, r.getHeight() * 1.0f));
     }
-    g.setGradientFill(ColourGradient(top, r.getX(), r.getY(), bottom, r.getX(), r.getBottom(), false));
-    g.fillRoundedRectangle(r, 2.5f);
-    if (on) {                            /* the red light in the button */
-        auto lamp = light ? r.reduced(r.getWidth() * 0.32f, r.getHeight() * 0.36f).withY(r.getY() + r.getHeight() * 0.18f) : r.reduced(3.0f, 3.0f);
-        g.setGradientFill(ColourGradient(col::redLed.withAlpha(0.5f), lamp.getCentreX(), lamp.getCentreY(), Colours::transparentBlack,
-                                         lamp.getCentreX() + lamp.getWidth(), lamp.getCentreY(), true));
-        g.fillRect(lamp.expanded(lamp.getWidth() * 0.6f, lamp.getHeight() * 0.9f));
-        g.setGradientFill(ColourGradient(Colour(0xffff6a4a), lamp.getCentreX(), lamp.getY(), Colour(0xffd81c10), lamp.getCentreX(),
-                                         lamp.getBottom(), false));
-        g.fillRoundedRectangle(lamp, 1.5f);
-    }
+    g.setColour(Colours::black.withAlpha(0.7f));
+    g.fillRoundedRectangle(r.translated(0.8f, 2.0f).expanded(0.5f), 3.5f);
+    g.setColour(Colour(0xff050505));     /* the black rim */
+    g.fillRoundedRectangle(r, 3.5f);
+    auto face = r.reduced(1.6f).translated(0.0f, down ? 0.8f : 0.0f);
+    if (on) {
+        ColourGradient lit(Colour(0xffffb45a), face.getCentreX(), face.getCentreY(), Colour(0xffe2230c), face.getRight(), face.getBottom(), true);
+        lit.addColour(0.45, Colour(0xffff6a26));
+        g.setGradientFill(lit);
+    } else
+        g.setGradientFill(ColourGradient(Colour(0xff2b2c2f), face.getX(), face.getY(), Colour(0xff111113), face.getX(), face.getBottom(), false));
+    g.fillRoundedRectangle(face, 2.5f);
+    g.setColour(Colours::white.withAlpha(on ? 0.25f : 0.10f));
+    g.drawLine(face.getX() + 2.5f, face.getY() + 0.8f, face.getRight() - 2.5f, face.getY() + 0.8f, 1.0f);
     if (over && !down) {
-        g.setColour(Colours::white.withAlpha(0.06f));
-        g.fillRoundedRectangle(r, 2.5f);
+        g.setColour(Colours::white.withAlpha(0.05f));
+        g.fillRoundedRectangle(face, 2.5f);
     }
-    g.setColour(Colours::white.withAlpha(light ? 0.5f : 0.12f));
-    g.drawLine(r.getX() + 2.0f, r.getY() + 0.8f, r.getRight() - 2.0f, r.getY() + 0.8f, 1.0f);
-    g.setColour(Colours::black.withAlpha(0.9f));
-    g.drawRoundedRectangle(r, 2.5f, 1.0f);
+}
+
+/* a light grey program key, seen from a little in front: its top, its front edge below, a round red LED */
+void drawKeycap(juce::Graphics &g, juce::Rectangle<float> r, bool led, bool hasLed, bool down, bool over)
+{
+    using namespace juce;
+    g.setColour(Colours::black.withAlpha(0.65f));
+    g.fillRoundedRectangle(r.translated(1.0f, 3.0f), 3.0f);
+    float front = r.getHeight() * (down ? 0.12f : 0.22f);
+    auto top = r.withTrimmedBottom(front).translated(0.0f, down ? r.getHeight() * 0.08f : 0.0f);
+    auto edge = r.withTop(r.getBottom() - front - 3.0f);
+    g.setGradientFill(ColourGradient(Colour(0xff8c8c89), edge.getX(), edge.getY(), Colour(0xff6c6c69), edge.getX(), edge.getBottom(), false));
+    g.fillRoundedRectangle(edge, 2.5f);
+    g.setGradientFill(ColourGradient(Colour(0xffc9c9c5), top.getX(), top.getY(), Colour(0xffaeaeaa), top.getX(), top.getBottom(), false));
+    g.fillRoundedRectangle(top, 2.5f);
+    g.setColour(Colours::white.withAlpha(0.45f));
+    g.drawLine(top.getX() + 2.0f, top.getY() + 0.8f, top.getRight() - 2.0f, top.getY() + 0.8f, 1.0f);
+    g.setColour(Colours::black.withAlpha(0.35f));
+    g.drawRoundedRectangle(r.withTop(top.getY()), 2.5f, 1.0f);
+    if (over && !down) {
+        g.setColour(Colours::white.withAlpha(0.08f));
+        g.fillRoundedRectangle(top, 2.5f);
+    }
+    if (hasLed) {
+        auto c = Point<float>(top.getCentreX(), top.getY() + top.getHeight() * 0.34f);
+        float lr = jmin(top.getWidth(), top.getHeight()) * 0.11f;
+        if (led) {
+            g.setGradientFill(ColourGradient(Colour(0xffff2a10).withAlpha(0.6f), c.x, c.y, Colours::transparentBlack, c.x + lr * 3.5f, c.y, true));
+            g.fillEllipse(Rectangle<float>(lr * 7.0f, lr * 7.0f).withCentre(c));
+        }
+        g.setColour(Colour(0xff3c3c3a));
+        g.fillEllipse(Rectangle<float>(lr * 2.6f, lr * 2.6f).withCentre(c));
+        g.setGradientFill(ColourGradient(led ? Colour(0xffffa070) : Colour(0xff7a1a12), c.x - lr * 0.3f, c.y - lr * 0.3f,
+                                         led ? Colour(0xffe8200c) : Colour(0xff3e0c08), c.x + lr, c.y + lr, true));
+        g.fillEllipse(Rectangle<float>(lr * 2.0f, lr * 2.0f).withCentre(c));
+    }
 }
 
 void drawLegend(juce::Graphics &g, const juce::String &t, juce::Rectangle<float> r, float size, juce::Justification j)
 {
     g.setColour(col::legend);
-    g.setFont(font(Face::label, size).withExtraKerningFactor(0.01f));
+    g.setFont(font(Face::title, size).withExtraKerningFactor(0.01f));
     g.drawFittedText(t, r.reduced(2.0f, 0.0f).toNearestInt(), j, 2, 0.7f);
 }
 
@@ -379,7 +434,7 @@ void drawSeg14Text(juce::Graphics &g, juce::Rectangle<float> r, const juce::Stri
                 g.setColour(col::segOn.withAlpha(0.25f));
                 g.strokePath(segs[s], PathStrokeType(t * 0.8f, PathStrokeType::mitered, PathStrokeType::rounded));
             }
-            g.setColour(lit ? col::segOn : col::segOff);
+            g.setColour(lit ? col::segOn : col::segOff.withAlpha(0.55f));
             g.fillPath(segs[s]);
         }
         auto dp = Rectangle<float>(t, t).withCentre({x + w + t * 0.7f, y + h - t * 0.5f});

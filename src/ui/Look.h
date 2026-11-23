@@ -11,7 +11,7 @@ namespace p67
 {
 namespace col
 {
-const juce::Colour panelTop{0xff3a3b3e}, panelBottom{0xff2c2d30}, frame{0xffd8d7d2}, legend{0xfff1f0ea},
+const juce::Colour panelTop{0xff252629}, panelBottom{0xff1c1d1f}, frame{0xffd8d7d2}, legend{0xfff1f0ea},
     dim{0xffa9a9a4}, redLed{0xffff2d1c}, ledOff{0xff4a1612}, segOn{0xffff2a18}, segOff{0xff3a0d0a},
     buttonTop{0xff2a2b2e}, buttonBottom{0xff121315}, progButton{0xffc3c3be};
 }
@@ -34,6 +34,7 @@ void drawLed(juce::Graphics &, juce::Point<float> c, float r, float level);
 /* a small Prophet button: dark, its face lit red when on (light: the grey program buttons) */
 void drawButton(juce::Graphics &, juce::Rectangle<float> r, bool on, bool down, bool over, bool light = false);
 /* a red seven-segment display: its window, then n characters of text (what seven segments can show) */
+void drawKeycap(juce::Graphics &, juce::Rectangle<float> r, bool led, bool hasLed, bool down, bool over);
 void drawSegWindow(juce::Graphics &, juce::Rectangle<float> r);
 void drawSegText(juce::Graphics &, juce::Rectangle<float> r, const juce::String &text, int n);
 /* the same with fourteen segments (letters that read) */
