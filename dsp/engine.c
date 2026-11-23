@@ -27,7 +27,7 @@ static struct {
     float o1_semi, o2_semi, o1_shape, o2_shape, o1_pw, o2_pw;
     float mix1, mix2, sub, noise;
     uint8_t o2_mode;
-    float cut_oct, res_k, env_oct, hp_oct, hp_k, keytrk, fvel, hp_env_oct;
+    float cut_oct, res_k, env_oct, hp_oct, hp_k, keytrk, fvel, hp_env_oct, hp_keytrk, hp_fvel;
     float fs, as;                        /* sustain levels */
     float lfo_hz[2], lfo_amt[2];
     uint8_t lfo_shape[2], lfo_dest[2], lfo_sync[2], lfo_retrig[2];
@@ -178,6 +178,10 @@ static float env_seconds(int v) { return 0.001f * fm_exp2f((float)v * (14.2877f 
 static float cutoff_oct(float v) { return 4.321928f + v * (9.965784f / 255.0f); }   /* log2: 20 Hz .. 20 kHz, 0..255 */
 static float sq_sign(float x) { return x * fm_fabsf(x); }
 
+#ifdef P67_PLUGIN
+static int hp_extra_set;
+static float hp_extra_vel, hp_extra_kt;
+#endif
 void eng_patch(const uint8_t *p)
 {
     int i;
@@ -201,6 +205,13 @@ void eng_patch(const uint8_t *p)
     P.hp_k = 2.0f - 1.85f * u7(p[P_HP_RESO]);
     P.keytrk = p[P_KEYTRK] == KT_FULL ? 1.0f : p[P_KEYTRK] == KT_HALF ? 0.5f : 0.0f;
     P.fvel = u7(p[P_FVEL]);
+#ifdef P67_PLUGIN
+    P.hp_keytrk = hp_extra_set ? hp_extra_kt : P.keytrk;   /* the plugin's HIGH-PASS VELOCITY and KEYBOARD (else as the LP's) */
+    P.hp_fvel = hp_extra_set ? hp_extra_vel : P.fvel;
+#else
+    P.hp_keytrk = P.keytrk;
+    P.hp_fvel = P.fvel;
+#endif
     P.hp_env_oct = sq_sign(bip(p[P_HP_ENV])) * 7.0f;
     P.fs = u7(p[P_FS]);
     P.as = u7(p[P_AS]);
@@ -714,9 +725,9 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
             /* the filters this chunk */
             vel_f = 1.0f - P.fvel + P.fvel * v->vel;
             famt = blk_env[c] * vel_f;
-            hamt = P.hp_env_oct * vel_f;
+            hamt = P.hp_env_oct * (1.0f - P.hp_fvel + P.hp_fvel * v->vel);
             cut = blk_cut[c] + v->ccut + v->ncut + famt * fen + P.keytrk * (p - 60.0f) * (1.0f / 12.0f);
-            hp = blk_hp[c] + hamt * fen + P.keytrk * (p - 60.0f) * (1.0f / 12.0f);
+            hp = blk_hp[c] + hamt * fen + P.hp_keytrk * (p - 60.0f) * (1.0f / 12.0f);
             if (P.pm_dfilt == PMF_LPF || P.pm_dfilt == PMF_BOTH)
                 cut += pmfe * fen * 7.0f;
             if (P.pm_dfilt == PMF_HPF || P.pm_dfilt == PMF_BOTH)
@@ -1186,6 +1197,14 @@ void eng_panic(void) { ev_put(EV_PANIC, 0, 0, 0.0f); }
 void eng_bend(float v) { bend_v = v; }
 void eng_mod(float v) { mod_v = v; }
 void eng_cutoff_cc(int v) { cc_cut = v; }
+#ifdef P67_PLUGIN
+void eng_hp_extra(int vel, int keytrk)   /* (taken at the next patch) */
+{
+    hp_extra_set = 1;
+    hp_extra_vel = (float)vel * (1.0f / 127.0f);
+    hp_extra_kt = keytrk == KT_FULL ? 1.0f : keytrk == KT_HALF ? 0.5f : 0.0f;
+}
+#endif
 void eng_duck(int on) { duck_on = (uint8_t)(on != 0); }
 int eng_ducked(void) { return duck_g < 0.001f; }
 

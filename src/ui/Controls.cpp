@@ -36,8 +36,44 @@ void Knob::paint(juce::Graphics &g)
     auto r = getLocalBounds().toFloat();
     auto lg = legend.isEmpty() ? juce::Rectangle<float>() : r.removeFromBottom(LEGEND_H * (legend.contains("\n") ? 2.0f : 1.0f));
     float d = juce::jmin(r.getWidth(), r.getHeight());
-    auto k = r.withSizeKeepingCentre(d, d).toNearestInt();
     auto rp = getRotaryParameters();
+    if ((bool)getProperties()["shapes"]) {   /* the waves around it: triangle at the left, saw at the top, pulse at the right */
+        using namespace juce;
+        auto c = r.getCentre();
+        float R = d * 0.5f, w = 7.5f, h = 4.5f;
+        auto wave = [&](Point<float> at, int kind) {
+            Path p;
+            float x0 = at.x - w, y0 = at.y;   /* (a wave 2w wide, centred on at) */
+            if (kind == 0) {
+                p.startNewSubPath(x0, y0 + h * 0.5f);
+                for (int i = 0; i < 3; i++)
+                    p.lineTo(x0 + w * (0.33f + 0.66f * (float)i), y0 + (i % 2 ? h : -h));
+                p.lineTo(x0 + w * 2.0f, y0);
+            } else if (kind == 1) {
+                p.startNewSubPath(x0, y0 + h);
+                p.lineTo(x0 + w * 0.8f, y0 - h);
+                p.lineTo(x0 + w * 0.8f, y0 + h);
+                p.lineTo(x0 + w * 1.6f, y0 - h);
+                p.lineTo(x0 + w * 1.6f, y0 + h);
+            } else {
+                p.startNewSubPath(x0, y0 + h);
+                p.lineTo(x0 + w * 0.5f, y0 + h);
+                p.lineTo(x0 + w * 0.5f, y0 - h);
+                p.lineTo(x0 + w * 1.1f, y0 - h);
+                p.lineTo(x0 + w * 1.1f, y0 + h);
+                p.lineTo(x0 + w * 1.6f, y0 + h);
+                p.lineTo(x0 + w * 1.6f, y0 - h);
+                p.lineTo(x0 + w * 2.0f, y0 - h);
+            }
+            g.setColour(col::legend);
+            g.strokePath(p, PathStrokeType(1.2f, PathStrokeType::mitered, PathStrokeType::square));
+        };
+        wave(c.getPointOnCircumference(R * 0.92f, 4.40f), 0);
+        wave(c.getPointOnCircumference(R * 0.86f, 0.0f), 1);
+        wave(c.getPointOnCircumference(R * 0.92f, 1.88f), 2);
+        d *= 0.74f;
+    }
+    auto k = r.withSizeKeepingCentre(d, d).toNearestInt();
     getLookAndFeel().drawRotarySlider(g, k.getX(), k.getY(), k.getWidth(), k.getHeight(),
                                       (float)valueToProportionOfLength(getValue()), rp.startAngleRadians,
                                       rp.endAngleRadians, *this);

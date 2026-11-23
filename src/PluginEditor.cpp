@@ -409,6 +409,32 @@ void Prophet67Panel::build()
     auto BR = [&](juce::String id, const char *leg, p67::Button::IsOn on, p67::Button::Next next) {
         return Item{BW, [=, &s](int x, int y) { add(new p67::Button(s, id, leg, this, on, next), {x, y + 48, BW, 54}); }};
     };
+    /* VELOCITY as the P6's button: lit when it acts; off keeps the amount for when it comes back on */
+    auto VEL = [&](juce::String id) {
+        auto mem = std::make_shared<int>(100);
+        return BR(id, "VELOCITY", [](int v) { return v > 0; }, [mem](int v) {
+            if (v > 0) {
+                *mem = v;
+                return 0;
+            }
+            return *mem;
+        });
+    };
+    /* KEYBOARD as the P6's: a button stepping OFF, HALF, FULL, its LEDs above */
+    auto KB = [&](juce::String id) {
+        return Item{BW + 6, [=, &s](int x, int y) {
+                        auto *b = new p67::Button(s, id, "KEYBOARD", this, [](int) { return false; }, [](int v) { return (v + 1) % NKT; });
+                        b->leds = {"Half", "Full"};
+                        add(b, {x, y + 34, BW + 6, 70});
+                    }};
+    };
+    auto SHAPE = [&](int i) {   /* with the waves around it: triangle, saw, pulse */
+        return Item{80, [=, &s](int x, int y) {
+                        auto *k = new Knob(s, P(i), "SHAPE", this);
+                        k->getProperties().set("shapes", true);
+                        add(k, {x, y + 18, 80, 84});
+                    }};
+    };
 
     /* OSC 2's mode as the P6's buttons: SYNC (osc 1 to osc 2), LOW FREQ, and KEYBOARD (LOW FREQ following the keys) */
     auto isSync = [](int v) { return v == O2M_SYNC; };
@@ -431,7 +457,7 @@ void Prophet67Panel::build()
         return Item{w, [=, &s](int x, int y) { add(new Knob(s, P(i), leg, this), {x, y + 22, w, 80}); }};
     };
 
-    const int ENV_W = 340;               /* both envelopes: the same width, their knobs one above the other */
+    const int ENV_W = 306;               /* both envelopes: the same width, their knobs one above the other */
 
     /* ---- row 1: MASTER VOL, EFFECTS, CLOCK, ARPEGGIATOR, VINTAGE & VOICE SPREAD, DISTORT ---- */
     row(22, {
@@ -487,11 +513,11 @@ void Prophet67Panel::build()
                         L(P(P_AT_DEST), {"Off", "Filter", "Swell", "Power", "Vibrato", "LFO 1", "Pitch", "Poly Mod"}, 66, 10.0f)}},
     });
 
-    /* ---- row 3: OSCILLATOR 1, OSCILLATOR 2, LOW SPLIT, AMPLIFIER ENVELOPE ---- */
+    /* ---- row 3: OSCILLATOR 1, OSCILLATOR 2, LOW SPLIT, FILTER ENVELOPE ---- */
     row(274, {
-        {"OSCILLATOR 1", {K(P_O1_FREQ, "FREQUENCY"), BR(P(P_O2_MODE), "SYNC", isSync, sync), K(P_O1_SHAPE, "SHAPE"),
+        {"OSCILLATOR 1", {K(P_O1_FREQ, "FREQUENCY"), BR(P(P_O2_MODE), "SYNC", isSync, sync), SHAPE(P_O1_SHAPE),
                           K(P_O1_PW, "PULSE WIDTH")}},
-        {"OSCILLATOR 2", {K(P_O2_FREQ, "FREQUENCY"), K(P_O2_FINE, "FINE"), K(P_O2_SHAPE, "SHAPE"), K(P_O2_PW, "PULSE WIDTH"),
+        {"OSCILLATOR 2", {K(P_O2_FREQ, "FREQUENCY"), K(P_O2_FINE, "FINE"), SHAPE(P_O2_SHAPE), K(P_O2_PW, "PULSE WIDTH"),
                           Item{BW + 6, [&](int x, int y) {   /* LOW FREQ above KEYBOARD */
                               add(new p67::Button(s, P(P_O2_MODE), "LOW FREQ", this, isLow, low), {x, y + 16, BW + 6, 48});
                               add(new p67::Button(s, P(P_O2_MODE), "KEYBOARD", this, isKeyb, keyb), {x, y + 64, BW + 6, 48});
@@ -503,17 +529,15 @@ void Prophet67Panel::build()
                            k->getProperties().set("bipolar", true);
                            add(k, {x, y + 22, KW, 80});
                        }}}},
-        {"AMPLIFIER ENVELOPE", {K(P_AVEL, "VELOCITY"), K(P_AA, "ATTACK"), K(P_AD, "DECAY"), K(P_AS, "SUSTAIN"), K(P_AR, "RELEASE")}, ENV_W},
+        {"FILTER ENVELOPE", {Item{BW, [](int, int) {}}, K(P_FA, "ATTACK"), K(P_FD, "DECAY"), K(P_FS, "SUSTAIN"), K(P_FR, "RELEASE")}, ENV_W},
     });
 
-    /* ---- row 4: MIXER, LOW-PASS FILTER, HIGH-PASS FILTER, FILTER ENVELOPE ---- */
+    /* ---- row 4: MIXER, LOW-PASS FILTER, HIGH-PASS FILTER, AMPLIFIER ENVELOPE ---- */
     row(400, {
         {"MIXER", {K(P_MIX_O1, "OSC 1"), K(P_MIX_O2, "OSC 2"), K(P_O1_SUB, "SUB OCTAVE"), K(P_NOISE, "NOISE")}},
-        {"LOW-PASS FILTER", {K(P_CUTOFF, "CUTOFF"), K(P_RESO, "RESONANCE"), K(P_ENV_AMT, "ENV AMOUNT"),
-                             BR(P(P_KEYTRK), "KEYBOARD", [](int) { return false; }, [](int v) { return (v + 1) % NKT; }),
-                             L(P(P_KEYTRK), {"Off", "Half", "Full"}, 44)}},
-        {"HIGH-PASS FILTER", {K(P_HPF, "CUTOFF"), K(P_HP_RESO, "RESONANCE"), K(P_HP_ENV, "ENV AMOUNT")}},
-        {"FILTER ENVELOPE", {K(P_FVEL, "VELOCITY"), K(P_FA, "ATTACK"), K(P_FD, "DECAY"), K(P_FS, "SUSTAIN"), K(P_FR, "RELEASE")}, ENV_W},
+        {"LOW-PASS FILTER", {K(P_CUTOFF, "CUTOFF"), K(P_RESO, "RESONANCE"), K(P_ENV_AMT, "ENV AMOUNT"), VEL(P(P_FVEL)), KB(P(P_KEYTRK))}},
+        {"HIGH-PASS FILTER", {K(P_HPF, "CUTOFF"), K(P_HP_RESO, "RESONANCE"), K(P_HP_ENV, "ENV AMOUNT"), VEL("hp_vel"), KB("hp_keytrk")}},
+        {"AMPLIFIER ENVELOPE", {VEL(P(P_AVEL)), K(P_AA, "ATTACK"), K(P_AD, "DECAY"), K(P_AS, "SUSTAIN"), K(P_AR, "RELEASE")}, ENV_W},
     });
 
     /* ---- the program strip ---- */

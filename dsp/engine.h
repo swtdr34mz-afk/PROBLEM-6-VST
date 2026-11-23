@@ -99,6 +99,9 @@ void eng_sustain(int on);               /* the pedal */
 void eng_bend(float v);                 /* -1..1 (the patch's BEND range) */
 void eng_mod(float v);                  /* the mod wheel 0..1: more LFO */
 void eng_cutoff_cc(int v);              /* MIDI CC 74 (-1: the patch's own) */
+#ifdef P67_PLUGIN
+void eng_hp_extra(int vel, int keytrk); /* the plugin's own HIGH-PASS VELOCITY (0..127) and KEYBOARD (KT_*), at the next patch */
+#endif
 void eng_all_off(void);                 /* every note let go */
 void eng_panic(void);                   /* silence at once */
 void eng_overload(void);                /* the render ran late: let the quietest voice go now */

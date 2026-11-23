@@ -81,6 +81,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout Prophet67Processor::createLa
     juce::StringArray keys;
     for (int i = 0; i < 12; i++)
         keys.add(NOTE[i]);
+    /* HIGH-PASS VELOCITY and KEYBOARD: the plugin's own (on the FM-1, the high-pass follows the low-pass's) */
+    integer("hp_vel", "HIGH-PASS VELOCITY", 0, 127, FACTORY[0].p[P_FVEL], num);
+    choice("hp_keytrk", "HIGH-PASS KEYBOARD", {"OFF", "HALF", "FULL"}, FACTORY[0].p[P_KEYTRK]);
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"arp_on", 1}, "ARP ON", false));
     choice("arp_mode", "ARP MODE", {"UP", "DOWN", "UP-DN", "RANDOM", "PLAYED"}, 0);
     choice("arp_rate", "ARP RATE", rates, 2);
@@ -131,6 +134,8 @@ void Prophet67Processor::loadUserPresets()
             u.name = xml->getStringAttribute("name", f.getFileNameWithoutExtension());
             for (int i = 0; i < NPARAM; i++)   /* (a parameter the file lacks: the INIT program's) */
                 u.p[i] = (uint8_t)juce::jlimit(0, (int)PARAMS[i].max, xml->getIntAttribute("p" + juce::String(i), FACTORY[NPRESETS - 1].p[i]));
+            u.hpVel = juce::jlimit(0, 127, xml->getIntAttribute("hp_vel", u.p[P_FVEL]));
+            u.hpKt = juce::jlimit(0, 2, xml->getIntAttribute("hp_keytrk", u.p[P_KEYTRK]));
             userPresets.push_back(u);
         }
 }
@@ -145,6 +150,8 @@ int Prophet67Processor::writePreset(const juce::String &name)
     xml.setAttribute("version", 1);
     for (int i = 0; i < NPARAM; i++)
         xml.setAttribute("p" + juce::String(i), (int)std::lround(apvts.getRawParameterValue(paramId(i))->load()));
+    xml.setAttribute("hp_vel", (int)std::lround(apvts.getRawParameterValue("hp_vel")->load()));
+    xml.setAttribute("hp_keytrk", (int)std::lround(apvts.getRawParameterValue("hp_keytrk")->load()));
     auto folder = presetFolder();
     folder.createDirectory();
     auto file = folder.getChildFile(juce::File::createLegalFileName(clean) + ".p67");
@@ -180,6 +187,7 @@ void Prophet67Processor::prepareToPlay(double sampleRate, int)
     uiMidi.reset(sampleRate);
     engine.prepare(sampleRate);
     patched = false;
+    hpVelSent = hpKtSent = -1;
     arpSent = false;
     for (int i = 0; i < 128; i++) {
         mapped[i] = -1;
@@ -197,6 +205,15 @@ void Prophet67Processor::setCurrentProgram(int index)
     for (int i = 0; i < NPARAM; i++)
         if (auto *p = apvts.getParameter(paramId(i)))
             p->setValueNotifyingHost(p->convertTo0to1((float)d[i]));
+    int hv = d[P_FVEL], hk = d[P_KEYTRK];      /* the high-pass's: a program of your own keeps them, else as the low-pass's */
+    if (index >= NPRESETS) {
+        hv = userPresets[(size_t)(index - NPRESETS)].hpVel;
+        hk = userPresets[(size_t)(index - NPRESETS)].hpKt;
+    }
+    if (auto *p = apvts.getParameter("hp_vel"))
+        p->setValueNotifyingHost(p->convertTo0to1((float)hv));
+    if (auto *p = apvts.getParameter("hp_keytrk"))
+        p->setValueNotifyingHost(p->convertTo0to1((float)hk));
 }
 
 const juce::String Prophet67Processor::getProgramName(int index)
@@ -377,6 +394,13 @@ void Prophet67Processor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
             change |= p[i] != sent[i];
         }
         dlSynced.store(p[P_DL_SYNC] != 0);
+        int hv = (int)(apvts.getRawParameterValue("hp_vel")->load() + 0.5f), hk = (int)(apvts.getRawParameterValue("hp_keytrk")->load() + 0.5f);
+        if (hv != hpVelSent || hk != hpKtSent) {
+            engine.hpExtra(hv, hk);
+            hpVelSent = hv;
+            hpKtSent = hk;
+            change = true;
+        }
         if (change) {
             engine.patch(p);
             std::memcpy(sent, p, sizeof sent);

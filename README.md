@@ -56,6 +56,8 @@ Läuft auf Apple Silicon und Intel (macOS 10.13 und neuer), Windows 10/11 64-bit
   the factory programs (016, 017, …; TENS SELECT, the keys and the name display's menu reach them). They are files in
   `Documents/PROPHET 67/Presets` (one `.p67` each), shared by every project and the standalone app; the same name
   again replaces one, and deleting a file there removes it.
+- **HIGH-PASS VELOCITY and KEYBOARD** are the plugin's own (two more host parameters): on the FM-1 the high-pass
+  follows the low-pass's. A factory program sets them as its low-pass's, so it sounds as on the FM-1; WRITE keeps them.
 - **Plugin settings** (also automatable): ARP (on, MODE, RATE, OCTAVES, GATE, HOLD), SWING, LOW SPLIT (SPLIT, POINT,
   SCALE L, SCALE R, KEY, FOLLOW, LOW HOLD, BALANCE) and VOLUME.
 - **The host's tempo** drives the arp, the synced LFOs and the synced delay; while the host plays, they lock to its
