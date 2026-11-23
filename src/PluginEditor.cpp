@@ -352,7 +352,7 @@ void Prophet67Panel::build()
         return Item{w, [=, &s](int x, int y) { add(new Knob(s, P(i), leg, this), {x, y + 22, w, 80}); }};
     };
 
-    /* ---- row 1: MASTER VOL, EFFECTS, ARPEGGIATOR, CLOCK, VINTAGE / SPREAD, DISTORT ---- */
+    /* ---- row 1: MASTER VOL, EFFECTS, CLOCK, ARPEGGIATOR, VINTAGE & VOICE SPREAD, DISTORT ---- */
     row(22, {
         {nullptr, {Item{60, [&](int x, int y) { add(new Knob(s, "volume", "MASTER VOL", this), {x, y + 22, 60, 80}); }}}},
         {"EFFECTS", {Item{106, [&](int x, int y) { add(new FxSelect(*this), {x, y + 22, 106, 82}); }},
@@ -370,14 +370,14 @@ void Prophet67Panel::build()
                                       }
                           }},
                      Item{BW, [&](int x, int y) { fxControls.push_back({add(new p67::Button(s, P(P_DL_SYNC), "SYNC", this), {x, y + 48, BW, 54}), 3}); }}}},
-        {"ARPEGGIATOR", {B("arp_on", "ON/OFF"), GK("arp_rate", "VALUE"), L("arp_rate", {"1/8", "1/8 T", "1/16", "1/16 T", "1/32"}, 46),
-                         GK("arp_oct", "OCTAVES"), L("arp_oct", {"1", "2", "3", "4"}, 26), GK("arp_mode", "MODE"),
-                         L("arp_mode", {"Up", "Down", "Up/Down", "Random", "Played"}, 58), GK("arp_gate", "GATE")}},
         {"CLOCK", {Item{96, [&](int x, int y) {
                        bpmDisplay = add(new SegDisplay(3, [this] { return juce::String(juce::roundToInt(proc.hostBpm.load())); }),
                                         {x + 6, y + 34, 84, 44});
                    }},
                    GK("swing", "SWING")}},
+        {"ARPEGGIATOR", {B("arp_on", "ON/OFF"), GK("arp_rate", "VALUE"), L("arp_rate", {"1/8", "1/8 T", "1/16", "1/16 T", "1/32"}, 46),
+                         GK("arp_oct", "OCTAVES"), L("arp_oct", {"1", "2", "3", "4"}, 26), GK("arp_mode", "MODE"),
+                         L("arp_mode", {"Up", "Down", "Up/Down", "Random", "Played"}, 58), GK("arp_gate", "GATE")}},
         {"VINTAGE & VOICE SPREAD", {wideKnob(P_VINTAGE, "VINTAGE", 64), wideKnob(P_SPREAD, "VOICE SPREAD", 72)}},
         {"DISTORT", {K(P_DIST, "AMOUNT")}},
     });
@@ -406,14 +406,14 @@ void Prophet67Panel::build()
                         L(P(P_AT_DEST), {"Off", "Filter", "Swell", "Power", "Vibrato", "LFO 1", "Pitch", "Poly Mod"}, 66, 10.0f)}},
     });
 
-    /* ---- row 3: OSCILLATOR 1, OSCILLATOR 2, HIGH-PASS FILTER, LOW SPLIT ---- */
+    /* ---- row 3: OSCILLATOR 1, OSCILLATOR 2, AMPLIFIER ENVELOPE, LOW SPLIT ---- */
     row(274, {
         {"OSCILLATOR 1", {K(P_O1_FREQ, "FREQUENCY"), BR(P(P_O2_MODE), "SYNC", isSync, sync), K(P_O1_SHAPE, "SHAPE"),
                           K(P_O1_PW, "PULSE WIDTH")}},
         {"OSCILLATOR 2", {K(P_O2_FREQ, "FREQUENCY"), K(P_O2_FINE, "FINE"), K(P_O2_SHAPE, "SHAPE"), K(P_O2_PW, "PULSE WIDTH"),
                           BR(P(P_O2_MODE), "LOW FREQ", isLow, low), BR(P(P_O2_MODE), "KEYBOARD", isKeyb, keyb)}},
-        {"HIGH-PASS FILTER", {K(P_HPF, "CUTOFF"), K(P_HP_RESO, "RESONANCE"), K(P_HP_ENV, "ENV AMOUNT")}},
-        {"LOW SPLIT", {GK("split", "SPLIT"), L("split", {"Off", "-1 Oct", "-2 Oct", "-3 Oct"}, 52), GK("split_point", "POINT"),
+        {"AMPLIFIER ENVELOPE", {K(P_AVEL, "VELOCITY"), K(P_AA, "ATTACK"), K(P_AD, "DECAY"), K(P_AS, "SUSTAIN"), K(P_AR, "RELEASE")}},
+        {"LOW SPLIT", {GK("split", "SPLIT"), L("split", {"Off", "-1 Oct", "-2 Oct", "-3 Oct"}, 42), GK("split_point", "POINT"),
                        GK("scale_l", "SCALE L"), GK("scale_r", "SCALE R"), GK("key", "KEY"), GK("follow", "FOLLOW"),
                        B("low_hold", "LOW HOLD"), Item{KW, [&](int x, int y) {
                            auto *k = new Knob(s, "balance", "BALANCE", this);
@@ -422,14 +422,14 @@ void Prophet67Panel::build()
                        }}}},
     });
 
-    /* ---- row 4: MIXER, LOW-PASS FILTER, FILTER ENVELOPE, AMPLIFIER ENVELOPE ---- */
+    /* ---- row 4: MIXER, LOW-PASS FILTER, HIGH-PASS FILTER, FILTER ENVELOPE ---- */
     row(400, {
         {"MIXER", {K(P_MIX_O1, "OSC 1"), K(P_MIX_O2, "OSC 2"), K(P_O1_SUB, "SUB OCTAVE"), K(P_NOISE, "NOISE")}},
         {"LOW-PASS FILTER", {K(P_CUTOFF, "CUTOFF"), K(P_RESO, "RESONANCE"), K(P_ENV_AMT, "ENV AMOUNT"), K(P_FVEL, "VELOCITY"),
                              BR(P(P_KEYTRK), "KEYBOARD", [](int) { return false; }, [](int v) { return (v + 1) % NKT; }),
                              L(P(P_KEYTRK), {"Off", "Half", "Full"}, 44)}},
+        {"HIGH-PASS FILTER", {K(P_HPF, "CUTOFF"), K(P_HP_RESO, "RESONANCE"), K(P_HP_ENV, "ENV AMOUNT")}},
         {"FILTER ENVELOPE", {K(P_FA, "ATTACK"), K(P_FD, "DECAY"), K(P_FS, "SUSTAIN"), K(P_FR, "RELEASE")}},
-        {"AMPLIFIER ENVELOPE", {K(P_AVEL, "VELOCITY"), K(P_AA, "ATTACK"), K(P_AD, "DECAY"), K(P_AS, "SUSTAIN"), K(P_AR, "RELEASE")}},
     });
 
     /* ---- the program strip ---- */
