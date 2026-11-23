@@ -31,6 +31,8 @@ static struct {
     float fs, as;                        /* sustain levels */
     float lfo_hz[2], lfo_amt[2];
     uint8_t lfo_shape[2], lfo_dest[2], lfo_sync[2], lfo_retrig[2];
+    uint8_t lfo_noise;                   /* LFO 1 on S+H with FREQUENCY at the top: the Prophet-6's hidden sixth
+                                          * shape, noise (the plugin's) */
     float pm_fenv, pm_osc2;              /* -1..1, squared with their sign */
     uint8_t pm_dosc, pm_dfilt;
     float glide_k, avel, bend;
@@ -135,6 +137,14 @@ static float blk_mod[NBLK / CH][NLD];    /* each destination's LFO, amounts in *
 static float blk_trem[NBLK / CH];        /* AMP: the gain, 0..1 */
 static float blk_l1[NBLK / CH], blk_vib[NBLK / CH];   /* LFO 1 at full amount; AFTERTOUCH's vibrato (5.5 Hz) */
 static float vib_ph;
+/* a fast LFO (LFO 1 above 40 Hz, or its noise): worked out per sample, not per chunk, and through the CV's own
+ * bandwidth (two poles at 1.6 kHz: the DAC's smoothing and the analogue control path into the filter), so an
+ * audio-rate LFO is clean and the noise reaches the cutoff as a smooth, dense wander, not as a raw hiss. What each
+ * destination gets, per sample (blk_ls; blk_ltrem: AMP's gain; blk_l1s: LFO 1 at full amount, for AFTERTOUCH) */
+static uint8_t lfo_fast[2];
+static float lfo_cv[2][2];
+static float blk_ls[NLD][NBLK], blk_ltrem[NBLK], blk_l1s[NBLK];
+static uint32_t blk_lfd;                 /* the destinations a fast LFO reaches (a mask of 1 << LD_*) */
 /* the filter's knobs (and CC 74), as they reach the voices: a knob moves in detents, so each detent's step is spread
  * over 2.5 ms, per chunk; the envelopes, LFOs and poly mod are never smoothed */
 static float blk_cut[NBLK / CH], blk_res[NBLK / CH], blk_env[NBLK / CH], blk_hp[NBLK / CH], blk_hpk[NBLK / CH];
@@ -217,7 +227,16 @@ void eng_patch(const uint8_t *p)
     P.hp_env_oct = sq_sign(bip(p[P_HP_ENV])) * 7.0f;
     P.fs = u7(p[P_FS]);
     P.as = u7(p[P_AS]);
+#ifdef P67_PLUGIN
+    /* LFO 1 as the Prophet-6's, whose digital LFO reaches into the audio range: as before up to 112 (14 Hz), then
+     * steeper, 280 Hz at 126 and 350 Hz at 127; on S+H at 127 it turns to noise (lfo_block) */
+    P.lfo_hz[0] = p[P_LFO_RATE] <= 112 ? 0.05f * fm_exp2f((float)p[P_LFO_RATE] * (9.2288f / 127.0f))
+                                       : 14.09f * fm_exp2f((float)(p[P_LFO_RATE] - 112) * 0.308f);
+    P.lfo_noise = p[P_LFO_SHAPE] == LS_SH && p[P_LFO_RATE] >= 127 && !p[P_L1_SYNC];
+#else
     P.lfo_hz[0] = 0.05f * fm_exp2f((float)p[P_LFO_RATE] * (9.2288f / 127.0f));   /* 0.05 .. 30 Hz */
+    P.lfo_noise = 0;
+#endif
     P.lfo_amt[0] = u7(p[P_LFO_AMT]) * u7(p[P_LFO_AMT]);
     P.lfo_shape[0] = p[P_LFO_SHAPE];
     P.lfo_dest[0] = p[P_LFO_DEST];
@@ -653,8 +672,11 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
             float p, inc1, inc2, sh1, pw1, cut, hp, G, gh, kh, a1, a2, kres, comp, pm_s, pm_p, pm_l, pm_h, pm_f;
             float vel_f, famt, hamt, fen, ug, ig, G4, drv, idrv, dG, dig, dG4, dk, dc, dgh, dkh, da1, da2, ft, fk, at, ak;
             int hp_on, pm_sp;
-            float m1, m2, msub, mnoise;
+            float m1, m2, msub, mnoise, sh2b, pw2b;
             wave_t w1, w2;
+            /* a fast LFO 1 (per sample: blk_ls), and AFTERTOUCH's share of it to its destination */
+            uint32_t lfd = blk_lfd;
+            int at_l1 = P.at_dest == AT_LFO && lfo_fast[0] && P.lfo_dest[0] < NLD && P.lfo_dest[0] != LD_AMP;
             int lowf = P.o2_mode == O2M_LOW || P.o2_mode == O2M_LOWFIX;
             int sync = P.o2_mode == O2M_SYNC;
             int o2_used = (P.mix2 > 0.0f && !lowf) || sync || blk_fm || blk_pms || blk_pmp || blk_pml || blk_pmh;
@@ -795,13 +817,17 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
             pm_p = blk_pmp ? pmo2 * 0.45f : 0.0f;
             pm_l = blk_pml ? pmo2 * 5.0f : 0.0f;
             pm_h = blk_pmh ? pmo2 * 4.0f : 0.0f;
-            wave_set(&w2, P.o2_shape + v->cshape2, P.o2_pw + v->cpw2 + lm[LD_PW] * 0.42f);
+            if (at_l1)
+                lfd |= 1u << P.lfo_dest[0];
+            sh2b = P.o2_shape + v->cshape2;
+            pw2b = P.o2_pw + v->cpw2 + lm[LD_PW] * 0.42f;
+            wave_set(&w2, sh2b, pw2b);
             wave_set(&w1, sh1, pw1);
             drv = v->cdrive * at_drv;
             idrv = 1.0f / drv;
             ug = v->camp * blk_trem[c] * at_amp * v->gain
                  * (1.0f - P.avel + P.avel * v->vel);
-            hp_on = hp > 4.6f || pm_h != 0.0f;
+            hp_on = hp > 4.6f || pm_h != 0.0f || (lfd & (1u << LD_HPF));
             pm_sp = pm_s != 0.0f || pm_p != 0.0f;
             m1 = 0.5f * P.mix1;
             m2 = lowf ? 0.0f : 0.5f * P.mix2;
@@ -810,8 +836,30 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
             env_targets(v, &ft, &fk, &at, &ak);
             for (s = 0; s < CH && c * CH + s < n; s++) {
                 float o1, o2, sub, x, u, S, y1, y2, y3, y4, t, hv1, hv2, hv3, out, rs, ae, stG;
+                float lf1 = 0.0f, lf2 = 0.0f, lpw = 0.0f, llp = 0.0f, lhp = 0.0f, ltr = 1.0f, i2 = inc2;
                 int wr1, wr2;
                 float wd1 = 0.0f, wd2 = 0.0f;
+                k = c * CH + s;
+                if (lfd) {               /* a fast LFO, this sample (its amounts as the chunk's: LFO 1's 12
+                                          * semitones, 0.42 of PW, 4 octaves of LPF, 3 of HPF) */
+                    float l[NLD];
+                    int d;
+                    for (d = 0; d < NLD; d++)
+                        l[d] = (blk_lfd & (1u << d)) ? blk_ls[d][k] : 0.0f;
+                    if (at_l1)
+                        l[P.lfo_dest[0]] += pp * blk_l1s[k];
+                    lf1 = l[LD_FREQ] + l[LD_FREQ1];   /* octaves */
+                    lf2 = l[LD_FREQ] + l[LD_FREQ2];
+                    lpw = l[LD_PW] * 0.42f;
+                    llp = l[LD_LPF] * 4.0f;
+                    lhp = l[LD_HPF] * 3.0f;
+                    if (lfd & (1u << LD_AMP))
+                        ltr = blk_ltrem[k];
+                    if (lf2 != 0.0f)
+                        i2 = fm_minf(inc2 * ex2(lf2), 0.45f);
+                    if (lpw != 0.0f)
+                        wave_set(&w2, sh2b, pw2b + lpw);
+                }
                 G += dG;                 /* the filters' coefficients, a step a sample */
                 ig += dig;
                 G4 += dG4;
@@ -844,17 +892,17 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
                 }
                 /* oscillator 2 first: it is poly mod's source and the sync's master */
                 if (o2_used) {
-                    o2 = osc_tick(&v->o2, &w2, inc2, -1.0f, &wr2, &wd2);
+                    o2 = osc_tick(&v->o2, &w2, i2, -1.0f, &wr2, &wd2);
                 } else {                 /* not heard, not used: it only runs on (free-running, as a VCO) */
                     o2 = 0.0f;
                     wr2 = 0;
-                    v->o2.ph += inc2;
+                    v->o2.ph += i2;
                     if (v->o2.ph >= 1.0f)
                         v->o2.ph -= 1.0f;
                 }
-                if (pm_sp)
-                    wave_set(&w1, sh1 + pm_s * o2, pw1 + pm_p * o2);
-                o1 = osc_tick(&v->o1, &w1, pm_f != 0.0f ? fm_minf(inc1 * ex2(pm_f * o2), 0.45f) : inc1,
+                if (pm_sp || lpw != 0.0f)
+                    wave_set(&w1, sh1 + pm_s * o2, pw1 + pm_p * o2 + lpw);
+                o1 = osc_tick(&v->o1, &w1, pm_f != 0.0f || lf1 != 0.0f ? fm_minf(inc1 * ex2(pm_f * o2 + lf1), 0.45f) : inc1,
                               (sync && wr2) ? wd2 : -1.0f, &wr1, &wd1);
                 if (wr1)
                     v->flip = 1.0f - v->flip;
@@ -866,8 +914,8 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
                 /* the high-pass (2-pole, state variable) */
                 if (hp_on) {             /* (at its bottom, below 24 Hz, it is left out) */
                     float qa1 = a1, qa2 = a2, qg = gh;
-                    if (pm_h != 0.0f) {  /* oscillator 2 moving it: worked out this sample */
-                        qg = tan_w(3.1415927f / SR * fm_clampf(ex2(hp + pm_h * o2), 8.0f, 12000.0f));
+                    if (pm_h != 0.0f || lhp != 0.0f) {   /* oscillator 2 or a fast LFO moving it: this sample */
+                        qg = tan_w(3.1415927f / SR * fm_clampf(ex2(hp + pm_h * o2 + lhp), 8.0f, 12000.0f));
                         qa1 = 1.0f / (1.0f + qg * (qg + kh));
                         qa2 = qg * qa1;
                     }
@@ -881,8 +929,8 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
                 /* the low-pass: four one-poles in a loop, solved without a delay; the input saturates */
                 {
                     float qG = G, qig = ig, qG4 = G4, G2;
-                    if (pm_l != 0.0f) {  /* oscillator 2 moving it: worked out this sample */
-                        float gs = tan_w(3.1415927f / SR * fm_clampf(ex2(cut + pm_l * o2), 12.0f, 17500.0f));
+                    if (pm_l != 0.0f || llp != 0.0f) {   /* oscillator 2 or a fast LFO moving it: this sample */
+                        float gs = tan_w(3.1415927f / SR * fm_clampf(ex2(cut + pm_l * o2 + llp), 12.0f, 17500.0f));
                         qig = 1.0f / (1.0f + gs);
                         qG = gs * qig;
                         qG4 = 1.0f / (1.0f + kres * qG * qG * qG * qG);
@@ -905,9 +953,8 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
                 rs = (y3 - v->s4) * stG;
                 y4 = rs + v->s4;
                 v->s4 = y4 + rs;
-                out = y4 * comp * ae * ug * 0.9f;
+                out = y4 * comp * ae * ug * ltr * 0.9f;
                 /* its place: a pan, and on the far side a fraction of a millisecond late */
-                k = c * CH + s;
                 if (v->hd == 0) {
                     L[k] += out * v->gl;
                     R[k] += out * v->gr;
@@ -980,12 +1027,76 @@ static void lfo_block(uint32_t n)
         }
     }
     lfo_reset = 0;
+    /* the fast ones, per sample */
+    blk_lfd = 0;
+    for (k = 0; k < 2; k++) {
+        int fast = k == 0 && !P.lfo_sync[0] && (P.lfo_noise || P.lfo_hz[0] > 40.0f);
+        uint32_t s;
+        float a, b, ng, inc, *dst;
+        if (!fast) {
+            lfo_fast[k] = 0;
+            continue;
+        }
+        if (!lfo_fast[k])                /* (just turned fast: the CV starts where the LFO is) */
+            lfo_cv[k][0] = lfo_cv[k][1] = lfo_now[k];
+        lfo_fast[k] = 1;
+        a = 1.0f - fm_expf(-6.2831853f * 1600.0f / SR);
+        b = 1.0f - a;
+        /* white noise through the CV's two poles keeps a fraction of its power, a^4 (1 + b^2) / (1 - b^2)^3: made
+         * up, so the noise moves the cutoff as far as a full-scale S+H would (rms 0.58), at any sample rate */
+        ng = 1.0f / fm_sqrtf(a * a * a * a * (1.0f + b * b) / ((1.0f - b * b) * (1.0f - b * b) * (1.0f - b * b)));
+        inc = P.lfo_hz[k] / SR;
+        dst = P.lfo_dest[k] == LD_AMP ? blk_ltrem : blk_ls[P.lfo_dest[k] < NLD ? P.lfo_dest[k] : 0];
+        if (P.lfo_dest[k] == LD_AMP) {
+            if (!(blk_lfd & (1u << LD_AMP)))
+                for (s = 0; s < n; s++)
+                    blk_ltrem[s] = 1.0f;
+            blk_lfd |= 1u << LD_AMP;
+        } else {
+            uint32_t bit = 1u << (P.lfo_dest[k] < NLD ? P.lfo_dest[k] : 0);
+            if (!(blk_lfd & bit))
+                for (s = 0; s < n; s++)
+                    dst[s] = 0.0f;
+            blk_lfd |= bit;
+        }
+        for (s = 0; s < n; s++) {
+            float x, y;
+            if (P.lfo_noise && k == 0) {
+                x = rnd_f(&lfo_seed) * ng;   /* the noise: a new value every sample */
+            } else {
+                float ph = lfo_ph[k] + inc;
+                if (ph >= 1.0f) {
+                    ph -= 1.0f;
+                    lfo_sh[k] = rnd_f(&lfo_seed);
+                }
+                lfo_ph[k] = ph;
+                x = lfo_shape_at(k, ph);
+            }
+            lfo_cv[k][0] += (x - lfo_cv[k][0]) * a;
+            lfo_cv[k][1] += (lfo_cv[k][0] - lfo_cv[k][1]) * a;
+            y = fm_clampf(lfo_cv[k][1], -2.0f, 2.0f);
+            if (k == 0)
+                blk_l1s[s] = y;
+            if (P.lfo_dest[k] == LD_AMP)
+                dst[s] *= 1.0f - amt[k] * fm_clampf(0.5f - 0.5f * y, 0.0f, 1.0f);
+            else
+                dst[s] += amt[k] * y;
+        }
+        lfo_now[k] = fm_clampf(lfo_cv[k][1], -1.0f, 1.0f);
+        lfo_cv[k][0] = flush_dn(lfo_cv[k][0]);
+        lfo_cv[k][1] = flush_dn(lfo_cv[k][1]);
+    }
     for (c = 0; c * CH < n; c++) {
         float *md = blk_mod[c], trem = 1.0f;
         for (d = 0; d < NLD; d++)
             md[d] = 0.0f;
         for (k = 0; k < 2; k++) {
             float ph, v, prev = lfo_ph[k];
+            if (lfo_fast[k]) {           /* (per sample, above) */
+                if (k == 0)
+                    blk_l1[c] = 0.0f;
+                continue;
+            }
             if (P.lfo_sync[k] && P.lfo_sync[k] < NLSY) {
                 float cyc = (float)LSY_TICKS[P.lfo_sync[k]];
                 ph = (pos + (float)(c * CH) / spt) / cyc + lfo_off[k];
