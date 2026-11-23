@@ -52,6 +52,10 @@ Läuft auf Apple Silicon und Intel (macOS 10.13 und neuer), Windows 10/11 64-bit
   shown in the firmware's units, saved with the project.
 - **The 16 factory presets** are the host's programs (and the menu in the editor). A preset sets the sound's
   parameters, as on the FM-1; the plugin settings below stay.
+- **WRITE** (the red key next to 9) keeps the sound as a program of your own: give it a name, and it comes after
+  the factory programs (016, 017, …; TENS SELECT, the keys and the name display's menu reach them). They are files in
+  `Documents/PROPHET 67/Presets` (one `.p67` each), shared by every project and the standalone app; the same name
+  again replaces one, and deleting a file there removes it.
 - **Plugin settings** (also automatable): ARP (on, MODE, RATE, OCTAVES, GATE, HOLD), SWING, LOW SPLIT (SPLIT, POINT,
   SCALE L, SCALE R, KEY, FOLLOW, LOW HOLD, BALANCE) and VOLUME.
 - **The host's tempo** drives the arp, the synced LFOs and the synced delay; while the host plays, they lock to its

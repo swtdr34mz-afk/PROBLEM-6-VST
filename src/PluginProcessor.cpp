@@ -109,6 +109,64 @@ Prophet67Processor::Prophet67Processor()
 {
     for (int i = 0; i < 128; i++)
         mapped[i] = -1;
+    loadUserPresets();
+}
+
+/* ------------------------------------------------------------------------- user presets --- */
+juce::File Prophet67Processor::presetFolder()
+{
+    return juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("PROPHET 67").getChildFile("Presets");
+}
+
+void Prophet67Processor::loadUserPresets()
+{
+    userPresets.clear();
+    auto files = presetFolder().findChildFiles(juce::File::findFiles, false, "*.p67");
+    files.sort();
+    for (auto &f : files)
+        if (auto xml = juce::XmlDocument::parse(f)) {
+            if (!xml->hasTagName("PROPHET67PRESET"))
+                continue;
+            UserPreset u;
+            u.name = xml->getStringAttribute("name", f.getFileNameWithoutExtension());
+            for (int i = 0; i < NPARAM; i++)   /* (a parameter the file lacks: the INIT program's) */
+                u.p[i] = (uint8_t)juce::jlimit(0, (int)PARAMS[i].max, xml->getIntAttribute("p" + juce::String(i), FACTORY[NPRESETS - 1].p[i]));
+            userPresets.push_back(u);
+        }
+}
+
+int Prophet67Processor::writePreset(const juce::String &name)
+{
+    auto clean = name.trim().toUpperCase().substring(0, NAME_LEN - 1);
+    if (clean.isEmpty())
+        return -1;
+    juce::XmlElement xml("PROPHET67PRESET");
+    xml.setAttribute("name", clean);
+    xml.setAttribute("version", 1);
+    for (int i = 0; i < NPARAM; i++)
+        xml.setAttribute("p" + juce::String(i), (int)std::lround(apvts.getRawParameterValue(paramId(i))->load()));
+    auto folder = presetFolder();
+    folder.createDirectory();
+    auto file = folder.getChildFile(juce::File::createLegalFileName(clean) + ".p67");
+    if (!xml.writeTo(file))
+        return -1;
+    loadUserPresets();
+    for (size_t i = 0; i < userPresets.size(); i++)
+        if (userPresets[i].name == clean) {
+            program = NPRESETS + (int)i;
+            updateHostDisplay(ChangeDetails().withProgramChanged(true));
+            return program;
+        }
+    return -1;
+}
+
+const uint8_t *Prophet67Processor::programData(int index) const
+{
+    if (index >= 0 && index < NPRESETS)
+        return FACTORY[index].p;
+    if (index >= NPRESETS && index < NPRESETS + (int)userPresets.size())
+        return userPresets[(size_t)(index - NPRESETS)].p;
+    return nullptr;
 }
 
 bool Prophet67Processor::isBusesLayoutSupported(const BusesLayout &layouts) const
@@ -132,17 +190,22 @@ void Prophet67Processor::prepareToPlay(double sampleRate, int)
 
 void Prophet67Processor::setCurrentProgram(int index)
 {
-    if (index < 0 || index >= NPRESETS)
+    auto *d = programData(index);
+    if (!d)
         return;
     program = index;
     for (int i = 0; i < NPARAM; i++)
         if (auto *p = apvts.getParameter(paramId(i)))
-            p->setValueNotifyingHost(p->convertTo0to1((float)FACTORY[index].p[i]));
+            p->setValueNotifyingHost(p->convertTo0to1((float)d[i]));
 }
 
 const juce::String Prophet67Processor::getProgramName(int index)
 {
-    return index >= 0 && index < NPRESETS ? juce::String(FACTORY[index].name) : juce::String();
+    if (index >= 0 && index < NPRESETS)
+        return FACTORY[index].name;
+    if (index >= NPRESETS && index < NPRESETS + (int)userPresets.size())
+        return userPresets[(size_t)(index - NPRESETS)].name;
+    return {};
 }
 
 void Prophet67Processor::readGlobals()

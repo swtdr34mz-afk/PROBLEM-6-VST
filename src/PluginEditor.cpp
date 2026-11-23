@@ -231,6 +231,83 @@ private:
     bool down = false;
 };
 
+/* WRITE: the red key; asks a name, keeps the sound as a program of your own */
+class WriteKey : public juce::Component
+{
+public:
+    explicit WriteKey(Prophet67Panel &p) : panel(p) { setRepaintsOnMouseActivity(true); }
+    void paint(juce::Graphics &g) override
+    {
+        using namespace juce;
+        auto r = getLocalBounds().toFloat();
+        auto lg = r.removeFromBottom(14.0f);
+        auto key = r.withSizeKeepingCentre(44.0f, r.getHeight() - 6.0f).translated(0.0f, down ? 1.2f : 0.0f);
+        g.setColour(Colour(0xff050505));
+        g.fillRoundedRectangle(key.expanded(2.5f), 3.5f);
+        float split = key.getY() + key.getHeight() * 0.64f;
+        g.setGradientFill(ColourGradient(Colour(0xffb81d12), key.getX(), split, Colour(0xff8e140c), key.getX(), key.getBottom(), false));
+        g.fillRoundedRectangle(key.withTop(split - 3.0f), 2.0f);
+        g.setGradientFill(ColourGradient(Colour(0xffe8392a), key.getX(), key.getY(), Colour(0xffcc2a1c), key.getX(), split, false));
+        g.fillRoundedRectangle(key.withBottom(split), 2.0f);
+        g.setColour(Colours::white.withAlpha(0.35f));
+        g.drawLine(key.getX() + 1.5f, split, key.getRight() - 1.5f, split, 1.0f);
+        g.drawLine(key.getX() + 2.0f, key.getY() + 0.8f, key.getRight() - 2.0f, key.getY() + 0.8f, 1.0f);
+        auto c = Point<float>(key.getCentreX(), key.getY() + (split - key.getY()) * 0.42f);
+        g.setColour(Colour(0xff5a0c07));
+        g.fillEllipse(Rectangle<float>(11.0f, 11.0f).withCentre(c));
+        g.setColour(Colour(0xff9a1a10));
+        g.fillEllipse(Rectangle<float>(8.0f, 8.0f).withCentre(c));
+        if (isMouseOver() && !down) {
+            g.setColour(Colours::white.withAlpha(0.07f));
+            g.fillRoundedRectangle(key, 2.0f);
+        }
+        drawLegend(g, "WRITE", lg);
+    }
+    void mouseDown(const juce::MouseEvent &) override
+    {
+        down = true;
+        repaint();
+    }
+    void mouseUp(const juce::MouseEvent &e) override
+    {
+        down = false;
+        repaint();
+        if (getLocalBounds().contains(e.getPosition()))
+            ask();
+    }
+
+private:
+    void ask()
+    {
+        auto *w = new juce::AlertWindow("WRITE PROGRAM", "Keep the sound as a program of your own.\nThe same name again replaces it.",
+                                        juce::MessageBoxIconType::NoIcon, this);
+        w->setLookAndFeel(&getLookAndFeel());
+        w->addTextEditor("name", panel.proc.getProgramName(panel.proc.getCurrentProgram()), "NAME (up to 11 characters)");
+        if (auto *t = w->getTextEditor("name")) {
+            t->setInputRestrictions(NAME_LEN - 1);
+            t->selectAll();
+        }
+        w->addButton("WRITE", 1, juce::KeyPress(juce::KeyPress::returnKey));
+        w->addButton("CANCEL", 0, juce::KeyPress(juce::KeyPress::escapeKey));
+        juce::Component::SafePointer<Prophet67Panel> self(&panel);
+        w->enterModalState(true, juce::ModalCallbackFunction::create([self, w](int r) {
+                               if (self && r == 1) {
+                                   int at = self->proc.writePreset(w->getTextEditorContents("name"));
+                                   if (at < 0)
+                                       juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::WarningIcon, "WRITE",
+                                                                              "The program could not be written to\n"
+                                                                                  + Prophet67Processor::presetFolder().getFullPathName());
+                                   else
+                                       self->tens = at / 10;
+                                   self->repaint();
+                               }
+                           }),
+                           true);
+    }
+    Prophet67Panel &panel;
+    bool down = false;
+};
+
 float textWidth(const juce::Font &f, const juce::String &t)
 {
     juce::GlyphArrangement ga;
@@ -458,7 +535,8 @@ void Prophet67Panel::build()
         return shownEdited ? n.paddedRight(' ', 12).substring(0, 12) + "." : n;
     }, true);
     name->onClick = [this] { presetMenu(); };
-    nameDisplay = add(name, {1094, 546, 250, 52});
+    add(new WriteKey(*this), {1090, 540, 50, 80});
+    nameDisplay = add(name, {1150, 546, 230, 52});
 
     /* ---- the keyboard and the wheels ---- */
     auto *k = new Keys(proc.keyboardState);
@@ -596,10 +674,10 @@ void Prophet67Panel::paintBackground(juce::Graphics &g)
 
     /* the strip's legends */
     drawLegend(g, "PROGRAM", Rectangle<float>(376.0f, 600.0f, 112.0f, 14.0f));
-    drawLegend(g, "PROGRAM NAME", Rectangle<float>(1094.0f, 532.0f, 250.0f, 12.0f), 9.5f);
+    drawLegend(g, "PROGRAM NAME", Rectangle<float>(1150.0f, 532.0f, 230.0f, 12.0f), 9.5f);
 
     /* the badge */
-    auto badge = Rectangle<float>(1358.0f, 552.0f, 142.0f, 42.0f);
+    auto badge = Rectangle<float>(1392.0f, 553.0f, 110.0f, 40.0f);
     g.setColour(Colours::black.withAlpha(0.6f));
     g.fillRoundedRectangle(badge.translated(0.0f, 2.0f), 3.0f);
     g.setGradientFill(ColourGradient(Colour(0xffc9cacb), badge.getX(), badge.getY(), Colour(0xff8f9092), badge.getX(), badge.getBottom(), false));
@@ -612,7 +690,7 @@ void Prophet67Panel::paintBackground(juce::Graphics &g)
     g.setColour(Colour(0xff4d4e50));
     g.drawRoundedRectangle(badge, 3.0f, 1.0f);
     g.setColour(Colour(0xff2b2c2e));
-    g.setFont(font(Face::logo, 24.0f).withExtraKerningFactor(0.02f));
+    g.setFont(font(Face::logo, 19.0f).withExtraKerningFactor(0.02f));
     g.drawText("prophet 67", badge.reduced(8.0f, 0.0f), Justification::centred, false);
 }
 
@@ -655,9 +733,9 @@ void Prophet67Panel::timerCallback()
     if (++tick % 3 == 0) {
         bool e = false;
         int prog = proc.getCurrentProgram();
-        if (prog >= 0 && prog < NPRESETS)
+        if (auto *d = proc.programData(prog))
             for (int i = 0; i < NPARAM && !e; i++)
-                e = (int)std::lround(proc.apvts.getRawParameterValue(Prophet67Processor::paramId(i))->load()) != FACTORY[prog].p[i];
+                e = (int)std::lround(proc.apvts.getRawParameterValue(Prophet67Processor::paramId(i))->load()) != d[i];
         if (e != shownEdited || prog != shownProgram) {
             shownEdited = e;
             if (prog != shownProgram)
@@ -678,9 +756,14 @@ void Prophet67Panel::timerCallback()
 void Prophet67Panel::presetMenu()
 {
     juce::PopupMenu m;
-    m.addSectionHeader("PROGRAMS");
-    for (int i = 0; i < proc.getNumPrograms(); i++)
+    m.addSectionHeader("FACTORY");
+    for (int i = 0; i < proc.getNumPrograms(); i++) {
+        if (i == NPRESETS)
+            m.addSectionHeader("YOUR PROGRAMS");
         m.addItem(i + 1, juce::String(i).paddedLeft('0', 3) + "   " + proc.getProgramName(i), true, i == proc.getCurrentProgram());
+    }
+    if (proc.userPresets.empty())
+        m.addItem(-1, "(WRITE keeps the sound as a program of your own)", false, false);
     juce::Component::SafePointer<Prophet67Panel> self(this);
     auto area = nameDisplay ? nameDisplay->getScreenBounds() : getScreenBounds();
     m.showMenuAsync(juce::PopupMenu::Options().withTargetScreenArea(area).withMinimumWidth(240), [self](int r) {

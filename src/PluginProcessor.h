@@ -29,7 +29,7 @@ public:
     bool isMidiEffect() const override { return false; }
     double getTailLengthSeconds() const override { return 8.0; }
 
-    int getNumPrograms() override { return NPRESETS; }
+    int getNumPrograms() override { return NPRESETS + (int)userPresets.size(); }
     int getCurrentProgram() override { return program; }
     void setCurrentProgram(int index) override;
     const juce::String getProgramName(int index) override;
@@ -45,7 +45,18 @@ public:
     std::atomic<float> hostBpm{120.0f};
     std::atomic<float> uiScale{0.82f};        /* the editor's size, kept with the project */
     std::atomic<int> uiPage{0};
-    std::atomic<bool> dlSynced{false};   /* DELAY SYNC on: TIME shows notes (for the host's and the editor's text) */
+    std::atomic<bool> dlSynced{false};
+
+    /* the user's own programs (WRITE): files in Documents/PROPHET 67/Presets, after the 16 factory programs */
+    struct UserPreset {
+        juce::String name;
+        uint8_t p[NPARAM];
+    };
+    std::vector<UserPreset> userPresets;
+    static juce::File presetFolder();
+    void loadUserPresets();
+    int writePreset(const juce::String &name);   /* the sound as it is now, kept under this name: its program number */
+    const uint8_t *programData(int index) const;   /* DELAY SYNC on: TIME shows notes (for the host's and the editor's text) */
     juce::AudioProcessorValueTreeState apvts;
     static juce::String paramId(int i) { return "p" + juce::String(i); }
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout(std::atomic<bool> *dlSynced);
