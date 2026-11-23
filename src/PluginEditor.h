@@ -51,7 +51,7 @@ private:
     int shownProgram = -1;
     bool shownEdited = false;
     int tick = 0;
-    const juce::Rectangle<int> readoutR{1006, 600, 312, 16};
+    const juce::Rectangle<int> readoutR{1066, 600, 306, 16};
 };
 
 class Prophet67Editor : public juce::AudioProcessorEditor

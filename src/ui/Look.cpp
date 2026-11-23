@@ -159,38 +159,48 @@ void drawButton(juce::Graphics &g, juce::Rectangle<float> r, bool on, bool down,
     }
 }
 
-/* a light grey program key, seen from a little in front: its top, its front edge below, a round red LED */
-void drawKeycap(juce::Graphics &g, juce::Rectangle<float> r, bool led, bool hasLed, bool down, bool over)
+/* a Prophet-6 key (the program keys, BANK and TENS SELECT; dark: GLIDE, UNISON): upright, sunk in a black gap, its
+ * top face above, its sloping front face below, a round red LED in the top face */
+void drawKeycap(juce::Graphics &g, juce::Rectangle<float> r, bool led, bool hasLed, bool down, bool over, bool dark)
 {
     using namespace juce;
-    g.setColour(Colours::black.withAlpha(0.65f));
-    g.fillRoundedRectangle(r.translated(1.0f, 3.0f), 3.0f);
-    float front = r.getHeight() * (down ? 0.12f : 0.22f);
-    auto top = r.withTrimmedBottom(front).translated(0.0f, down ? r.getHeight() * 0.08f : 0.0f);
-    auto edge = r.withTop(r.getBottom() - front - 3.0f);
-    g.setGradientFill(ColourGradient(Colour(0xff8c8c89), edge.getX(), edge.getY(), Colour(0xff6c6c69), edge.getX(), edge.getBottom(), false));
-    g.fillRoundedRectangle(edge, 2.5f);
-    g.setGradientFill(ColourGradient(Colour(0xffc9c9c5), top.getX(), top.getY(), Colour(0xffaeaeaa), top.getX(), top.getBottom(), false));
-    g.fillRoundedRectangle(top, 2.5f);
-    g.setColour(Colours::white.withAlpha(0.45f));
-    g.drawLine(top.getX() + 2.0f, top.getY() + 0.8f, top.getRight() - 2.0f, top.getY() + 0.8f, 1.0f);
-    g.setColour(Colours::black.withAlpha(0.35f));
-    g.drawRoundedRectangle(r.withTop(top.getY()), 2.5f, 1.0f);
+    g.setColour(Colour(0xff050505));     /* the gap around it */
+    g.fillRoundedRectangle(r.expanded(2.5f), 3.5f);
+    auto key = r.translated(0.0f, down ? 1.2f : 0.0f);
+    Colour topA = dark ? Colour(0xff2e2f32) : Colour(0xffcfcfcb), topB = dark ? Colour(0xff222326) : Colour(0xffbdbdb9);
+    Colour frontA = dark ? Colour(0xff1a1b1d) : Colour(0xffb0b0ac), frontB = dark ? Colour(0xff101112) : Colour(0xff9d9d99);
+    float split = key.getY() + key.getHeight() * (down ? 0.70f : 0.64f);
+    auto front = key.withTop(split);
+    auto top = key.withBottom(split);
+    g.setGradientFill(ColourGradient(frontA, front.getX(), front.getY(), frontB, front.getX(), front.getBottom(), false));
+    g.fillRoundedRectangle(front, 2.0f);
+    g.fillRect(front.withHeight(3.0f));
+    g.setGradientFill(ColourGradient(topA, top.getX(), top.getY(), topB, top.getX(), top.getBottom(), false));
+    g.fillRoundedRectangle(top, 2.0f);
+    g.fillRect(top.withTop(top.getBottom() - 3.0f));
+    g.setColour(Colours::white.withAlpha(dark ? 0.10f : 0.55f));          /* the edge between the faces catches the light */
+    g.drawLine(key.getX() + 1.5f, split, key.getRight() - 1.5f, split, 1.0f);
+    g.setColour(Colours::black.withAlpha(dark ? 0.6f : 0.18f));
+    g.drawLine(key.getX() + 1.5f, split + 1.0f, key.getRight() - 1.5f, split + 1.0f, 1.0f);
+    g.setColour(Colours::white.withAlpha(dark ? 0.12f : 0.6f));
+    g.drawLine(key.getX() + 2.0f, key.getY() + 0.8f, key.getRight() - 2.0f, key.getY() + 0.8f, 1.0f);
+    g.setColour(Colours::black.withAlpha(0.5f));
+    g.drawRoundedRectangle(key, 2.0f, 1.0f);
     if (over && !down) {
-        g.setColour(Colours::white.withAlpha(0.08f));
-        g.fillRoundedRectangle(top, 2.5f);
+        g.setColour(Colours::white.withAlpha(0.07f));
+        g.fillRoundedRectangle(key, 2.0f);
     }
     if (hasLed) {
-        auto c = Point<float>(top.getCentreX(), top.getY() + top.getHeight() * 0.34f);
-        float lr = jmin(top.getWidth(), top.getHeight()) * 0.11f;
+        auto c = Point<float>(top.getCentreX(), top.getY() + top.getHeight() * 0.42f);
+        float lr = jmin(key.getWidth() * 0.10f, 4.2f);
         if (led) {
-            g.setGradientFill(ColourGradient(Colour(0xffff2a10).withAlpha(0.6f), c.x, c.y, Colours::transparentBlack, c.x + lr * 3.5f, c.y, true));
-            g.fillEllipse(Rectangle<float>(lr * 7.0f, lr * 7.0f).withCentre(c));
+            g.setGradientFill(ColourGradient(Colour(0xffff2a10).withAlpha(0.65f), c.x, c.y, Colours::transparentBlack, c.x + lr * 3.8f, c.y, true));
+            g.fillEllipse(Rectangle<float>(lr * 7.6f, lr * 7.6f).withCentre(c));
         }
-        g.setColour(Colour(0xff3c3c3a));
-        g.fillEllipse(Rectangle<float>(lr * 2.6f, lr * 2.6f).withCentre(c));
-        g.setGradientFill(ColourGradient(led ? Colour(0xffffa070) : Colour(0xff7a1a12), c.x - lr * 0.3f, c.y - lr * 0.3f,
-                                         led ? Colour(0xffe8200c) : Colour(0xff3e0c08), c.x + lr, c.y + lr, true));
+        g.setColour(dark ? Colour(0xff0a0a0a) : Colour(0xff4a4a48));
+        g.fillEllipse(Rectangle<float>(lr * 2.7f, lr * 2.7f).withCentre(c));
+        g.setGradientFill(ColourGradient(led ? Colour(0xffffb080) : Colour(0xff8a1c14), c.x - lr * 0.3f, c.y - lr * 0.35f,
+                                         led ? Colour(0xffe8200c) : Colour(0xff40100c), c.x + lr, c.y + lr, true));
         g.fillEllipse(Rectangle<float>(lr * 2.0f, lr * 2.0f).withCentre(c));
     }
 }

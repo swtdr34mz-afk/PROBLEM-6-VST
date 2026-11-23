@@ -71,6 +71,7 @@ public:
     void mouseDown(const juce::MouseEvent &) override;
     void mouseUp(const juce::MouseEvent &) override;
     juce::StringArray leds;              /* LEDs above (bit i: LED i), as POLY MOD's FILTER: LP, HP */
+    bool key = false;                    /* drawn as a dark P6 key with its LED (GLIDE, UNISON) */
 
 private:
     IsOn isOn;

@@ -130,6 +130,13 @@ void Button::paint(juce::Graphics &g)
             drawLed(g, {c.getCentreX(), c.getBottom() - 3.0f}, 2.6f, (value >> i) & 1 ? 1.0f : 0.0f);
         }
     }
+    if (key) {
+        drawKeycap(g, r.withSizeKeepingCentre(juce::jmin(r.getWidth() - 10.0f, 40.0f), r.getHeight() - 6.0f), isOn(value), true, pressed,
+                   isMouseOver(), true);
+        if (!lg.isEmpty())
+            drawLegend(g, legend, lg);
+        return;
+    }
     auto b = r.withSizeKeepingCentre(juce::jmin(r.getWidth() - 6.0f, 36.0f), juce::jmin(r.getHeight() - 4.0f, 19.0f));
     drawButton(g, b, leds.isEmpty() && isOn(value), pressed, isMouseOver());
     if (!lg.isEmpty())

@@ -179,7 +179,7 @@ public:
         auto lg = r.removeFromBottom(14.0f);
         int prog = panel.tens * 10 + digit;
         bool on = panel.proc.getCurrentProgram() == prog, there = prog < panel.proc.getNumPrograms();
-        drawKeycap(g, r.reduced(3.0f, 1.0f), on, true, down, isMouseOver() && there);
+        drawKeycap(g, r.withSizeKeepingCentre(44.0f, r.getHeight() - 6.0f), on, true, down, isMouseOver() && there);
         drawLegend(g, juce::String(digit), lg, 11.0f);
     }
     void mouseDown(const juce::MouseEvent &) override
@@ -211,7 +211,7 @@ public:
         auto r = getLocalBounds().toFloat();
         drawLegend(g, "TENS", r.removeFromTop(14.0f));
         auto lg = r.removeFromBottom(14.0f);
-        drawKeycap(g, r.reduced(6.0f, 2.0f), false, false, down, isMouseOver());
+        drawKeycap(g, r.withSizeKeepingCentre(44.0f, r.getHeight() - 6.0f), false, false, down, isMouseOver());
         drawLegend(g, "SELECT", lg);
     }
     void mouseDown(const juce::MouseEvent &) override
@@ -440,22 +440,25 @@ void Prophet67Panel::build()
     });
 
     /* ---- the program strip ---- */
-    add(new p67::Button(s, "arp_hold", "HOLD", this), {70, 556, BW, 54});
+    for (auto [id, leg, x] : {std::tuple<const char *, const char *, int>{"arp_hold", "HOLD", 68}, {"", "UNISON", 206}}) {
+        auto *b = new p67::Button(s, juce::String(id).isEmpty() ? P(P_UNISON) : juce::String(id), leg, this);
+        b->key = true;
+        add(b, {x, 540, 54, 80});
+    }
     add(new Knob(s, P(P_GLIDE), "GLIDE AMT", this), {134, 538, KW, 80});
-    add(new p67::Button(s, P(P_UNISON), "UNISON", this), {206, 556, BW, 54});
     add(new Knob(s, P(P_BEND), "BEND RANGE", this), {268, 538, 64, 80});
     auto *prog = new SegDisplay(3, [this] { return juce::String(proc.getCurrentProgram()).paddedLeft('0', 3); });
     prog->onClick = [this] { presetMenu(); };
     add(prog, {376, 546, 112, 52});
-    add(new TensButton(*this), {498, 534, 56, 92});
+    add(new TensButton(*this), {500, 528, 52, 94});
     for (int d = 0; d < 10; d++)
-        progButtons.add(add(new ProgButton(*this, d), {576 + 45 * d, 546, 44, 72}));
+        progButtons.add(add(new ProgButton(*this, d), {574 + 50 * d, 540, 50, 80}));
     auto *name = new SegDisplay(12, [this] {
         auto n = proc.getProgramName(proc.getCurrentProgram()).toUpperCase();
         return shownEdited ? n.paddedRight(' ', 12).substring(0, 12) + "." : n;
     }, true);
     name->onClick = [this] { presetMenu(); };
-    nameDisplay = add(name, {1034, 546, 290, 52});
+    nameDisplay = add(name, {1094, 546, 250, 52});
 
     /* ---- the keyboard and the wheels ---- */
     auto *k = new Keys(proc.keyboardState);
@@ -593,10 +596,10 @@ void Prophet67Panel::paintBackground(juce::Graphics &g)
 
     /* the strip's legends */
     drawLegend(g, "PROGRAM", Rectangle<float>(376.0f, 600.0f, 112.0f, 14.0f));
-    drawLegend(g, "PROGRAM NAME", Rectangle<float>(1034.0f, 532.0f, 290.0f, 12.0f), 9.5f);
+    drawLegend(g, "PROGRAM NAME", Rectangle<float>(1094.0f, 532.0f, 250.0f, 12.0f), 9.5f);
 
     /* the badge */
-    auto badge = Rectangle<float>(1344.0f, 552.0f, 156.0f, 42.0f);
+    auto badge = Rectangle<float>(1358.0f, 552.0f, 142.0f, 42.0f);
     g.setColour(Colours::black.withAlpha(0.6f));
     g.fillRoundedRectangle(badge.translated(0.0f, 2.0f), 3.0f);
     g.setGradientFill(ColourGradient(Colour(0xffc9cacb), badge.getX(), badge.getY(), Colour(0xff8f9092), badge.getX(), badge.getBottom(), false));

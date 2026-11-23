@@ -34,7 +34,7 @@ void drawLed(juce::Graphics &, juce::Point<float> c, float r, float level);
 /* a small Prophet button: dark, its face lit red when on (light: the grey program buttons) */
 void drawButton(juce::Graphics &, juce::Rectangle<float> r, bool on, bool down, bool over, bool light = false);
 /* a red seven-segment display: its window, then n characters of text (what seven segments can show) */
-void drawKeycap(juce::Graphics &, juce::Rectangle<float> r, bool led, bool hasLed, bool down, bool over);
+void drawKeycap(juce::Graphics &, juce::Rectangle<float> r, bool led, bool hasLed, bool down, bool over, bool dark = false);
 void drawSegWindow(juce::Graphics &, juce::Rectangle<float> r);
 void drawSegText(juce::Graphics &, juce::Rectangle<float> r, const juce::String &text, int n);
 /* the same with fourteen segments (letters that read) */
