@@ -406,13 +406,12 @@ void Prophet67Panel::build()
                         L(P(P_AT_DEST), {"Off", "Filter", "Swell", "Power", "Vibrato", "LFO 1", "Pitch", "Poly Mod"}, 66, 10.0f)}},
     });
 
-    /* ---- row 3: OSCILLATOR 1, OSCILLATOR 2, AMPLIFIER ENVELOPE, LOW SPLIT ---- */
+    /* ---- row 3: OSCILLATOR 1, OSCILLATOR 2, LOW SPLIT, AMPLIFIER ENVELOPE ---- */
     row(274, {
         {"OSCILLATOR 1", {K(P_O1_FREQ, "FREQUENCY"), BR(P(P_O2_MODE), "SYNC", isSync, sync), K(P_O1_SHAPE, "SHAPE"),
                           K(P_O1_PW, "PULSE WIDTH")}},
         {"OSCILLATOR 2", {K(P_O2_FREQ, "FREQUENCY"), K(P_O2_FINE, "FINE"), K(P_O2_SHAPE, "SHAPE"), K(P_O2_PW, "PULSE WIDTH"),
                           BR(P(P_O2_MODE), "LOW FREQ", isLow, low), BR(P(P_O2_MODE), "KEYBOARD", isKeyb, keyb)}},
-        {"AMPLIFIER ENVELOPE", {K(P_AVEL, "VELOCITY"), K(P_AA, "ATTACK"), K(P_AD, "DECAY"), K(P_AS, "SUSTAIN"), K(P_AR, "RELEASE")}},
         {"LOW SPLIT", {GK("split", "SPLIT"), L("split", {"Off", "-1 Oct", "-2 Oct", "-3 Oct"}, 42), GK("split_point", "POINT"),
                        GK("scale_l", "SCALE L"), GK("scale_r", "SCALE R"), GK("key", "KEY"), GK("follow", "FOLLOW"),
                        B("low_hold", "LOW HOLD"), Item{KW, [&](int x, int y) {
@@ -420,6 +419,7 @@ void Prophet67Panel::build()
                            k->getProperties().set("bipolar", true);
                            add(k, {x, y + 22, KW, 80});
                        }}}},
+        {"AMPLIFIER ENVELOPE", {K(P_AVEL, "VELOCITY"), K(P_AA, "ATTACK"), K(P_AD, "DECAY"), K(P_AS, "SUSTAIN"), K(P_AR, "RELEASE")}},
     });
 
     /* ---- row 4: MIXER, LOW-PASS FILTER, HIGH-PASS FILTER, FILTER ENVELOPE ---- */
