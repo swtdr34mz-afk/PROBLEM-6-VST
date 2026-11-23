@@ -276,24 +276,26 @@ void Prophet67Panel::build()
     struct Sec {
         const char *title;
         std::vector<Item> items;
+        int fixed = 0;                   /* a width of its own (the envelopes, one above the other) */
     };
     auto row = [&](int y, std::vector<Sec> secs) {   /* fixed gaps; the room left widens the sections, spreading their items */
         const float gap = 8.0f;
         float total = 0.0f;
         std::vector<float> nat, w;
+        float flexible = 0.0f;
         for (auto &sc : secs) {
             float t = sc.title ? 20.0f : 0.0f;
             for (auto &it : sc.items)
                 t += (float)it.w;
             nat.push_back(t);
-            total += t;
+            total += sc.fixed ? (float)sc.fixed : t;
+            if (sc.title && !sc.fixed)
+                flexible += t;
         }
         float extra = juce::jmax(0.0f, (float)(X1 - X0) - total - gap * (float)(secs.size() - 1));
         float x = (float)X0;
         for (size_t i = 0; i < secs.size(); i++) {
-            float sw = nat[i] + (secs[i].title ? extra * nat[i] / total : 0.0f);
-            if (!secs[i].title)
-                extra += 0.0f;
+            float sw = secs[i].fixed ? (float)secs[i].fixed : nat[i] + (secs[i].title ? extra * nat[i] / flexible : 0.0f);
             int sx = (int)std::lround(x);
             if (secs[i].title)
                 sections.push_back({{sx, y, (int)std::lround(sw), 120}, secs[i].title});
@@ -351,6 +353,8 @@ void Prophet67Panel::build()
     auto wideKnob = [&](int i, const char *leg, int w) {
         return Item{w, [=, &s](int x, int y) { add(new Knob(s, P(i), leg, this), {x, y + 22, w, 80}); }};
     };
+
+    const int ENV_W = 340;               /* both envelopes: the same width, their knobs one above the other */
 
     /* ---- row 1: MASTER VOL, EFFECTS, CLOCK, ARPEGGIATOR, VINTAGE & VOICE SPREAD, DISTORT ---- */
     row(22, {
@@ -411,7 +415,10 @@ void Prophet67Panel::build()
         {"OSCILLATOR 1", {K(P_O1_FREQ, "FREQUENCY"), BR(P(P_O2_MODE), "SYNC", isSync, sync), K(P_O1_SHAPE, "SHAPE"),
                           K(P_O1_PW, "PULSE WIDTH")}},
         {"OSCILLATOR 2", {K(P_O2_FREQ, "FREQUENCY"), K(P_O2_FINE, "FINE"), K(P_O2_SHAPE, "SHAPE"), K(P_O2_PW, "PULSE WIDTH"),
-                          BR(P(P_O2_MODE), "LOW FREQ", isLow, low), BR(P(P_O2_MODE), "KEYBOARD", isKeyb, keyb)}},
+                          Item{BW + 6, [&](int x, int y) {   /* LOW FREQ above KEYBOARD */
+                              add(new p67::Button(s, P(P_O2_MODE), "LOW FREQ", this, isLow, low), {x, y + 16, BW + 6, 48});
+                              add(new p67::Button(s, P(P_O2_MODE), "KEYBOARD", this, isKeyb, keyb), {x, y + 64, BW + 6, 48});
+                          }}}},
         {"LOW SPLIT", {GK("split", "SPLIT"), L("split", {"Off", "-1 Oct", "-2 Oct", "-3 Oct"}, 42), GK("split_point", "POINT"),
                        GK("scale_l", "SCALE L"), GK("scale_r", "SCALE R"), GK("key", "KEY"), GK("follow", "FOLLOW"),
                        B("low_hold", "LOW HOLD"), Item{KW, [&](int x, int y) {
@@ -419,17 +426,17 @@ void Prophet67Panel::build()
                            k->getProperties().set("bipolar", true);
                            add(k, {x, y + 22, KW, 80});
                        }}}},
-        {"AMPLIFIER ENVELOPE", {K(P_AVEL, "VELOCITY"), K(P_AA, "ATTACK"), K(P_AD, "DECAY"), K(P_AS, "SUSTAIN"), K(P_AR, "RELEASE")}},
+        {"AMPLIFIER ENVELOPE", {K(P_AVEL, "VELOCITY"), K(P_AA, "ATTACK"), K(P_AD, "DECAY"), K(P_AS, "SUSTAIN"), K(P_AR, "RELEASE")}, ENV_W},
     });
 
     /* ---- row 4: MIXER, LOW-PASS FILTER, HIGH-PASS FILTER, FILTER ENVELOPE ---- */
     row(400, {
         {"MIXER", {K(P_MIX_O1, "OSC 1"), K(P_MIX_O2, "OSC 2"), K(P_O1_SUB, "SUB OCTAVE"), K(P_NOISE, "NOISE")}},
-        {"LOW-PASS FILTER", {K(P_CUTOFF, "CUTOFF"), K(P_RESO, "RESONANCE"), K(P_ENV_AMT, "ENV AMOUNT"), K(P_FVEL, "VELOCITY"),
+        {"LOW-PASS FILTER", {K(P_CUTOFF, "CUTOFF"), K(P_RESO, "RESONANCE"), K(P_ENV_AMT, "ENV AMOUNT"),
                              BR(P(P_KEYTRK), "KEYBOARD", [](int) { return false; }, [](int v) { return (v + 1) % NKT; }),
                              L(P(P_KEYTRK), {"Off", "Half", "Full"}, 44)}},
         {"HIGH-PASS FILTER", {K(P_HPF, "CUTOFF"), K(P_HP_RESO, "RESONANCE"), K(P_HP_ENV, "ENV AMOUNT")}},
-        {"FILTER ENVELOPE", {K(P_FA, "ATTACK"), K(P_FD, "DECAY"), K(P_FS, "SUSTAIN"), K(P_FR, "RELEASE")}},
+        {"FILTER ENVELOPE", {K(P_FVEL, "VELOCITY"), K(P_FA, "ATTACK"), K(P_FD, "DECAY"), K(P_FS, "SUSTAIN"), K(P_FR, "RELEASE")}, ENV_W},
     });
 
     /* ---- the program strip ---- */
