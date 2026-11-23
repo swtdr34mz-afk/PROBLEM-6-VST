@@ -277,28 +277,35 @@ void Prophet67Panel::build()
         const char *title;
         std::vector<Item> items;
     };
-    auto row = [&](int y, std::vector<Sec> secs) {
-        int total = 0;
-        std::vector<int> w;
+    auto row = [&](int y, std::vector<Sec> secs) {   /* fixed gaps; the room left widens the sections, spreading their items */
+        const float gap = 8.0f;
+        float total = 0.0f;
+        std::vector<float> nat, w;
         for (auto &sc : secs) {
-            int t = sc.title ? 20 : 0;
+            float t = sc.title ? 20.0f : 0.0f;
             for (auto &it : sc.items)
-                t += it.w;
-            w.push_back(t);
+                t += (float)it.w;
+            nat.push_back(t);
             total += t;
         }
-        float gap = secs.size() > 1 ? (float)(X1 - X0 - total) / (float)(secs.size() - 1) : 0.0f;
+        float extra = juce::jmax(0.0f, (float)(X1 - X0) - total - gap * (float)(secs.size() - 1));
         float x = (float)X0;
         for (size_t i = 0; i < secs.size(); i++) {
+            float sw = nat[i] + (secs[i].title ? extra * nat[i] / total : 0.0f);
+            if (!secs[i].title)
+                extra += 0.0f;
             int sx = (int)std::lround(x);
             if (secs[i].title)
-                sections.push_back({{sx, y, w[i], 120}, secs[i].title});
-            int cx = sx + (secs[i].title ? 10 : 0);
+                sections.push_back({{sx, y, (int)std::lround(sw), 120}, secs[i].title});
+            float inner = nat[i] - (secs[i].title ? 20.0f : 0.0f), spare = sw - nat[i];
+            float step = secs[i].items.empty() ? 0.0f : spare / (float)secs[i].items.size();
+            float cx = (float)sx + (secs[i].title ? 10.0f : 0.0f) + step * 0.5f;
+            juce::ignoreUnused(inner);
             for (auto &it : secs[i].items) {
-                it.place(cx, y);
-                cx += it.w;
+                it.place((int)std::lround(cx), y);
+                cx += (float)it.w + step;
             }
-            x += (float)w[i] + gap;
+            x += sw + gap;
         }
     };
     auto K = [&](int i, const char *leg) {
@@ -324,30 +331,6 @@ void Prophet67Panel::build()
         return Item{BW, [=, &s](int x, int y) { add(new p67::Button(s, id, leg, this, on, next), {x, y + 48, BW, 54}); }};
     };
 
-    /* ---- row 1 ---- */
-    row(22, {
-        {nullptr, {Item{64, [&](int x, int y) { add(new Knob(s, "volume", "MASTER VOL", this), {x, y + 22, 64, 80}); }}}},
-        {"POLY MOD", {K(P_PM_FENV, "FILTER ENV"), K(P_PM_OSC2, "OSC 2"), B(P(P_PM_DOSC), "FREQ 1", PMO_FREQ),
-                      B(P(P_PM_DOSC), "SHAPE 1", PMO_SHAPE), B(P(P_PM_DOSC), "PW 1", PMO_PW),
-                      Item{BW, [&](int x, int y) {
-                               auto *b = new p67::Button(s, P(P_PM_DFILT), "FILTER", this, [](int) { return false; },
-                                                         [](int v) { return (v + 1) % 4; });
-                               b->leds = {"LP", "HP"};
-                               add(b, {x, y + 34, BW, 70});
-                           }}}},
-        {"CLOCK", {Item{96, [&](int x, int y) {
-                       bpmDisplay = add(new SegDisplay(3, [this] { return juce::String(juce::roundToInt(proc.hostBpm.load())); }),
-                                        {x + 6, y + 34, 84, 44});
-                   }},
-                   GK("swing", "SWING")}},
-        {"ARPEGGIATOR", {B("arp_on", "ON/OFF"), GK("arp_rate", "VALUE"), L("arp_rate", {"1/8", "1/8 T", "1/16", "1/16 T", "1/32"}, 50),
-                         GK("arp_oct", "OCTAVES"), L("arp_oct", {"1", "2", "3", "4"}, 26), GK("arp_mode", "MODE"),
-                         L("arp_mode", {"Up", "Down", "Up/Down", "Random", "Played"}, 62), GK("arp_gate", "GATE")}},
-        {"AFTERTOUCH", {K(P_AT_AMT, "AMOUNT"), K(P_AT_CURVE, "CURVE"), K(P_AT_SMOOTH, "SMOOTH"), K(P_AT_DEST, "DEST"),
-                        L(P(P_AT_DEST), {"Off", "Filter", "Swell", "Power", "Vibrato", "LFO 1", "Pitch", "Poly Mod"}, 66, 10.0f)}},
-    });
-
-    /* ---- row 2 ---- */
     /* OSC 2's mode as the P6's buttons: SYNC (osc 1 to osc 2), LOW FREQ, and KEYBOARD (LOW FREQ following the keys) */
     auto isSync = [](int v) { return v == O2M_SYNC; };
     auto sync = [](int v) { return v == O2M_SYNC ? O2M_NORMAL : O2M_SYNC; };
@@ -355,38 +338,6 @@ void Prophet67Panel::build()
     auto low = [](int v) { return v == O2M_LOW || v == O2M_LOWFIX ? O2M_NORMAL : O2M_LOW; };
     auto isKeyb = [](int v) { return v != O2M_LOWFIX; };
     auto keyb = [](int v) { return v == O2M_LOW ? O2M_LOWFIX : v == O2M_LOWFIX ? O2M_LOW : v; };
-    row(148, {
-        {"OSCILLATOR 1", {K(P_O1_FREQ, "FREQUENCY"), BR(P(P_O2_MODE), "SYNC", isSync, sync), K(P_O1_SHAPE, "SHAPE"),
-                          K(P_O1_PW, "PULSE WIDTH")}},
-        {"OSCILLATOR 2", {K(P_O2_FREQ, "FREQUENCY"), K(P_O2_FINE, "FINE"), K(P_O2_SHAPE, "SHAPE"), K(P_O2_PW, "PULSE WIDTH"),
-                          BR(P(P_O2_MODE), "LOW FREQ", isLow, low), BR(P(P_O2_MODE), "KEYBOARD", isKeyb, keyb)}},
-        {"VINTAGE", {K(P_VINTAGE, "AMOUNT")}},
-        {"MIXER", {K(P_MIX_O1, "OSC 1"), K(P_MIX_O2, "OSC 2"), K(P_O1_SUB, "SUB OCTAVE"), K(P_NOISE, "NOISE")}},
-        {"HIGH-PASS FILTER", {K(P_HPF, "CUTOFF"), K(P_HP_RESO, "RESONANCE"), K(P_HP_ENV, "ENV AMOUNT")}},
-        {"FILTER ENVELOPE", {K(P_FA, "ATTACK"), K(P_FD, "DECAY"), K(P_FS, "SUSTAIN"), K(P_FR, "RELEASE")}},
-    });
-
-    /* ---- row 3 ---- */
-    auto lfo = [&](int l) {
-        return Sec{l ? "LFO 2" : "LOW FREQUENCY OSCILLATOR 1",
-                   {K(l ? P_L2_RATE : P_LFO_RATE, "FREQUENCY"), K(l ? P_L2_SYNC : P_L1_SYNC, "SYNC"),
-                    K(l ? P_L2_SHAPE : P_LFO_SHAPE, "SHAPE"),
-                    L(P(l ? P_L2_SHAPE : P_LFO_SHAPE), {"Triangle", "Sawtooth", "Ramp", "Square", "Random"}, 62),
-                    K(l ? P_L2_AMT : P_LFO_AMT, "INITIAL AMT"),
-                    L(P(l ? P_L2_DEST : P_LFO_DEST), {"Freq 1+2", "Freq 1", "Freq 2", "PW 1+2", "Low-pass", "High-pass", "Amp"}, 66, 10.5f),
-                    B(P(l ? P_L2_RETRIG : P_L1_RETRIG), "RETRIG")}};
-    };
-    row(274, {
-        lfo(0),
-        lfo(1),
-        {"LOW-PASS FILTER", {K(P_CUTOFF, "CUTOFF"), K(P_RESO, "RESONANCE"), K(P_ENV_AMT, "ENV AMOUNT"), K(P_FVEL, "VELOCITY"),
-                             BR(P(P_KEYTRK), "KEYBOARD", [](int) { return false; }, [](int v) { return (v + 1) % NKT; }),
-                             L(P(P_KEYTRK), {"Off", "Half", "Full"}, 44)}},
-        {"MISC PARAMETERS", {Item{76, [&](int x, int y) { add(new Knob(s, P(P_SPREAD), "VOICE SPREAD", this), {x, y + 22, 76, 80}); }},
-                             Item{76, [&](int x, int y) { add(new Knob(s, P(P_BEND), "BEND RANGE", this), {x, y + 22, 76, 80}); }}}},
-    });
-
-    /* ---- row 4 ---- */
     const int fxSets[5][4] = {{P_CH_MIX, P_CH_RATE, P_CH_DEPTH, -1},
                               {P_RV_TYPE, P_RV_MIX, P_RV_DECAY, P_RV_TONE},
                               {P_SP_MOD, P_SP_SHIM, P_SP_SWELL, P_SP_PRE},
@@ -397,9 +348,14 @@ void Prophet67Panel::build()
                                   {"MODULATE", "SHIMMER", "SWELL", "PRE-DELAY"},
                                   {"TIME L", "TIME R", "REPEATS", "MIX"},
                                   {"DEPTH", "RATE", "TONE", ""}};
-    row(400, {
-        {"DISTORT", {K(P_DIST, "AMOUNT")}},
-        {"EFFECTS", {Item{116, [&](int x, int y) { add(new FxSelect(*this), {x, y + 22, 116, 82}); }},
+    auto wideKnob = [&](int i, const char *leg, int w) {
+        return Item{w, [=, &s](int x, int y) { add(new Knob(s, P(i), leg, this), {x, y + 22, w, 80}); }};
+    };
+
+    /* ---- row 1: MASTER VOL, EFFECTS, ARPEGGIATOR, CLOCK, VINTAGE / SPREAD, DISTORT ---- */
+    row(22, {
+        {nullptr, {Item{60, [&](int x, int y) { add(new Knob(s, "volume", "MASTER VOL", this), {x, y + 22, 60, 80}); }}}},
+        {"EFFECTS", {Item{106, [&](int x, int y) { add(new FxSelect(*this), {x, y + 22, 106, 82}); }},
                      Item{84, [&](int x, int y) {
                               add(new SegDisplay(3, [this] { return juce::String(FX_CODE[fx]); }), {x + 4, y + 26, 76, 36});
                               fxDisplay = add(new SegDisplay(3, [this] { return fxValueText(); }), {x + 4, y + 64, 76, 36});
@@ -407,11 +363,56 @@ void Prophet67Panel::build()
                      Item{KW * 4, [&](int x, int y) {
                               for (int f = 0; f < 5; f++)
                                   for (int k = 0; k < 4; k++)
-                                      if (fxSets[f][k] >= 0)
-                                          fxControls.push_back({add(new Knob(s, P(fxSets[f][k]), fxLegend[f][k], this), {x + KW * k, y + 22, KW, 80}), f});
+                                      if (fxSets[f][k] >= 0) {
+                                          auto *kn = new Knob(s, P(fxSets[f][k]), fxLegend[f][k], this);
+                                          kn->getProperties().set("bipolar", bipolarKind(fxSets[f][k]));
+                                          fxControls.push_back({add(kn, {x + KW * k, y + 22, KW, 80}), f});
+                                      }
                           }},
                      Item{BW, [&](int x, int y) { fxControls.push_back({add(new p67::Button(s, P(P_DL_SYNC), "SYNC", this), {x, y + 48, BW, 54}), 3}); }}}},
-        {"AMPLIFIER ENVELOPE", {K(P_AVEL, "VELOCITY"), K(P_AA, "ATTACK"), K(P_AD, "DECAY"), K(P_AS, "SUSTAIN"), K(P_AR, "RELEASE")}},
+        {"ARPEGGIATOR", {B("arp_on", "ON/OFF"), GK("arp_rate", "VALUE"), L("arp_rate", {"1/8", "1/8 T", "1/16", "1/16 T", "1/32"}, 46),
+                         GK("arp_oct", "OCTAVES"), L("arp_oct", {"1", "2", "3", "4"}, 26), GK("arp_mode", "MODE"),
+                         L("arp_mode", {"Up", "Down", "Up/Down", "Random", "Played"}, 58), GK("arp_gate", "GATE")}},
+        {"CLOCK", {Item{96, [&](int x, int y) {
+                       bpmDisplay = add(new SegDisplay(3, [this] { return juce::String(juce::roundToInt(proc.hostBpm.load())); }),
+                                        {x + 6, y + 34, 84, 44});
+                   }},
+                   GK("swing", "SWING")}},
+        {"VINTAGE & VOICE SPREAD", {wideKnob(P_VINTAGE, "VINTAGE", 64), wideKnob(P_SPREAD, "VOICE SPREAD", 72)}},
+        {"DISTORT", {K(P_DIST, "AMOUNT")}},
+    });
+
+    /* ---- row 2: POLY MOD, LFO 1, LFO 2, AFTERTOUCH ---- */
+    auto lfo = [&](int l) {
+        return Sec{l ? "LFO 2" : "LFO 1",
+                   {K(l ? P_L2_RATE : P_LFO_RATE, "FREQUENCY"), K(l ? P_L2_SYNC : P_L1_SYNC, "SYNC"),
+                    L(P(l ? P_L2_SHAPE : P_LFO_SHAPE), {"Triangle", "Sawtooth", "Ramp", "Square", "Random"}, 64),
+                    K(l ? P_L2_AMT : P_LFO_AMT, "INITIAL AMT"),
+                    L(P(l ? P_L2_DEST : P_LFO_DEST), {"Freq 1+2", "Freq 1", "Freq 2", "PW 1+2", "Low-pass", "High-pass", "Amp"}, 66, 10.5f),
+                    B(P(l ? P_L2_RETRIG : P_L1_RETRIG), "RETRIG")}};
+    };
+    row(148, {
+        {"POLY MOD", {K(P_PM_FENV, "FILTER ENV"), K(P_PM_OSC2, "OSC 2"), B(P(P_PM_DOSC), "FREQ 1", PMO_FREQ),
+                      B(P(P_PM_DOSC), "SHAPE 1", PMO_SHAPE), B(P(P_PM_DOSC), "PW 1", PMO_PW),
+                      Item{BW, [&](int x, int y) {
+                               auto *b = new p67::Button(s, P(P_PM_DFILT), "FILTER", this, [](int) { return false; },
+                                                         [](int v) { return (v + 1) % 4; });
+                               b->leds = {"LP", "HP"};
+                               add(b, {x, y + 34, BW, 70});
+                           }}}},
+        lfo(0),
+        lfo(1),
+        {"AFTERTOUCH", {K(P_AT_AMT, "AMOUNT"), K(P_AT_CURVE, "CURVE"), K(P_AT_SMOOTH, "SMOOTH"), K(P_AT_DEST, "DEST"),
+                        L(P(P_AT_DEST), {"Off", "Filter", "Swell", "Power", "Vibrato", "LFO 1", "Pitch", "Poly Mod"}, 66, 10.0f)}},
+    });
+
+    /* ---- row 3: OSCILLATOR 1, OSCILLATOR 2, HIGH-PASS FILTER, LOW SPLIT ---- */
+    row(274, {
+        {"OSCILLATOR 1", {K(P_O1_FREQ, "FREQUENCY"), BR(P(P_O2_MODE), "SYNC", isSync, sync), K(P_O1_SHAPE, "SHAPE"),
+                          K(P_O1_PW, "PULSE WIDTH")}},
+        {"OSCILLATOR 2", {K(P_O2_FREQ, "FREQUENCY"), K(P_O2_FINE, "FINE"), K(P_O2_SHAPE, "SHAPE"), K(P_O2_PW, "PULSE WIDTH"),
+                          BR(P(P_O2_MODE), "LOW FREQ", isLow, low), BR(P(P_O2_MODE), "KEYBOARD", isKeyb, keyb)}},
+        {"HIGH-PASS FILTER", {K(P_HPF, "CUTOFF"), K(P_HP_RESO, "RESONANCE"), K(P_HP_ENV, "ENV AMOUNT")}},
         {"LOW SPLIT", {GK("split", "SPLIT"), L("split", {"Off", "-1 Oct", "-2 Oct", "-3 Oct"}, 52), GK("split_point", "POINT"),
                        GK("scale_l", "SCALE L"), GK("scale_r", "SCALE R"), GK("key", "KEY"), GK("follow", "FOLLOW"),
                        B("low_hold", "LOW HOLD"), Item{KW, [&](int x, int y) {
@@ -421,10 +422,21 @@ void Prophet67Panel::build()
                        }}}},
     });
 
+    /* ---- row 4: MIXER, LOW-PASS FILTER, FILTER ENVELOPE, AMPLIFIER ENVELOPE ---- */
+    row(400, {
+        {"MIXER", {K(P_MIX_O1, "OSC 1"), K(P_MIX_O2, "OSC 2"), K(P_O1_SUB, "SUB OCTAVE"), K(P_NOISE, "NOISE")}},
+        {"LOW-PASS FILTER", {K(P_CUTOFF, "CUTOFF"), K(P_RESO, "RESONANCE"), K(P_ENV_AMT, "ENV AMOUNT"), K(P_FVEL, "VELOCITY"),
+                             BR(P(P_KEYTRK), "KEYBOARD", [](int) { return false; }, [](int v) { return (v + 1) % NKT; }),
+                             L(P(P_KEYTRK), {"Off", "Half", "Full"}, 44)}},
+        {"FILTER ENVELOPE", {K(P_FA, "ATTACK"), K(P_FD, "DECAY"), K(P_FS, "SUSTAIN"), K(P_FR, "RELEASE")}},
+        {"AMPLIFIER ENVELOPE", {K(P_AVEL, "VELOCITY"), K(P_AA, "ATTACK"), K(P_AD, "DECAY"), K(P_AS, "SUSTAIN"), K(P_AR, "RELEASE")}},
+    });
+
     /* ---- the program strip ---- */
     add(new p67::Button(s, "arp_hold", "HOLD", this), {70, 556, BW, 54});
     add(new Knob(s, P(P_GLIDE), "GLIDE AMT", this), {134, 538, KW, 80});
     add(new p67::Button(s, P(P_UNISON), "UNISON", this), {206, 556, BW, 54});
+    add(new Knob(s, P(P_BEND), "BEND RANGE", this), {268, 538, 64, 80});
     auto *prog = new SegDisplay(3, [this] { return juce::String(proc.getCurrentProgram()).paddedLeft('0', 3); });
     prog->onClick = [this] { presetMenu(); };
     add(prog, {376, 546, 112, 52});
