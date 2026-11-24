@@ -301,6 +301,10 @@ void Prophet67Processor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
             change = true;
         }
         if (change) {
+            /* CUTOFF turned (the knob, automation, a program): it takes over again from a MIDI CC 74 (the last one
+             * touched wins; CC 74 had held the cutoff until the plugin was loaded again) */
+            if (patched && p[P_CUTOFF] != sent[P_CUTOFF])
+                engine.cutoffCC(-1);
             engine.patch(p);
             std::memcpy(sent, p, sizeof sent);
             patched = true;
