@@ -5,10 +5,10 @@
  * the VST lays them out (the same items, sizes and spacing as Prophet67Panel::build), on the MPC's pages:
  *
  *   QUICK    LOW-PASS FILTER, MIXER, FX MIX / VINTAGE & VOICE SPREAD, POLY MOD, ARPEGGIATOR / HOLD, GLIDE, UNISON,
- *            BEND, AFTERTOUCH, QUALITY, LOW SPLIT
+ *            BEND (and INIT), AFTERTOUCH, QUALITY, LOW SPLIT
  *   OSC      OSCILLATOR 1, OSCILLATOR 2 / MIXER
  *   FLT/ENV  HIGH-PASS FILTER, FILTER ENVELOPE / LOW-PASS FILTER, AMPLIFIER ENVELOPE
- *   LFO      POLY MOD, LFO 1, LFO 2
+ *   LFO      POLY MOD / LFO 1 / LFO 2
  *   FX       EFFECTS (SELECT, its LEDs and displays, each effect's knobs, DELAY's SYNC)
  *
  * Each page is drawn as large as it fits the MPC's 1280 x 628 (at most twice the VST's size), and cut up: its
@@ -36,7 +36,7 @@ bool bipolarKind(int i)
     return k == PK_BIPOLAR || k == PK_SEMI || k == PK_FINE;
 }
 
-/* QUALITY: the MPC plugin's own (not in the VST), a parameter for its LEDs to show */
+/* QUALITY and INIT: the MPC plugin's own (not in the VST), parameters for their controls to show */
 class Extra : public AudioProcessor
 {
 public:
@@ -45,6 +45,7 @@ public:
     {
         AudioProcessorValueTreeState::ParameterLayout l;
         l.add(std::make_unique<AudioParameterChoice>(ParameterID{"quality", 1}, "QUALITY", StringArray{"HIGH", "ECO"}, 0));
+        l.add(std::make_unique<AudioParameterBool>(ParameterID{"init", 1}, "INIT", false));
         return l;
     }
     const String getName() const override { return "extra"; }
@@ -128,7 +129,7 @@ struct Builder {
     Extra &extra;
     Page &page;
 
-    APVTS &apvtsOf(const String &id) { return id == "quality" ? extra.apvts : proc.apvts; }
+    APVTS &apvtsOf(const String &id) { return id == "quality" || id == "init" ? extra.apvts : proc.apvts; }
     Component *add(Component *c, Rectangle<int> r)
     {
         page.addAndMakeVisible(c);
@@ -229,11 +230,12 @@ struct Builder {
     {
         return {w, [=](int x, int y) { add(new Knob(proc.apvts, P(i), leg, nullptr), {x, y + 22, w, 80}); }};
     }
-    Item keyButton(String id, const char *leg)   /* the program strip's dark keys (HOLD, UNISON) */
+    Item keyButton(String id, const char *leg, bool grey = false)   /* the program strip's keys (HOLD, UNISON; INIT grey) */
     {
         return {54, [=](int x, int y) {
-                    auto *b = new p67::Button(proc.apvts, id, leg, nullptr);
+                    auto *b = new p67::Button(apvtsOf(id), id, leg, nullptr);
                     b->key = true;
+                    b->grey = grey;
                     add(b, {x, y + 22, 54, 80});
                 }};
     }
@@ -730,7 +732,7 @@ int main(int argc, char **argv)
                        {"FX MIX", {b.K(P_DIST, "DISTORT"), b.K(P_CH_MIX, "CHORUS"), b.K(P_RV_MIX, "REVERB"), b.K(P_DL_MIX, "DELAY")}}});
              b.row(126, {{"VINTAGE & VOICE SPREAD", {b.wideKnob(P_VINTAGE, "VINTAGE", 64), b.wideKnob(P_SPREAD, "VOICE SPREAD", 72)}},
                          b.polyMod(), b.arp()});
-             b.row(252, {{nullptr, {b.keyButton("arp_hold", "HOLD"), b.K(P_GLIDE, "GLIDE AMT"), b.keyButton(Builder::P(P_UNISON), "UNISON"),
+             b.row(252, {{nullptr, {b.keyButton("init", "INIT", true), b.keyButton("arp_hold", "HOLD"), b.K(P_GLIDE, "GLIDE AMT"), b.keyButton(Builder::P(P_UNISON), "UNISON"),
                                     b.wideKnob(P_BEND, "BEND RANGE", 64)}},
                          b.afterTouch(), {"QUALITY", {b.L("quality", {"High", "Eco"}, 60)}}, b.lowSplit()});
          }},
@@ -742,7 +744,11 @@ int main(int argc, char **argv)
              b.row(0, {b.highPass(), b.envelope(false)});
              b.row(126, {b.lowPass(), b.envelope(true)});
          }},
-        {"LFO", 1, [](Builder &b) { b.row(0, {b.polyMod(), b.lfo(0), b.lfo(1)}); }},
+        {"LFO", 3, [](Builder &b) {
+             b.row(0, {b.polyMod()});
+             b.row(126, {b.lfo(0)});
+             b.row(252, {b.lfo(1)});
+         }},
         {"FX", 1, [](Builder &b) { b.row(0, {b.effects()}); }},
     };
 
