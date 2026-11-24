@@ -182,7 +182,11 @@ def main(argv):
                 names[c["id"]] = c["names"]
             h = handle(c["id"])
             if c["kind"] == "knob":
-                x, y, w, hh = c["rect"]
+                # the knob's slot: the knob and its legend under it (its legend touched turns it too); the film strip
+                # at the knob's place in it (an effect's legend is a picture of its own: the slot is the knob)
+                fr = c["frame"] if not c.get("legendImage") else c["rect"]
+                kx, ky, w, hh = c["rect"]
+                ox, oy = kx - fr[0], ky - fr[1]
                 ov = "menu overlay" if c["names"] else "knob overlay bipolar" if c["bipolar"] else "knob overlay"
                 knob = O(("version", 3), ("knobType", "FilmStrip"), ("filmStrip", use(c["strip"])), ("numFrames", c["frames"]),
                          ("invert", False), ("dragOrientation", "Vertical"), ("handleName", "Data"))
@@ -190,13 +194,13 @@ def main(argv):
                 defs.append((name, component(
                     [action("Mouse Down", "Q-Link", "Data", ""), action("Double Click", "Show Overlay", "Data", ov),
                      action("Enter Pressed", "Show Overlay", "Data", ov)],
-                    [entry("knob", "Knob", knob, bounds((0, 0, w, hh))),
+                    [entry("knob", "Knob", knob, bounds((ox, oy, w, hh))),
                      entry("focus", "Focus", focus, O(("version", 1), ("acceptsHWFocus", "No"), ("showWhenDataModelInvalid", "Show"),
                                                       ("whenVisible", "WhenFocussed"), ("boundsType", "Absolute"),
-                                                      ("bounds", box((0, 0, w, hh)))))])))
+                                                      ("bounds", box((0, 0, fr[2], fr[3])))))])))
                 kids.append(entry(c["id"], name, O(("version", 1), ("handleName", "Data")),
-                                  bounds(c["rect"], "Yes", fx_hide(c) or None, "Hide"), [("Data", h)]))
-                boxes.append((c["id"], c["rect"]))
+                                  bounds(fr, "Yes", fx_hide(c) or None, "Hide"), [("Data", h)]))
+                boxes.append((c["id"], fr))
                 legends.append((c["id"], c["frame"]))
                 if c.get("legendImage"):     # (an effect's knob: its legend with it)
                     kids.append(entry(c["id"] + " legend", "Image", image_data(use(c["legendImage"])),
