@@ -243,7 +243,7 @@ int main(int argc, char **argv)
     check(!(p.e->flags & effFlagsHasEditor), "no editor (the MPC draws the skin)");
     std::printf("  %s by %s, %d parameters, %d programs\n", p.str(effGetEffectName).c_str(), p.str(effGetVendorString).c_str(),
                 p.e->numParams, p.e->numPrograms);
-    check(p.str(effGetEffectName) == "PROPHET 67" && p.str(effGetVendorString) == "swtdr34mz", "names as in plugin.json");
+    check(p.str(effGetEffectName) == "PROPHETIC 6" && p.str(effGetVendorString) == "swtdr34mz", "names as in plugin.json");
 
     /* the MPC's load sequence: open, the queries, open again, program 0, names */
     p.d(effSetSampleRate, 0, 0, nullptr, 44100.0f);

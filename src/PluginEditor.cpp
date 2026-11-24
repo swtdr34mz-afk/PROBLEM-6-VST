@@ -308,12 +308,6 @@ private:
     bool down = false;
 };
 
-float textWidth(const juce::Font &f, const juce::String &t)
-{
-    juce::GlyphArrangement ga;
-    ga.addLineOfText(f, t, 0.0f, 0.0f);
-    return ga.getBoundingBox(0, -1, true).getWidth();
-}
 } // namespace
 
 /* =============================================================================== the panel === */
@@ -638,43 +632,14 @@ static void paintWood(juce::Graphics &g, juce::Rectangle<float> r, int seed)
     }
 }
 
-void Prophet67Panel::paintSection(juce::Graphics &g, const Section &s)
-{
-    using namespace juce;
-    auto r = s.r.toFloat().reduced(0.5f);
-    auto f = font(Face::title, 11.5f).withExtraKerningFactor(0.06f);
-    float tw = textWidth(f, s.title), cx = r.getCentreX(), gl = cx - tw * 0.5f - 6.0f, gr = cx + tw * 0.5f + 6.0f, rad = 6.0f;
-    Path p;
-    p.startNewSubPath(gr, r.getY());
-    p.lineTo(r.getRight() - rad, r.getY());
-    p.quadraticTo(r.getRight(), r.getY(), r.getRight(), r.getY() + rad);
-    p.lineTo(r.getRight(), r.getBottom() - rad);
-    p.quadraticTo(r.getRight(), r.getBottom(), r.getRight() - rad, r.getBottom());
-    p.lineTo(r.getX() + rad, r.getBottom());
-    p.quadraticTo(r.getX(), r.getBottom(), r.getX(), r.getBottom() - rad);
-    p.lineTo(r.getX(), r.getY() + rad);
-    p.quadraticTo(r.getX(), r.getY(), r.getX() + rad, r.getY());
-    p.lineTo(gl, r.getY());
-    g.setColour(col::frame);
-    g.strokePath(p, PathStrokeType(1.4f));
-    g.setColour(col::legend);
-    g.setFont(f);
-    g.drawText(s.title, Rectangle<float>(gl, r.getY() - 8.0f, gr - gl, 16.0f), Justification::centred, false);
-}
+void Prophet67Panel::paintSection(juce::Graphics &g, const Section &s) { drawSection(g, s.r, s.title); }
 
 void Prophet67Panel::paintBackground(juce::Graphics &g)
 {
     using namespace juce;
     auto all = Rectangle<float>(0.0f, 0.0f, (float)W, (float)H);
     auto panel = all.reduced(40.0f, 0.0f);
-    g.setGradientFill(ColourGradient(col::panelTop, 0.0f, 0.0f, col::panelBottom, 0.0f, 640.0f, false));
-    g.fillRect(panel.withBottom(640.0f));
-    Random rnd(67);                      /* a matte finish */
-    for (int i = 0; i < 9000; i++) {
-        float x = panel.getX() + rnd.nextFloat() * panel.getWidth(), y = rnd.nextFloat() * 640.0f;
-        g.setColour((rnd.nextBool() ? Colours::white : Colours::black).withAlpha(0.025f + 0.03f * rnd.nextFloat()));
-        g.fillRect(x, y, 1.0f, 1.0f);
-    }
+    drawPanelFace(g, panel.withBottom(640.0f), 9000);
     /* the keyboard's bed and the wheels' block */
     g.setColour(Colour(0xff0f0f10));
     g.fillRect(panel.withTop(640.0f));
@@ -700,22 +665,8 @@ void Prophet67Panel::paintBackground(juce::Graphics &g)
     drawLegend(g, "PROGRAM", Rectangle<float>(376.0f, 600.0f, 112.0f, 14.0f));
     drawLegend(g, "PROGRAM NAME", Rectangle<float>(1150.0f, 532.0f, 230.0f, 12.0f), 9.5f);
 
-    /* the badge */
-    auto badge = Rectangle<float>(1392.0f, 553.0f, 110.0f, 40.0f);
-    g.setColour(Colours::black.withAlpha(0.6f));
-    g.fillRoundedRectangle(badge.translated(0.0f, 2.0f), 3.0f);
-    g.setGradientFill(ColourGradient(Colour(0xffc9cacb), badge.getX(), badge.getY(), Colour(0xff8f9092), badge.getX(), badge.getBottom(), false));
-    g.fillRoundedRectangle(badge, 3.0f);
-    Random brush(6);
-    for (int i = 0; i < 60; i++) {
-        g.setColour((brush.nextBool() ? Colours::white : Colours::black).withAlpha(0.05f));
-        g.drawHorizontalLine((int)(badge.getY() + brush.nextFloat() * badge.getHeight()), badge.getX() + 2.0f, badge.getRight() - 2.0f);
-    }
-    g.setColour(Colour(0xff4d4e50));
-    g.drawRoundedRectangle(badge, 3.0f, 1.0f);
-    g.setColour(Colour(0xff2b2c2e));
-    g.setFont(font(Face::logo, 19.0f).withExtraKerningFactor(0.02f));
-    g.drawText("prophet 67", badge.reduced(8.0f, 0.0f), Justification::centred, false);
+    /* the maker's tag, where a badge would be */
+    drawTag(g, Rectangle<float>(1390.0f, 553.0f, 114.0f, 40.0f));
 }
 
 void Prophet67Panel::paint(juce::Graphics &g)

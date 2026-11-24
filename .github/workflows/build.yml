@@ -23,7 +23,7 @@ jobs:
       - name: run
         run: build-tests/engine_tests
 
-  # PROPHET 67 for the MPC (mpc/): the SDK project made from the shared engine, built with Akai's MPC Plugin SDK
+  # PROPHET 67 for the MPC, named PROPHETIC 6 there (mpc/): the SDK project made from the shared engine, built with Akai's MPC Plugin SDK
   # (its Zig cross compiler: arm32 and arm64), checked by the SDK's own validator and host simulator and by
   # mpc/test/mpc_host_test.cpp (the MPC's host contract); the plugin folder zipped with its README
   mpc:
@@ -44,17 +44,17 @@ jobs:
       - name: host test (the native build)
         run: |
           g++ -std=c++17 -O2 -Impc-sdk/framework mpc/test/mpc_host_test.cpp -ldl -o mpc_host_test
-          ./mpc_host_test "mpc/build/PROPHET 67/build/native/prophet-67.so"
+          ./mpc_host_test "mpc/build/PROPHETIC 6/build/native/prophetic-6.so"
       - name: package
         run: |
-          cd "mpc/build/PROPHET 67/build"
-          file "swtdr34mz - VST - PROPHET 67/VST/"*.so
-          cp "../README.md" "swtdr34mz - VST - PROPHET 67/README.md"
-          zip -qr "$GITHUB_WORKSPACE/PROPHET67-MPC.zip" "swtdr34mz - VST - PROPHET 67"
+          cd "mpc/build/PROPHETIC 6/build"
+          file "swtdr34mz - VST - PROPHETIC 6/VST/"*.so
+          cp "../README.md" "swtdr34mz - VST - PROPHETIC 6/README.md"
+          zip -qr "$GITHUB_WORKSPACE/PROPHETIC6-MPC.zip" "swtdr34mz - VST - PROPHETIC 6"
       - uses: actions/upload-artifact@v4
         with:
-          name: PROPHET67-MPC
-          path: PROPHET67-MPC.zip
+          name: PROPHETIC6-MPC
+          path: PROPHETIC6-MPC.zip
       # a tag v*: the same folder as the Open MPC catalog's SDK zip (<Name>-<version>-mpc-sdk.zip; the catalog makes its
       # installer from it), its version the tag's, checked against plugin.json
       - name: release (the Open MPC catalog's zip)
@@ -62,12 +62,12 @@ jobs:
         run: |
           v="${GITHUB_REF_NAME#v}"
           grep -q "\"version\": \"$v\"" mpc/plugin/plugin.json || { echo "::error::plugin.json's version is not $v"; exit 1; }
-          cp PROPHET67-MPC.zip "PROPHET-67-$v-mpc-sdk.zip"
-          sha256sum "PROPHET-67-$v-mpc-sdk.zip"
+          cp PROPHETIC6-MPC.zip "PROPHETIC-6-$v-mpc-sdk.zip"
+          sha256sum "PROPHETIC-6-$v-mpc-sdk.zip"
       - uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
-          files: PROPHET-67-*-mpc-sdk.zip
+          files: PROPHETIC-6-*-mpc-sdk.zip
 
   build:
     strategy:

@@ -1,6 +1,6 @@
-# PROPHET 67 for the MPC
+# PROPHETIC 6: PROPHET 67 for the MPC
 
-The PROPHET 67 synth as a plugin for Akai MPC standalone hardware: the same engine as the PROPHET 67 VST3 and the
+The PROPHET 67 synth as a plugin for Akai MPC standalone hardware, named PROPHETIC 6 there: the same engine as the PROPHET 67 VST3 and the
 M-Vave FM-1 firmware, built with Akai's MPC Plugin SDK. A 7-voice analogue-style poly after the Sequential
 Prophet-6: two oscillators (triangle - saw - pulse, sub octave, noise, hard sync, LOW FREQ), poly mod, a resonant
 high-pass into a creamy 4-pole low-pass, filter and amp envelopes, VINTAGE and SPREAD, two LFOs (LFO 1 into the
@@ -11,10 +11,10 @@ SPRING, SPACE), an arpeggiator on the MPC's tempo and the LOW SPLIT with its sca
 
 1. MPC OS **3.10.1 oder neuer**. Auf der MPC: **Preferences → Enhancements (Beta) → Enable Enhancements** und
    **External Plugin Support** einschalten.
-2. Den Ordner **`swtdr34mz - VST - PROPHET 67`** (aus dem Download `PROPHET67-MPC.zip`) auf einen USB-Stick, eine
+2. Den Ordner **`swtdr34mz - VST - PROPHETIC 6`** (aus dem Download `PROPHETIC6-MPC.zip`) auf einen USB-Stick, eine
    SD-Karte oder das interne Laufwerk der MPC kopieren, in einen Ordner namens **`VST2 Plugins`** ganz oben auf dem
-   Laufwerk: `VST2 Plugins/swtdr34mz - VST - PROPHET 67/`.
-3. Die MPC neu starten. PROPHET 67 steht dann im Plugin-Browser unter **External Plugins** (als Plugin-Programm
+   Laufwerk: `VST2 Plugins/swtdr34mz - VST - PROPHETIC 6/`.
+3. Die MPC neu starten. PROPHETIC 6 steht dann im Plugin-Browser unter **External Plugins** (als Plugin-Programm
    laden).
 
 Die MPC XL, Live III (64 Bit) und die 32-Bit-Geräte (X, X SE, Live, Live II, One, One+, Key 61, Key 37, Force)
@@ -22,26 +22,23 @@ nehmen denselben Ordner; jedes Gerät lädt seine eigene Datei darin.
 
 ## On the screen
 
-The MPC shows the VST's own panel: the same picture, drawn by the VST's own code at the MPC's 1280 pixels across
-(`mpc/skin/`), and every control on it works as in the VST: turn a knob (drag it up and down, or its Q-Link; a
-double tap opens the MPC's large editor, or the list for a choice), tap a button (POLY MOD's FREQ 1 / SHAPE 1 / PW 1,
-OSC 2's SYNC, LOW FREQ and KEYBOARD, the filters' KEYBOARD, the VELOCITY buttons, RETRIG, ARP ON/OFF, HOLD, UNISON,
-LOW HOLD), tap an LED to choose (the LFOs' shapes and destinations, AFTERTOUCH's DEST, the arp's rate, octaves and
-mode, the split). EFFECTS' SELECT and its LEDs choose the effect whose knobs it shows, as in the VST.
+The pages are drawn with the VST's own code: its knobs, buttons, LEDs, displays and section frames, laid out as on
+the VST, just larger. Every control works as in the VST: turn a knob (drag it up and down, or its Q-Link; a double
+tap opens the MPC's large editor, or the list for a choice), tap a button (POLY MOD's FREQ 1 / SHAPE 1 / PW 1, OSC 2's
+SYNC, LOW FREQ and KEYBOARD, the filters' KEYBOARD, the VELOCITY buttons, RETRIG, ARP ON/OFF, HOLD, UNISON), tap an LED
+to choose (the LFOs' shapes and destinations, AFTERTOUCH's DEST, the arp's rate, octaves and mode, QUALITY).
 
-The function keys choose which controls the 16 Q-Links turn; the page is the whole panel each time, the Q-Links'
-four groups framed (the top row of Q-Links the first, down to the bottom row):
+| Page | On it | The Q-Links (top row first) |
+|---|---|---|
+| QUICK | LOW-PASS FILTER, MIXER, POLY MOD, FX MIX · ARPEGGIATOR, HOLD, GLIDE, UNISON, BEND RANGE · VINTAGE & VOICE SPREAD, QUALITY, AFTERTOUCH | LOW-PASS · MIXER · POLY MOD · FX MIX |
+| OSC | OSCILLATOR 1, OSCILLATOR 2 · MIXER | OSC 1 · OSC 2 · MIXER |
+| FILTER | LOW-PASS FILTER, HIGH-PASS FILTER | LOW-PASS · HIGH-PASS · their VELOCITY |
+| ENV | FILTER ENVELOPE · AMPLIFIER ENVELOPE | FILTER ENV · AMP ENV · their VELOCITY |
+| LFO | POLY MOD, LFO 1, LFO 2 | POLY MOD · LFO 1 · LFO 2 · their DESTs |
+| FX | EFFECTS: SELECT and its LEDs choose CHORUS, REVERB, SPACE, DELAY or DLY MOD, as on the VST | CHORUS · REVERB · DELAY · DLY MOD and SYNC |
 
-| Page | The Q-Links' rows, top to bottom |
-|---|---|
-| OSC | POLY MOD · OSCILLATOR 1 (with OSC 2's SYNC) · OSCILLATOR 2 · MIXER |
-| FLT/AMP | FILTER ENVELOPE · LOW-PASS (and its KEYBOARD) · HIGH-PASS (and its KEYBOARD) · AMPLIFIER ENVELOPE |
-| LFO/AT | LFO 1 · LFO 1's DEST and LFO 2 · LFO 2's AMT and DEST, AFTERTOUCH's AMOUNT and CURVE · its SMOOTH and DEST |
-| FX (press again for the next) | CHORUS, REVERB, SPACE, DELAY, DLY MOD: the effect's knobs · VINTAGE, VOICE SPREAD, DISTORT · SWING · MASTER VOL |
-| ARP/SPLT | the arp's VALUE, OCTAVES, MODE, GATE · LOW SPLIT's SPLIT, POINT, SCALE L, SCALE R · KEY, FOLLOW, BALANCE, QUALITY · GLIDE, BEND RANGE |
-
-The tempo and the program are the MPC's own: the CLOCK and PROGRAM displays stay dark, and the program buttons
-are the panel's picture (the factory programs are in the MPC's preset list). The keyboard is the MPC's pads.
+The tempo and the programs are the MPC's own (the factory programs are in its preset list); the keyboard is its pads.
+LOW SPLIT works (it is in the plugin) but has no page yet: its eight values are in the MPC's parameter list.
 
 The 16 factory programs are the plugin's presets (the MPC's preset list); the MPC saves the sound with the project,
 and presets of your own with its own preset save. Every value reads as on the FM-1 and in the VST.
@@ -50,8 +47,7 @@ and presets of your own with its own preset save. Every value reads as on the FM
 
 ## CPU
 
-The MPC is a small ARM computer, and this is a full analogue-style poly with five effects. **QUALITY** (a Q-Link on the ARP/SPLT page: the
-third row's fourth) chooses:
+The MPC is a small ARM computer, and this is a full analogue-style poly with five effects. **QUALITY** (on the QUICK page) chooses:
 
 - **HIGH** (the default on the MPC XL and Live III): the low-pass at twice the rate, as in the VST: its full top end,
   no aliasing from its saturation.
@@ -70,7 +66,7 @@ MPC keeps presets with its own preset save.
 ## Build
 
 See `mpc/build.py` in the repository: it makes the SDK project from the shared engine and runs the SDK's build. On
-GitHub, every push builds it (Actions → the run → Artifacts → `PROPHET67-MPC`).
+GitHub, every push builds it (Actions → the run → Artifacts → `PROPHETIC6-MPC`).
 
 Third-party plugins run on the MPC without protection: a fault in one can stop the MPC. PROPHET 67's engine is
 tested on every build (`tests/engine_tests.cpp`, `mpc/test/mpc_host_test.cpp`), but as with any new plugin, save

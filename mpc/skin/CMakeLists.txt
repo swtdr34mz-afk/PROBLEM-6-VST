@@ -28,7 +28,8 @@ juce_add_binary_data(P67SkinFonts SOURCES
     ${R}/fonts/FiraSans-SemiBold.ttf
     ${R}/fonts/FiraSans-Bold.ttf
     ${R}/fonts/FiraSans-ExtraBold.ttf
-    ${R}/fonts/AnonymousPro-Bold.ttf)
+    ${R}/fonts/AnonymousPro-Bold.ttf
+    ${R}/res/swtdr34mz-tag.png)
 target_sources(p67_skin_render PRIVATE
     render_skin.cpp
     ${R}/src/P67Engine.cpp

@@ -5,22 +5,19 @@
 
     python3 mpc/skin/make_skin.py <render folder> mpc/plugin/skins
 
-The renderer (render_skin.cpp) draws the VST3's own panel at the MPC's size and cuts every control out at every value;
-this places each picture where it was cut from, bound to the MPC plugin's parameter, so the MPC's screen is the VST's
-panel and every control on it works as on the VST:
+The renderer (render_skin.cpp) draws each MPC page with the VST3's own controls and sections and cuts every control
+out at every value; this places each picture where it was cut from, bound to the MPC plugin's parameter, so every
+control works as on the VST:
 
   knobs         film strips (a frame a value), dragged; a double tap opens the MPC's editor (its list for a choice)
   buttons       a picture for each run of values that looks and acts alike, shown while the value is in that run; a
                 tap gives the value the VST's own rule gives (a switch, POLY MOD's FREQ 1 / SHAPE 1 / PW 1 bits,
                 OSC 2's SYNC / LOW FREQ / KEYBOARD, the KEYBOARD and FILTER steps, VELOCITY off and back at 100)
   LED lists     each row a radio button
-  EFFECTS       SELECT and its LEDs choose the effect shown (a value of the screen's own); each effect has an FX page
-                of its own too, where the Q-Links turn its knobs
-  displays      the effect's name and its first knob's value, as the VST shows them
+  EFFECTS       SELECT and its LEDs choose the effect shown (a value of the screen's own), with its displays
 
-The tabs (the function keys): OSC, FLT/AMP, LFO/AT, FX (pressed again: CHORUS, REVERB, SPACE, DELAY, DLY MOD) and
-ARP/SPLT, each the whole panel with the Q-Links' four groups framed: the top row of Q-Links the first group, and so on
-down. Standard library only.
+The pages (the function keys): QUICK, OSC, FILTER, ENV, LFO, FX. On each the 16 Q-Links turn four groups, the top row
+of Q-Links the first group and so on down, each group framed on the screen. Standard library only.
 """
 import json
 import os
@@ -36,33 +33,32 @@ for i, k in enumerate(["hp_vel", "hp_keytrk", "fenv_vel", "arp_on", "arp_mode", 
     MPC[k] = 75 + i
 NPARAMS = 94
 
-FX_NAMES = ["CHORUS", "REVERB", "SPACE", "DELAY", "DLY MOD"]
 FXH = "Local/5/fx"                       # the effect EFFECTS shows (the screen's own value)
 
-# The tabs: (name, function key, sub-tab, the effect it shows (None: SELECT chooses), the Q-Links' groups top down)
-TABS = [
-    ("OSC", 0, 0, None, [["p32", "p33", "p34", "p35"],            # POLY MOD
-                         ["p0", "p11#0", "p1", "p2"],             # OSCILLATOR 1 (SYNC: OSC 2's mode, its first button)
-                         ["p4", "p5", "p6", "p7"],                # OSCILLATOR 2
-                         ["p8", "p9", "p3", "p10"]]),             # MIXER
-    ("FLT/AMP", 1, 0, None, [["p20", "p21", "p22", "p23"],        # FILTER ENVELOPE
-                             ["p12", "p13", "p14", "p17"],        # LOW-PASS (and its KEYBOARD)
-                             ["p15", "p16", "p19", "hp_keytrk"],  # HIGH-PASS
-                             ["p24", "p25", "p26", "p27"]]),      # AMPLIFIER ENVELOPE
-    ("LFO/AT", 2, 0, None, [["p28", "p58", "p30", "p29"],         # LFO 1
-                            ["p31", "p54", "p59", "p56"],         # LFO 1's DEST, LFO 2
-                            ["p55", "p57", "p63", "p64"],         # LFO 2's AMT and DEST, AFTERTOUCH
-                            ["p65", "p62"]]),                     # AFTERTOUCH's SMOOTH and DEST
-] + [
-    (FX_NAMES[f], 3, f, f, [None,                                 # (the effect's own knobs)
-                            ["p52", "p53", "p39"],                # VINTAGE, VOICE SPREAD, DISTORT
-                            ["swing"],
-                            ["volume"]]) for f in range(5)
-] + [
-    ("ARP/SPLT", 4, 0, None, [["arp_rate", "arp_oct", "arp_mode", "arp_gate"],
-                              ["split", "split_point", "scale_l", "scale_r"],
-                              ["key", "follow", "balance", "quality"],   # (QUALITY: the Q-Link only, not on the panel)
-                              ["p48", "p51"]]),                   # GLIDE, BEND RANGE
+# The pages, as the renderer names them: (the function key's name, the Q-Links' groups top down; a group in brackets
+# of its own, ("frame", False), is not framed: its controls are not side by side)
+PAGES = [
+    ("QUICK", [["p12", "p13", "p14", "p17"],                     # LOW-PASS FILTER (and its KEYBOARD)
+               ["p8", "p9", "p3", "p10"],                        # MIXER
+               ["p32", "p33", "p34", "p35"],                     # POLY MOD
+               ["p39", "p36", "p41", "p69"]]),                   # FX MIX: DISTORT, CHORUS, REVERB, DELAY
+    ("OSC", [["p0", "p11#0", "p1", "p2"],                        # OSCILLATOR 1 (SYNC: OSC 2's mode, its first button)
+             ["p4", "p5", "p6", "p7"],                           # OSCILLATOR 2
+             ["p8", "p9", "p3", "p10"]]),                        # MIXER
+    ("FILTER", [["p12", "p13", "p14", "p17"],                    # LOW-PASS
+                ["p15", "p16", "p19", "hp_keytrk"],              # HIGH-PASS
+                (["p18", "hp_vel"], False)]),                    # their VELOCITY amounts
+    ("ENV", [["p20", "p21", "p22", "p23"],                       # FILTER ENVELOPE
+             ["p24", "p25", "p26", "p27"],                       # AMPLIFIER ENVELOPE
+             (["fenv_vel", "p49"], False)]),                     # their VELOCITY amounts
+    ("LFO", [["p32", "p33", "p34", "p35"],                       # POLY MOD
+             ["p28", "p58", "p30", "p29"],                       # LFO 1
+             ["p54", "p59", "p56", "p55"],                       # LFO 2
+             (["p31", "p57"], False)]),                          # their DESTs
+    ("FX", [(["p36", "p37", "p38"], False),                      # CHORUS   (the knobs shown follow SELECT,
+            (["p40", "p41", "p42", "p43"], False),               # REVERB    so no frames)
+            (["p66", "p67", "p68", "p69"], False),               # DELAY
+            (["p70", "p71", "p72", "p73"], False)]),             # DLY MOD (and DELAY's SYNC)
 ]
 # Program (Track) mode: the knobs as the MPC's own program knobs, bottom left Q-Link 1
 PROGRAM_QLINKS = ["p51", "p29", "p39", "volume",       # 1..4   (bottom row)
@@ -148,72 +144,63 @@ def main(argv):
         return 2
     src, out = argv[1], argv[2]
     m = json.load(open(os.path.join(src, "manifest.json")))
-    ctls, fx = m["controls"], m["effects"]
-    for c in ctls:
-        if c["id"] not in MPC:
-            sys.exit("the panel's %s is not one of the MPC plugin's parameters" % c["id"])
+    pages = {p["name"]: p for p in m["pages"]}
+    for p in m["pages"]:
+        for c in p["controls"]:
+            if c["id"] not in MPC:
+                sys.exit("%s: the page's %s is not one of the MPC plugin's parameters" % (p["name"], c["id"]))
 
     if os.path.isdir(out):
         shutil.rmtree(out)
     os.makedirs(out)
-    used = {m["background"]}
+    used = set()
 
     def use(f):
         used.add(f)
         return f
 
-    # ---- the components: one for each knob (its own film strip), and the overlays
-    defs = [("knob overlay", overlay("KnobOverlay", O(("version", 2), ("version", 1), ("actions", [FOCUS_LOST]),
-                                                      ("overlayType", "Knob With Header"), ("scaleType", "Linear"),
-                                                      ("polarityType", "Unipolar"), ("showMinusSign", True),
-                                                      ("handleName", "Data")))),
-            ("knob overlay bipolar", overlay("KnobOverlay", O(("version", 2), ("version", 1), ("actions", [FOCUS_LOST]),
-                                                              ("overlayType", "Knob With Header"), ("scaleType", "Linear"),
-                                                              ("polarityType", "Bipolar"), ("showMinusSign", True),
-                                                              ("handleName", "Data")))),
+    def knob_overlay(bipolar):
+        return overlay("KnobOverlay", O(("version", 2), ("version", 1), ("actions", [FOCUS_LOST]), ("overlayType", "Knob With Header"),
+                                        ("scaleType", "Linear"), ("polarityType", "Bipolar" if bipolar else "Unipolar"),
+                                        ("showMinusSign", True), ("handleName", "Data")))
+    defs = [("knob overlay", knob_overlay(False)), ("knob overlay bipolar", knob_overlay(True)),
             ("menu overlay", overlay("MenuOverlay", O(("version", 1), ("version", 1), ("actions", [FOCUS_LOST]),
                                                       ("withNumbers", False), ("handleName", "Data"))))]
+    focus = O(("version", 1), ("backgroundColour", "19ffffff"), ("outlineColour", "ffe81f40"), ("backgroundInset", 1.0),
+              ("outlineThickness", 1.0))
     names = {}                           # the discrete parameters' names (replacementStrings)
-    for i, c in enumerate(ctls):
-        if c["names"]:
-            names[c["id"]] = c["names"]
-        if c["kind"] != "knob":
-            continue
-        x, y, w, h = c["rect"]
-        ov = "menu overlay" if c["names"] else "knob overlay bipolar" if c["bipolar"] else "knob overlay"
-        knob = O(("version", 3), ("knobType", "FilmStrip"), ("filmStrip", use(c["strip"])), ("numFrames", c["frames"]),
-                 ("invert", False), ("dragOrientation", "Vertical"), ("handleName", "Data"))
-        focus = O(("version", 1), ("backgroundColour", "19ffffff"), ("outlineColour", "ffe81f40"),
-                  ("backgroundInset", 1.0), ("outlineThickness", 1.0))
-        c["def"] = "knob %d %s" % (i, c["id"])
-        defs.append((c["def"], component(
-            [action("Mouse Down", "Q-Link", "Data", ""), action("Double Click", "Show Overlay", "Data", ov),
-             action("Enter Pressed", "Show Overlay", "Data", ov)],
-            [entry("knob", "Knob", knob, bounds((0, 0, w, h))),
-             entry("focus", "Focus", focus, O(("version", 1), ("acceptsHWFocus", "No"), ("showWhenDataModelInvalid", "Show"),
-                                              ("whenVisible", "WhenFocussed"), ("boundsType", "Absolute"),
-                                              ("bounds", box((0, 0, w, h)))))])))
 
-    # ---- a tab: the panel, then every control on it
-    def tab_children(shown_fx):
-        kids = [entry("panel", "Image", image_data(use(m["background"])), bounds((0, 0, 1280, 628)))]
-        boxes = []                       # (parameter id, rect) for the Q-Link frames
-        legends = []                     # (parameter id, a knob's rect with its legend under it)
+    def tab_children(page):
+        kids = [entry("panel", "Image", image_data(use(page["background"])), bounds((0, 0, 1280, 628)))]
+        boxes, legends = [], []          # (parameter id, rect) for the Q-Link frames; a knob's rect with its legend
 
         def fx_hide(c):
-            if c["fx"] < 0 or shown_fx is not None:
-                return []
-            return ["IndexedEnabling/%d/5/%s" % (c["fx"], FXH)]
+            return ["IndexedEnabling/%d/5/%s" % (c["fx"], FXH)] if c["fx"] >= 0 else []
 
-        for c in ctls:
-            if shown_fx is not None and c["fx"] >= 0 and c["fx"] != shown_fx:
-                continue
+        for i, c in enumerate(page["controls"]):
+            if c["names"]:
+                names[c["id"]] = c["names"]
             h = handle(c["id"])
             if c["kind"] == "knob":
-                kids.append(entry(c["id"], c["def"], O(("version", 1), ("handleName", "Data")),
+                x, y, w, hh = c["rect"]
+                ov = "menu overlay" if c["names"] else "knob overlay bipolar" if c["bipolar"] else "knob overlay"
+                knob = O(("version", 3), ("knobType", "FilmStrip"), ("filmStrip", use(c["strip"])), ("numFrames", c["frames"]),
+                         ("invert", False), ("dragOrientation", "Vertical"), ("handleName", "Data"))
+                name = "%s knob %d %s" % (page["name"].lower(), i, c["id"])
+                defs.append((name, component(
+                    [action("Mouse Down", "Q-Link", "Data", ""), action("Double Click", "Show Overlay", "Data", ov),
+                     action("Enter Pressed", "Show Overlay", "Data", ov)],
+                    [entry("knob", "Knob", knob, bounds((0, 0, w, hh))),
+                     entry("focus", "Focus", focus, O(("version", 1), ("acceptsHWFocus", "No"), ("showWhenDataModelInvalid", "Show"),
+                                                      ("whenVisible", "WhenFocussed"), ("boundsType", "Absolute"),
+                                                      ("bounds", box((0, 0, w, hh)))))])))
+                kids.append(entry(c["id"], name, O(("version", 1), ("handleName", "Data")),
                                   bounds(c["rect"], "Yes", fx_hide(c) or None, "Hide"), [("Data", h)]))
                 boxes.append((c["id"], c["rect"]))
                 legends.append((c["id"], c["frame"]))
+                if c.get("legendImage"):     # (an effect's knob: its legend with it)
+                    kids.append(entry(c["id"] + " legend", "Image", image_data(use(c["legendImage"])),
+                                      bounds(c["legendRect"], "No", fx_hide(c) or None)))
             elif c["kind"] == "button":
                 rs = c["ranges"]
                 for r in rs:
@@ -231,9 +218,9 @@ def main(argv):
                     kids.append(entry(c["id"], "Button", data, bounds(row["rect"], "No", fx_hide(c) or None, "Hide")))
                     boxes.append((c["id"], row["rect"]))
 
-        # EFFECTS: SELECT, its LEDs, the effect's name, its first knob's value
-        if shown_fx is None:
-            for j in range(5):           # SELECT: the next effect
+        fx = page.get("effects")
+        if fx:                           # EFFECTS: SELECT (the next effect), its LEDs, the effect's name and first value
+            for j in range(5):
                 data = O(("version", 2), ("onImage", use(fx["selectImage"])), ("offImage", fx["selectImage"]),
                          ("buttonId", (j + 1) % 5), ("numButtonsInGroup", 5), ("handleName", FXH), ("gestureBehaviour", "Instant"))
                 kids.append(entry("fx select", "Button", data, bounds(fx["select"], "No", ["IndexedEnabling/%d/5/%s" % (j, FXH)])))
@@ -248,25 +235,14 @@ def main(argv):
                 strip = O(("version", 2), ("imageType", "FilmStrip"), ("colour", "0"), ("image", use(v["strip"])),
                           ("numFrames", v["steps"]), ("handleName", handle(v["id"])))
                 kids.append(entry("fx value", "Image", strip, bounds(fx["value"], "No", ["IndexedEnabling/%d/5/%s" % (f, FXH)])))
-        else:
-            kids.append(entry("fx select", "Image", image_data(use(fx["selectImage"])), bounds(fx["select"])))
-            for k, row in enumerate(fx["rows"]):
-                kids.append(entry("fx led", "Image", image_data(use(row["on"] if k == shown_fx else row["off"])), bounds(row["rect"])))
-            kids.append(entry("fx name", "Image", image_data(use(fx["codes"][shown_fx])), bounds(fx["code"])))
-            v = fx["values"][shown_fx]
-            strip = O(("version", 2), ("imageType", "FilmStrip"), ("colour", "0"), ("image", use(v["strip"])),
-                      ("numFrames", v["steps"]), ("handleName", handle(v["id"])))
-            kids.append(entry("fx value", "Image", strip, bounds(fx["value"])))
-        boxes += [("", fx["select"]), ("", fx["code"]), ("", fx["value"])] + [("", r["rect"]) for r in fx["rows"]]
-        return kids, boxes + [("legend " + pid, r) for pid, r in legends]
+            boxes += [("", fx["select"]), ("", fx["code"]), ("", fx["value"])] + [("", r["rect"]) for r in fx["rows"]]
+        return kids, boxes, legends
 
-    def frame(group, boxes):
-        """The Q-Link group's frame: around its controls (and any control it would otherwise cut through), with an even
-        gap that touches no other control."""
-        legends = [(p[7:], r) for p, r in boxes if p.startswith("legend ")]
-        boxes = [(p, r) for p, r in boxes if not p.startswith("legend ")]
+    def frame(group, boxes, legends):
+        """The Q-Link group's frame: around its controls with their legends (and any control it would otherwise cut
+        through), with an even gap that touches no other control."""
         mine = []
-        for g in group:                  # ("id#k": only the k-th of its controls from the left, by their boxes)
+        for g in group:                  # ("id#k": only the k-th of its controls from the left)
             pid, _, k = g.partition("#")
             xs = sorted({r[0] for p, r in boxes if p == pid})
             mine += [r for p, r in boxes + legends if p == pid and (not k or r[0] == xs[int(k)])]
@@ -288,27 +264,30 @@ def main(argv):
             if r is None:
                 break
             x0, y0, x1, y1 = min(x0, r[0]), min(y0, r[1]), max(x1, r[0] + r[2]), max(y1, r[1] + r[3])
-        for pad in (4, 3, 2, 1, 0):
+        for pad in (6, 5, 4, 3, 2, 1, 0):
             a, b, c, d = max(0, x0 - pad), max(0, y0 - pad), min(1280, x1 + pad), min(628, y1 + pad)
             if cuts(a, b, c, d) is None:
                 return (a, b, c - a, d - b)
         return (x0, y0, x1 - x0, y1 - y0)
 
     tabs, qmaps = [], []
-    fx_knobs = {f: [c["id"] for c in sorted(ctls, key=lambda c: c["rect"][0] if c["kind"] == "knob" else 9999)
-                    if c["fx"] == f and c["kind"] == "knob"] for f in range(5)}
-    for name, key, sub, shown_fx, groups in TABS:
-        groups = [fx_knobs[shown_fx] if g is None else g for g in groups]
-        kids, boxes = tab_children(shown_fx)
-        rects = [frame(g, boxes) for g in groups]
-        tabs.append(O(("version", 1), ("tabName", name), ("fnKeyIndex", key), ("fnKeySubIndex", sub),
-                      ("componentDefinition", component([], kids)),
-                      ("qlinkBoundsData", [box(r) for r in rects if r])))
+    for key, (name, groups) in enumerate(PAGES):
+        page = pages[name]
+        kids, boxes, legends = tab_children(page)
+        rects = []
         q = {}
         for row, g in enumerate(groups):
-            for col, pid in enumerate(g):
+            ids, framed = (g, True) if isinstance(g, list) else g
+            if framed:
+                r = frame(ids, boxes, legends)
+                if r:
+                    rects.append(r)
+            for col, pid in enumerate(ids):
                 q[13 + col - 4 * row] = MPC[pid.partition("#")[0]]
-        qmaps.append(O(("Tab", key + 1), ("SubTab", sub + 1), ("Bank Direction", "RowTopDown"),
+        tabs.append(O(("version", 1), ("tabName", name), ("fnKeyIndex", key), ("fnKeySubIndex", 0),
+                      ("componentDefinition", component([], kids)),
+                      ("qlinkBoundsData", [box(r) for r in rects])))
+        qmaps.append(O(("Tab", key + 1), ("SubTab", 1), ("Bank Direction", "RowTopDown"),
                        ("Q-Links", O(*[("Q-Link %d" % n, q.get(n, -1)) for n in range(1, 17)]))))
 
     repl = [O(("key", handle(pid)), ("value", v)) for pid, v in sorted(names.items(), key=lambda kv: MPC[kv[0]])]
@@ -325,9 +304,18 @@ def main(argv):
         f.write(dump(tui) + "\n")
     with open(os.path.join(out, "Q-Links.json"), "w") as f:
         f.write(dump(ql) + "\n")
+    try:                                 # (the panel's matte specks: 256 colours make them a thirtieth the size)
+        from PIL import Image
+    except ImportError:
+        Image = None
+        print("(no Pillow: the pictures copied as they are, many times larger)")
     for f in sorted(used):
-        shutil.copy2(os.path.join(src, f), os.path.join(out, f))
-    print("TUI.json: %d tabs, %d components; Q-Links.json; %d pictures in %s" % (len(tabs), len(defs), len(used), out))
+        if Image:
+            im = Image.open(os.path.join(src, f)).convert("RGB")
+            im.quantize(256, method=Image.MEDIANCUT, dither=Image.NONE).save(os.path.join(out, f), optimize=True)
+        else:
+            shutil.copy2(os.path.join(src, f), os.path.join(out, f))
+    print("TUI.json: %d pages, %d components; Q-Links.json; %d pictures in %s" % (len(tabs), len(defs), len(used), out))
     return 0
 
 

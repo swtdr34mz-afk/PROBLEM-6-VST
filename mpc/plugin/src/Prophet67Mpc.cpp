@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (C) 2026 swtdr34mz (PROPHET 67)
 //
-// PROPHET 67 for the MPC: the same engine as the VST3 and the FM-1 firmware (dsp/, src/P67Engine.*), hosted by the
+// PROPHETIC 6, PROPHET 67 for the MPC: the same engine as the VST3 and the FM-1 firmware (dsp/, src/P67Engine.*), hosted by the
 // MPC Plugin SDK's framework (mpc_plugin.h). mpc/build.py copies the engine's files beside this one and generates
 // p67_data.cpp (the parameters, the 16 factory programs, every value's text) before the SDK builds it.
 //
@@ -240,9 +240,9 @@ private:
     static mpc::PluginInfo makeInfo()
     {
         mpc::PluginInfo i;
-        i.name = "PROPHET 67";
+        i.name = "PROPHETIC 6";
         i.vendor = "swtdr34mz";
-        i.uniqueId = MPC_FOURCC('P', 'h', '6', '7');
+        i.uniqueId = MPC_FOURCC('P', 'r', '6', 'c');
         i.version = 1000;
         i.isInstrument = true;
         i.numInputs = 0;

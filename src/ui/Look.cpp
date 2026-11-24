@@ -452,4 +452,57 @@ void drawSeg14Text(juce::Graphics &g, juce::Rectangle<float> r, const juce::Stri
         g.fillEllipse(dp);
     }
 }
+/* ------------------------------------------------------------------ sections and the face --- */
+float textWidth(const juce::Font &f, const juce::String &t)
+{
+    juce::GlyphArrangement ga;
+    ga.addLineOfText(f, t, 0.0f, 0.0f);
+    return ga.getBoundingBox(0, -1, true).getWidth();
+}
+
+void drawSection(juce::Graphics &g, juce::Rectangle<int> sr, const juce::String &title)
+{
+    using namespace juce;
+    auto r = sr.toFloat().reduced(0.5f);
+    auto f = font(Face::title, 11.5f).withExtraKerningFactor(0.06f);
+    float tw = textWidth(f, title), cx = r.getCentreX(), gl = cx - tw * 0.5f - 6.0f, gr = cx + tw * 0.5f + 6.0f, rad = 6.0f;
+    Path p;
+    p.startNewSubPath(gr, r.getY());
+    p.lineTo(r.getRight() - rad, r.getY());
+    p.quadraticTo(r.getRight(), r.getY(), r.getRight(), r.getY() + rad);
+    p.lineTo(r.getRight(), r.getBottom() - rad);
+    p.quadraticTo(r.getRight(), r.getBottom(), r.getRight() - rad, r.getBottom());
+    p.lineTo(r.getX() + rad, r.getBottom());
+    p.quadraticTo(r.getX(), r.getBottom(), r.getX(), r.getBottom() - rad);
+    p.lineTo(r.getX(), r.getY() + rad);
+    p.quadraticTo(r.getX(), r.getY(), r.getX() + rad, r.getY());
+    p.lineTo(gl, r.getY());
+    g.setColour(col::frame);
+    g.strokePath(p, PathStrokeType(1.4f));
+    g.setColour(col::legend);
+    g.setFont(f);
+    g.drawText(title, Rectangle<float>(gl, r.getY() - 8.0f, gr - gl, 16.0f), Justification::centred, false);
+}
+
+void drawPanelFace(juce::Graphics &g, juce::Rectangle<float> r, int dots, int seed)
+{
+    using namespace juce;
+    g.setGradientFill(ColourGradient(col::panelTop, 0.0f, r.getY(), col::panelBottom, 0.0f, r.getBottom(), false));
+    g.fillRect(r);
+    Random rnd(seed);                    /* a matte finish */
+    for (int i = 0; i < dots; i++) {
+        float x = r.getX() + rnd.nextFloat() * r.getWidth(), y = r.getY() + rnd.nextFloat() * r.getHeight();
+        g.setColour((rnd.nextBool() ? Colours::white : Colours::black).withAlpha(0.025f + 0.03f * rnd.nextFloat()));
+        g.fillRect(x, y, 1.0f, 1.0f);
+    }
+}
+void drawTag(juce::Graphics &g, juce::Rectangle<float> r)
+{
+    static const juce::Image tag = juce::ImageCache::getFromMemory(BinaryData::swtdr34mztag_png, BinaryData::swtdr34mztag_pngSize);
+    if (tag.isNull())
+        return;
+    auto fit = juce::RectanglePlacement(juce::RectanglePlacement::centred).appliedTo(tag.getBounds().toFloat(), r);
+    g.setColour(col::legend);
+    g.drawImage(tag, fit, juce::RectanglePlacement::stretchToFit, true);
+}
 } // namespace p67
