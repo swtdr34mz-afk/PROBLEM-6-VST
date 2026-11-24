@@ -225,7 +225,7 @@ void Prophet67Processor::setCurrentProgram(int index)
 const juce::String Prophet67Processor::getProgramName(int index)
 {
     if (index >= 0 && index < NPRESETS)
-        return FACTORY[index].name;
+        return juce::String(FACTORY[index].name, (size_t)NAME_LEN);   /* (a name of 12 has no nought) */
     if (index >= NPRESETS && index < NPRESETS + (int)userPresets.size())
         return userPresets[(size_t)(index - NPRESETS)].name;
     return {};

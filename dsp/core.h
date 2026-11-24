@@ -93,7 +93,7 @@ INL float ex2(float x)
     p = p * f + 6.931472057e-01f;
     p = p * f + 1.0f;
     b.f = p;
-    b.i += (int32_t)fl << 23;
+    b.u += (uint32_t)(int32_t)fl << 23;   /* (unsigned: the same bits, no shift of a negative) */
     return b.f;
 }
 INL float hz_of(float midi) { return 440.0f * ex2((midi - 69.0f) * (1.0f / 12.0f)); }

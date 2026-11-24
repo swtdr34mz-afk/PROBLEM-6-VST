@@ -325,6 +325,24 @@ float fx_tail(void) { return tail; }
 /* ----------------------------------------------------------- the pieces --- */
 INL float rd_frac(const float *b, uint32_t mask_or_len, uint32_t w, float d, int pow2)
 {
+#ifdef P67_PLUGIN
+    /* (the whole samples from the write position, the fraction from the delay alone: as fine at the end of a long
+     * line as at its start; a float of the position would keep a 1/128 sample there) */
+    uint32_t di = (uint32_t)d, i1, i0;
+    float f = d - (float)di, a, c;
+    if (pow2) {
+        i1 = (w - di) & mask_or_len;
+        i0 = (i1 - 1u) & mask_or_len;
+    } else {
+        i1 = w >= di ? w - di : w + mask_or_len - di;
+        if (i1 >= mask_or_len)
+            i1 -= mask_or_len;
+        i0 = i1 == 0u ? mask_or_len - 1u : i1 - 1u;
+    }
+    a = b[i1];
+    c = b[i0];
+    return a + (c - a) * f;
+#else
     float rp = (float)w - d;
     int32_t i;
     float f, a, c;
@@ -345,6 +363,7 @@ INL float rd_frac(const float *b, uint32_t mask_or_len, uint32_t w, float d, int
     a = b[i0];
     c = b[i1];
     return a + (c - a) * f;
+#endif
 }
 
 /* the shimmer: an octave up, two heads sliding through a window, crossfaded */
@@ -564,6 +583,18 @@ void fx_process(float *l, float *r, uint32_t n)
                     dl_wow[c] += (dl_wowt[c] - dl_wow[c]) * k_wow;   /* (gliding there: no step) */
                     dl_d[c] += (dl_wt[c] - dl_d[c]) * k_dglide;   /* a new time: glides there (~80 ms) */
                     d = dl_d[c] + dl_wow[c] + FQ.dl_depth * (1.0f + fm_sin_turns(dl_ph + 0.25f * (float)c)) * 0.5f;
+#ifdef P67_PLUGIN                        /* (the fraction from the delay alone, as rd_frac) */
+                    (void)rp;
+                    (void)i0;
+                    {
+                        uint32_t di = (uint32_t)d;
+                        f = d - (float)di;
+                        j1 = dl_w >= di ? dl_w - di : dl_w + DLN - di;
+                        j0 = j1 == 0u ? DLN - 1u : j1 - 1u;
+                        a = dl_buf[c][j1];
+                        b = dl_buf[c][j0];
+                    }
+#else
                     rp = (float)dl_w - d;
                     if (rp < 0.0f)
                         rp += (float)DLN;
@@ -573,6 +604,7 @@ void fx_process(float *l, float *r, uint32_t n)
                     j1 = j0 + 1u >= DLN ? 0u : j0 + 1u;
                     a = (float)dl_buf[c][j0];
                     b = (float)dl_buf[c][j1];
+#endif
                     y = (a + (b - a) * f) * (1.0f / DL_Q);
                     dl_lp[c] += (y - dl_lp[c]) * F.dl_tk;   /* TONE: the repeats darken as they go */
                     dl_hp[c] += (dl_lp[c] - dl_hp[c]) * k_dhp;   /* the lows thinned (80 Hz) */

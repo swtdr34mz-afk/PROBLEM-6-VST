@@ -178,6 +178,7 @@ static float lvl_out;
 static uint8_t duck_on;
 #ifdef P67_PLUGIN
 static float dcb_x[2], dcb_y[2];
+static uint8_t q_eco;                    /* (eng_quality) */
 #endif
 static float duck_g = 1.0f, gain_s;
 
@@ -886,7 +887,7 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
     const float steal_d = 1.0f / (STEAL * SRS), drift_k = k_sr(0.0016f);
     const float noise_g = SRS == 1.0f ? 1.0f : fm_sqrtf(SRS);
 #ifdef P67_PLUGIN
-    const int lp_os = SR < 70000.0f ? 2 : 1;   /* the low-pass's rate: twice, below 70 kHz */
+    const int lp_os = SR < 70000.0f && !q_eco ? 2 : 1;   /* the low-pass's rate: twice, below 70 kHz (unless ECO) */
 #else
     const int lp_os = 1;
 #endif
@@ -1738,6 +1739,9 @@ void eng_hp_extra(int vel, int keytrk, int fenvVel)   /* (taken at the next patc
     hp_extra_vel = (float)vel * (1.0f / 127.0f);
     hp_extra_kt = keytrk == KT_FULL ? 1.0f : keytrk == KT_HALF ? 0.5f : 0.0f;
 }
+#endif
+#ifdef P67_PLUGIN
+void eng_quality(int high) { q_eco = (uint8_t)(high ? 0 : 1); }
 #endif
 void eng_duck(int on) { duck_on = (uint8_t)(on != 0); }
 int eng_ducked(void) { return duck_g < 0.001f; }
