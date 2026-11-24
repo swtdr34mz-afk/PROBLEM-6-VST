@@ -39,6 +39,13 @@ void drawSegWindow(juce::Graphics &, juce::Rectangle<float> r);
 void drawSegText(juce::Graphics &, juce::Rectangle<float> r, const juce::String &text, int n);
 /* the same with fourteen segments (letters that read) */
 void drawSeg14Text(juce::Graphics &, juce::Rectangle<float> r, const juce::String &text, int n);
+/* a section's white frame with its name set in the top line */
+void drawSection(juce::Graphics &, juce::Rectangle<int> r, const juce::String &title);
+/* the panel's charcoal face, matte (dots specks over the area, the same for the same seed) */
+void drawPanelFace(juce::Graphics &, juce::Rectangle<float> r, int dots, int seed = 67);
+float textWidth(const juce::Font &, const juce::String &);
+/* the maker's tag (res/swtdr34mz-tag.png), in the legends' white, as large as fits r, centred */
+void drawTag(juce::Graphics &, juce::Rectangle<float> r);
 void drawLegend(juce::Graphics &, const juce::String &, juce::Rectangle<float>, float size = 10.5f,
                 juce::Justification j = juce::Justification::centred);
 } // namespace p67

@@ -56,7 +56,8 @@ juce_add_binary_data(P67Fonts SOURCES
     fonts/FiraSans-SemiBold.ttf
     fonts/FiraSans-Bold.ttf
     fonts/FiraSans-ExtraBold.ttf
-    fonts/AnonymousPro-Bold.ttf)
+    fonts/AnonymousPro-Bold.ttf
+    res/swtdr34mz-tag.png)
 
 target_sources(Prophet67 PRIVATE
     src/P67Engine.cpp

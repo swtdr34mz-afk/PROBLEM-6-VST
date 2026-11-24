@@ -4,37 +4,9 @@
 #include "PluginEditor.h"
 #include "Sections.h"
 
-/* --------------------------------------------------------------- the scales (the firmware's, app.c) --- */
+/* LOW SPLIT's scales and the rest: KeySplit.h (shared with the MPC plugin) */
+using namespace p67split;
 namespace {
-struct Scale {
-    const char *name;
-    int n;
-    int st[7];
-};
-const Scale SCALES[] = {
-    {"MAJOR", 7, {0, 2, 4, 5, 7, 9, 11}},   {"MINOR", 7, {0, 2, 3, 5, 7, 8, 10}},
-    {"DORIAN", 7, {0, 2, 3, 5, 7, 9, 10}},  {"PHRYGIAN", 7, {0, 1, 3, 5, 7, 8, 10}},
-    {"LYDIAN", 7, {0, 2, 4, 6, 7, 9, 11}},  {"MIXOLYD", 7, {0, 2, 4, 5, 7, 9, 10}},
-    {"HARM MIN", 7, {0, 2, 3, 5, 7, 8, 11}}, {"PENTA MAJ", 5, {0, 2, 4, 7, 9}},
-    {"PENTA MIN", 5, {0, 3, 5, 7, 10}},     {"BLUES", 6, {0, 3, 5, 6, 7, 10}},
-    {"ARABIC", 7, {0, 1, 4, 5, 7, 8, 11}},
-};
-const int NSC = (int)(sizeof SCALES / sizeof SCALES[0]);
-const char *const NOTE[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
-bool isWhite(int n)
-{
-    int c = n % 12;
-    return c == 0 || c == 2 || c == 4 || c == 5 || c == 7 || c == 9 || c == 11;
-}
-int snap(int n, int rootNote, int scale)        /* to the scale's note at or below n */
-{
-    const Scale &sc = SCALES[(scale - 1) % NSC];
-    int rel = ((n - rootNote) % 12 + 12) % 12, best = 0;
-    for (int i = 0; i < sc.n; i++)
-        if (sc.st[i] <= rel)
-            best = sc.st[i];
-    return n - rel + best;
-}
 juce::String noteName(int n) { return juce::String(NOTE[n % 12]) + juce::String(n / 12 - 1); }
 } // namespace
 
@@ -111,8 +83,6 @@ Prophet67Processor::Prophet67Processor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts(*this, nullptr, "PROPHET67", createLayout(&dlSynced))
 {
-    for (int i = 0; i < 128; i++)
-        mapped[i] = -1;
     loadUserPresets();
 }
 
@@ -192,11 +162,7 @@ void Prophet67Processor::prepareToPlay(double sampleRate, int)
     patched = false;
     hpVelSent = hpKtSent = fenvVelSent = -1;
     arpSent = false;
-    for (int i = 0; i < 128; i++) {
-        mapped[i] = -1;
-        held[i] = latched[i] = false;
-    }
-    root = -1;
+    split.reset();
     lastGain = -1.0f;
 }
 
@@ -241,120 +207,23 @@ void Prophet67Processor::readGlobals()
     g.arpOct = (int)v("arp_oct");
     g.arpGate = (int)v("arp_gate");
     g.swing = (int)v("swing");
-    g.split = (int)v("split");
-    g.point = (int)v("split_point");
-    g.scaleL = (int)v("scale_l");
-    g.scaleR = (int)v("scale_r");
-    g.key = (int)v("key");
-    g.follow = (int)v("follow");
-    g.lowHold = v("low_hold") > 0.5f;
-    g.balance = (int)v("balance");
+    sp.split = (int)v("split");
+    sp.point = (int)v("split_point");
+    sp.scaleL = (int)v("scale_l");
+    sp.scaleR = (int)v("scale_r");
+    sp.key = (int)v("key");
+    sp.follow = (int)v("follow");
+    sp.lowHold = v("low_hold") > 0.5f;
+    sp.balance = (int)v("balance");
     g.volume = v("volume");
-}
-
-/* ------------------------------------------------------------------------------ the split --- */
-int Prophet67Processor::keyMap(int note) const
-{
-    if (isLeft(note)) {
-        int n = note - 12 * g.split;
-        return g.scaleL ? snap(n, g.key, g.scaleL) : n;
-    }
-    if (!g.scaleR)
-        return note;
-    int base = g.split > 0 && g.follow != 0 && root >= 0 ? root : g.key;
-    if (g.split > 0 && g.follow == 2) {  /* WHITE: the scale on the white keys from the split point up */
-        const Scale &sc = SCALES[(g.scaleR - 1) % NSC];
-        if (!isWhite(note))
-            return -1;
-        int first = g.point;
-        while (!isWhite(first))
-            first++;
-        int d = 0;
-        for (int j = first; j < note; j++)
-            d += isWhite(j) ? 1 : 0;
-        int b0 = first - (((first - base) % 12 + 12) % 12);
-        if (first - b0 > 6)
-            b0 += 12;
-        return b0 + 12 * (d / sc.n) + sc.st[d % sc.n];
-    }
-    return snap(note, base, g.scaleR);
-}
-
-float Prophet67Processor::zoneGain(int note) const
-{
-    float b = (float)g.balance / 50.0f;
-    if (g.split == 0)
-        return 1.0f;
-    return isLeft(note) ? (b > 0.0f ? 1.0f - b : 1.0f) : (b < 0.0f ? 1.0f + b : 1.0f);
-}
-
-void Prophet67Processor::rootUpdate()
-{
-    for (int n = 0; n < 128; n++)
-        if (isLeft(n) && mapped[n] >= 0) {
-            root = mapped[n] % 12;
-            return;
-        }
-}
-
-void Prophet67Processor::stopNote(int note)
-{
-    if (mapped[note] >= 0) {
-        if (engine.arpOn())
-            engine.arpKey(mapped[note], false, 0.0f);
-        else
-            engine.noteOff(note);
-    }
-    mapped[note] = -1;
-    latched[note] = false;
-}
-
-void Prophet67Processor::noteDown(int note, float vel)
-{
-    if (g.lowHold && isLeft(note)) {     /* a new note on the left, none held there: the held ones go */
-        bool anyHeld = false, anyLatched = false;
-        for (int n = 0; n < 128; n++) {
-            anyHeld |= held[n] && isLeft(n);
-            anyLatched |= latched[n];
-        }
-        if (!anyHeld && anyLatched)
-            for (int n = 0; n < 128; n++)
-                if (latched[n])
-                    stopNote(n);
-    }
-    if (mapped[note] >= 0)
-        stopNote(note);
-    held[note] = true;
-    int m = keyMap(note);
-    if (m < 0 || m > 127)
-        return;
-    mapped[note] = m;
-    if (engine.arpOn())
-        engine.arpKey(m, true, vel);
-    else
-        engine.noteOn(note, m, vel, zoneGain(note));
-    if (isLeft(note)) {
-        if (g.lowHold)
-            latched[note] = true;
-        rootUpdate();
-    }
-}
-
-void Prophet67Processor::noteUp(int note)
-{
-    held[note] = false;
-    if (latched[note] && g.lowHold)
-        return;                          /* LOW HOLD: it stays */
-    stopNote(note);
-    rootUpdate();
 }
 
 void Prophet67Processor::handleMidi(const juce::MidiMessage &m)
 {
     if (m.isNoteOn())
-        noteDown(m.getNoteNumber(), m.getFloatVelocity());
+        split.noteDown(engine, m.getNoteNumber(), m.getFloatVelocity());
     else if (m.isNoteOff())
-        noteUp(m.getNoteNumber());
+        split.noteUp(engine, m.getNoteNumber());
     else if (m.isPitchWheel())
         engine.bend((float)(m.getPitchWheelValue() - 8192) / 8192.0f);
     else if (m.isChannelPressure())
@@ -376,10 +245,7 @@ void Prophet67Processor::handleMidi(const juce::MidiMessage &m)
                 engine.panic();
             else
                 engine.allOff();
-            for (int n = 0; n < 128; n++) {
-                mapped[n] = -1;
-                held[n] = latched[n] = false;
-            }
+            split.forget(true);
         } else if (cc == 121) {          /* RESET ALL CONTROLLERS: the wheels, the pedal, the pressure, CC 74 */
             engine.bend(0.0f);
             engine.modWheel(0.0f);
@@ -429,17 +295,13 @@ void Prophet67Processor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
         || g.arpOct != gSent.arpOct || g.arpGate != gSent.arpGate) {
         if (g.arpOn != gSent.arpOn || !arpSent) {   /* the arp on or off: what sounds lets go */
             engine.allOff();
-            for (int i = 0; i < 128; i++)
-                mapped[i] = -1, latched[i] = false;
+            split.forget(false);
         }
         engine.arp(g.arpOn, g.arpMode, g.arpRate, g.arpOct, (float)g.arpGate * 0.01f);
     }
     if (!arpSent || g.arpHold != gSent.arpHold)
         engine.arpHold(g.arpHold);
-    if (arpSent && gSent.lowHold && !g.lowHold)   /* LOW HOLD off: what only it held goes */
-        for (int i = 0; i < 128; i++)
-            if (latched[i] && !held[i])
-                stopNote(i);
+    split.set(engine, sp);                 /* (LOW HOLD off: what only it held goes) */
     arpSent = true;
     gSent = g;
 
