@@ -163,6 +163,7 @@ void Prophet67Processor::prepareToPlay(double sampleRate, int)
     hpVelSent = hpKtSent = fenvVelSent = -1;
     arpSent = false;
     split.reset();
+    pedal = susSent = false;
     lastGain = -1.0f;
 }
 
@@ -230,10 +231,10 @@ void Prophet67Processor::handleMidi(const juce::MidiMessage &m)
         engine.pressAll((float)m.getChannelPressureValue() / 127.0f);
     else if (m.isAftertouch())
         engine.press(m.getNoteNumber(), (float)m.getAfterTouchValue() / 127.0f);
-    else if (m.isSustainPedalOn())
-        engine.sustain(true);
-    else if (m.isSustainPedalOff())
-        engine.sustain(false);
+    else if (m.isSustainPedalOn() || m.isSustainPedalOff()) {
+        pedal = m.isSustainPedalOn();
+        sustainUpdate();
+    }
     else if (m.isController()) {
         int cc = m.getControllerNumber(), v = m.getControllerValue();
         if (cc == 1)
@@ -249,12 +250,23 @@ void Prophet67Processor::handleMidi(const juce::MidiMessage &m)
         } else if (cc == 121) {          /* RESET ALL CONTROLLERS: the wheels, the pedal, the pressure, CC 74 */
             engine.bend(0.0f);
             engine.modWheel(0.0f);
-            engine.sustain(false);
+            pedal = false;                 /* (HOLD, if on, still holds) */
+            sustainUpdate();
             engine.pressAll(0.0f);
             engine.cutoffCC(-1);
         }
     } else if (m.isAllNotesOff() || m.isAllSoundOff())
         engine.allOff();
+}
+
+/* the sustain: the pedal (CC 64), or HOLD while the arp is off (with the arp on, HOLD is the arp's own) */
+void Prophet67Processor::sustainUpdate()
+{
+    bool want = pedal || (g.arpHold && !g.arpOn);
+    if (want != susSent) {
+        engine.sustain(want);
+        susSent = want;
+    }
 }
 
 /* ------------------------------------------------------------------------------ the block --- */
@@ -301,6 +313,7 @@ void Prophet67Processor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
     }
     if (!arpSent || g.arpHold != gSent.arpHold)
         engine.arpHold(g.arpHold);
+    sustainUpdate();                       /* HOLD without the arp: the notes held, as by the pedal */
     split.set(engine, sp);                 /* (LOW HOLD off: what only it held goes) */
     arpSent = true;
     gSent = g;

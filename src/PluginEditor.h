@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 swtdr34mz (PROPHET 67) */
 /* The editor: a Prophet-6's front panel, drawn at 1560 x 900 and scaled to the window (drag the corner). Four rows
- * of sections as on the P6 (POLY MOD, CLOCK, ARPEGGIATOR, AFTERTOUCH; the oscillators, VINTAGE, MIXER, HIGH-PASS
+ * of sections as on the P6 (POLY MOD, ARPEGGIATOR, AFTERTOUCH; the oscillators, VINTAGE, MIXER, HIGH-PASS
  * FILTER, FILTER ENVELOPE; the two LFOs, LOW-PASS FILTER, MISC PARAMETERS; DISTORT, EFFECTS, AMPLIFIER ENVELOPE,
- * LOW SPLIT), the program strip (HOLD, GLIDE AMT, UNISON, the program display, TENS SELECT, 0-9, the name) and a
+ * LOW SPLIT), the program strip (HOLD, GLIDE AMT, UNISON, the program display, TENS SELECT, 0-9, INIT, WRITE, the name) and a
  * four-octave keyboard with pitch and mod wheels. */
 #pragma once
 #include "PluginProcessor.h"
@@ -40,7 +40,7 @@ private:
     std::vector<Section> sections;
     std::vector<std::pair<juce::Component *, int>> fxControls;   /* EFFECTS: a knob and the effect it is for */
     juce::OwnedArray<juce::Component> keys;                       /* the keyboard and the wheels */
-    juce::Component *bpmDisplay = nullptr, *fxDisplay = nullptr, *nameDisplay = nullptr;
+    juce::Component *fxDisplay = nullptr, *nameDisplay = nullptr;
     juce::Array<juce::Component *> progButtons;
 
     juce::Image background;
