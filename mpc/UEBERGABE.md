@@ -88,11 +88,16 @@ Scales/Key/Follow/Balance nur in der Parameterliste.
 4. Branding-Hinweis: „PROPHETIC 6“ ist nah an „Prophet-6“; die Reviewer könnten nachfragen. Kein Hersteller-Logo im
    Skin (geprüft), Summary sagt „Prophet-6-style“.
 
-## Neue Version
+## Neue Version und Katalog-Zips
 
-Bei jedem Release die Versionsnummer an **zwei** Stellen gleich setzen: `CMakeLists.txt` (`project(PROPHET67 VERSION …)`,
-VST) und `mpc/plugin/plugin.json` (`"version"`, MPC). Sonst bricht die CI beim MPC-Zip ab („plugin.json's version is
-not …“), wie bei v1.0.1 passiert.
+- Die MPC-Version kommt beim Release **aus dem Tag** (die CI schreibt sie in `mpc/plugin/plugin.json`). v1.0.2 und
+  v1.0.3 hatten noch kein MPC-Zip, weil plugin.json nicht passte.
+- Die CI macht mit den Werkzeugen des Katalogs (`open-mpc/mpc-vst-plugins` gepinnt auf `aa81004…`, `tools/sdk_release.py`)
+  `PROPHETIC-6-<v>-mpc-armv7.zip` und `-mpc-aarch64.zip`, prüft sie mit `catalog_check.py --catalog` und schreibt
+  Ausgabe + SHA-256 in die Job-Zusammenfassung des `mpc`-Jobs. Ans Release kommen beide plus `-mpc-sdk.zip`.
+- Katalog-Eintrag: `asset_pattern` = `PROPHETIC-6-*-mpc-armv7.zip` (das aarch64-Zip findet der Katalog daneben).
+- Review in #1158 (24.11. abends): Summary mit „A port of the PROPHET 67 firmware for the M-VAVE FM-1“, asset_pattern,
+  catalog_check-Ausgabe + SHA-256 im PR. Der Name PROPHETIC 6 darf bleiben (Korrektur der Betreuer).
 
 ## Arbeitsregeln (wie bisher)
 
