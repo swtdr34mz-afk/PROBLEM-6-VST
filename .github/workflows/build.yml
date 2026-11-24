@@ -79,10 +79,12 @@ jobs:
         include:
           - os: windows-latest
             name: Windows
-          # the Mac: GitHub's macOS runners found no machine (Nov 2026); back in with these two lines
-          # - os: macos-26
-          #   name: macOS
+          # the Mac: on GitHub's Intel Mac (the Apple Silicon runners found no machine, Nov 2026); the plugins are
+          # built for both Apple Silicon and Intel in one file (CMAKE_OSX_ARCHITECTURES), as for NIQUE D0
+          - os: macos-15-intel
+            name: macOS
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -124,6 +126,17 @@ jobs:
           Copy-Item "$a/Standalone/PROPHET 67.exe" $o/
           Copy-Item README.md $o/
           Compress-Archive -Path $o -DestinationPath PROPHET67-Windows.zip
+
+      - name: auval (macOS)
+        # the Audio Unit checked as Logic and Ableton check it (informative: a failure here does not stop the build)
+        if: runner.os == 'macOS'
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R "build/Prophet67_artefacts/Release/AU/PROPHET 67.component" ~/Library/Audio/Plug-Ins/Components/
+          killall -9 AudioComponentRegistrar || true
+          auval -v aumu Ph67 Swtd
 
       - name: package (macOS)
         if: runner.os == 'macOS'
