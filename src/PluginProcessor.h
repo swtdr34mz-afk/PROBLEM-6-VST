@@ -9,6 +9,7 @@
 #include <atomic>
 #include "P67Engine.h"
 #include "KeySplit.h"
+#include "vst_presets.h"
 
 class Prophet67Processor : public juce::AudioProcessor
 {
@@ -30,7 +31,9 @@ public:
     bool isMidiEffect() const override { return false; }
     double getTailLengthSeconds() const override { return 8.0; }
 
-    int getNumPrograms() override { return NPRESETS + (int)userPresets.size(); }
+    /* the programs: the 16 factory programs (the FM-1's and the MPC's), the VST's own 50, then the user's own */
+    static constexpr int NFACTORY = NPRESETS + NVST_PRESETS;
+    int getNumPrograms() override { return NFACTORY + (int)userPresets.size(); }
     int getCurrentProgram() override { return program; }
     void setCurrentProgram(int index) override;
     const juce::String getProgramName(int index) override;
