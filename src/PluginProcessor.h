@@ -81,6 +81,8 @@ private:
     p67split::Settings sp;               /* LOW SPLIT's, read each block */
     bool arpSent = false;
     void readGlobals();
+    bool pedal = false, susSent = false;  /* the sustain pedal; the sustain the engine has */
+    void sustainUpdate();
 
     p67split::KeySplit split;            /* the LOW SPLIT on MIDI notes (KeySplit.h) */
     void handleMidi(const juce::MidiMessage &m);

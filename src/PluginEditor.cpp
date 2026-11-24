@@ -231,6 +231,35 @@ private:
     bool down = false;
 };
 
+/* INIT: a grey key; the INIT program (a saw, the filter open), to start a sound from */
+class InitKey : public juce::Component
+{
+public:
+    explicit InitKey(Prophet67Panel &p) : panel(p) { setRepaintsOnMouseActivity(true); }
+    void paint(juce::Graphics &g) override
+    {
+        auto r = getLocalBounds().toFloat();
+        auto lg = r.removeFromBottom(14.0f);
+        drawKeycap(g, r.withSizeKeepingCentre(44.0f, r.getHeight() - 6.0f), false, false, down, isMouseOver());
+        drawLegend(g, "INIT", lg);
+    }
+    void mouseDown(const juce::MouseEvent &) override
+    {
+        down = true;
+        panel.proc.setCurrentProgram(NPRESETS - 1);   /* (the factory's last: INIT) */
+        panel.repaint();
+    }
+    void mouseUp(const juce::MouseEvent &) override
+    {
+        down = false;
+        repaint();
+    }
+
+private:
+    Prophet67Panel &panel;
+    bool down = false;
+};
+
 /* WRITE: the red key; asks a name, keeps the sound as a program of your own */
 class WriteKey : public juce::Component
 {
@@ -471,11 +500,6 @@ void Prophet67Panel::build()
                                       }
                           }},
                      Item{BW, [&](int x, int y) { fxControls.push_back({add(new p67::Button(s, P(P_DL_SYNC), "SYNC", this), {x, y + 48, BW, 54}), 3}); }}}},
-        {"CLOCK", {Item{96, [&](int x, int y) {
-                       bpmDisplay = add(new SegDisplay(3, [this] { return juce::String(juce::roundToInt(proc.hostBpm.load())); }),
-                                        {x + 6, y + 34, 84, 44});
-                   }},
-                   GK("swing", "SWING")}},
         {"ARPEGGIATOR", {B("arp_on", "ON/OFF"), GK("arp_rate", "VALUE"), L("arp_rate", {"1/8", "1/8 T", "1/16", "1/16 T", "1/32"}, 46),
                          GK("arp_oct", "OCTAVES"), L("arp_oct", {"1", "2", "3", "4"}, 26), GK("arp_mode", "MODE"),
                          L("arp_mode", {"Up", "Down", "Up/Down", "Random", "Played"}, 58), GK("arp_gate", "GATE")}},
@@ -517,12 +541,7 @@ void Prophet67Panel::build()
                               add(new p67::Button(s, P(P_O2_MODE), "KEYBOARD", this, isKeyb, keyb), {x, y + 64, BW + 6, 48});
                           }}}},
         {"LOW SPLIT", {GK("split", "SPLIT"), L("split", {"Off", "-1 Oct", "-2 Oct", "-3 Oct"}, 42), GK("split_point", "POINT"),
-                       GK("scale_l", "SCALE L"), GK("scale_r", "SCALE R"), GK("key", "KEY"), GK("follow", "FOLLOW"),
-                       B("low_hold", "LOW HOLD"), Item{KW, [&](int x, int y) {
-                           auto *k = new Knob(s, "balance", "BALANCE", this);
-                           k->getProperties().set("bipolar", true);
-                           add(k, {x, y + 22, KW, 80});
-                       }}}},
+                       B("low_hold", "LOW HOLD")}},
         {"FILTER ENVELOPE", {VEL("fenv_vel"), K(P_FA, "ATTACK"), K(P_FD, "DECAY"), K(P_FS, "SUSTAIN"), K(P_FR, "RELEASE")}, ENV_W},
     });
 
@@ -544,10 +563,11 @@ void Prophet67Panel::build()
     add(new Knob(s, P(P_BEND), "BEND RANGE", this), {268, 538, 64, 80});
     auto *prog = new SegDisplay(3, [this] { return juce::String(proc.getCurrentProgram()).paddedLeft('0', 3); });
     prog->onClick = [this] { presetMenu(); };
-    add(prog, {376, 546, 112, 52});
-    add(new TensButton(*this), {500, 528, 52, 94});
+    add(prog, {342, 546, 112, 52});
+    add(new TensButton(*this), {462, 528, 52, 94});
     for (int d = 0; d < 10; d++)
-        progButtons.add(add(new ProgButton(*this, d), {574 + 50 * d, 540, 50, 80}));
+        progButtons.add(add(new ProgButton(*this, d), {530 + 50 * d, 540, 50, 80}));
+    add(new InitKey(*this), {1034, 540, 50, 80});
     auto *name = new SegDisplay(12, [this] {
         auto n = proc.getProgramName(proc.getCurrentProgram()).toUpperCase();
         return shownEdited ? n.paddedRight(' ', 12).substring(0, 12) + "." : n;
@@ -662,7 +682,7 @@ void Prophet67Panel::paintBackground(juce::Graphics &g)
         paintSection(g, s);
 
     /* the strip's legends */
-    drawLegend(g, "PROGRAM", Rectangle<float>(376.0f, 600.0f, 112.0f, 14.0f));
+    drawLegend(g, "PROGRAM", Rectangle<float>(342.0f, 600.0f, 112.0f, 14.0f));
     drawLegend(g, "PROGRAM NAME", Rectangle<float>(1150.0f, 532.0f, 230.0f, 12.0f), 9.5f);
 
     /* the maker's tag, where a badge would be */
@@ -716,10 +736,8 @@ void Prophet67Panel::timerCallback()
             if (prog != shownProgram)
                 tens = prog / 10;
             shownProgram = prog;
-            repaint(juce::Rectangle<int>(360, 530, 1000, 100));
+            repaint(juce::Rectangle<int>(330, 530, 1060, 100));
         }
-        if (bpmDisplay)
-            bpmDisplay->repaint();
         if (fxDisplay)
             fxDisplay->repaint();
     }
