@@ -22,18 +22,16 @@ nehmen denselben Ordner; jedes Gerät lädt seine eigene Datei darin.
 
 ## On the screen
 
-Eight pages, each in rows of four (one Q-Link group each):
+Six pages (the MPC's six function keys), each in rows of four (one Q-Link group each):
 
 | Page | Rows |
 |---|---|
-| OSC | oscillator 1 (FREQ, SHAPE, PW, SUB) · oscillator 2 (FREQ, FINE, SHAPE, PW) · the mixer (OSC 1, OSC 2, NOISE, OSC 2 MODE) |
+| OSC | oscillator 1 (FREQ, SHAPE, PW, SUB) · oscillator 2 (FREQ, FINE, SHAPE, PW) · the mixer (OSC 1, OSC 2, NOISE, OSC 2 MODE) · GLIDE, UNISON, BEND RANGE, AMP VELOCITY |
 | FILTER | low-pass (CUTOFF, RESONANCE, ENV AMT, KEYBOARD) · high-pass (CUTOFF, RESO, ENV AMT, KEYBOARD) · the velocities · the filter envelope |
-| AMP | the amp envelope · AMP VELOCITY, GLIDE, UNISON, BEND RANGE · VINTAGE, SPREAD, VOLUME, QUALITY |
-| LFO | LFO 1 · both LFOs' SYNC and RETRIG · LFO 2 |
-| MOD | poly mod · aftertouch |
+| AMP | the amp envelope · VINTAGE, SPREAD, VOLUME, QUALITY · aftertouch (DEST, AMOUNT, CURVE, SMOOTH) |
+| LFO+PM | LFO 1 · both LFOs' SYNC and RETRIG · LFO 2 · poly mod |
 | FX | distortion and chorus · the reverb · SPACE's own (shown on SPACE) |
-| DELAY | the times, REPEATS, MIX · its modulation, TONE, SYNC |
-| ARP | on, MODE, RATE, OCTAVES · GATE, HOLD, SWING |
+| DLY+ARP | the delay's times, REPEATS, MIX · its modulation, TONE, SYNC · the arp (on, MODE, RATE, OCTAVES · GATE, HOLD, SWING) |
 
 The 16 factory programs are the plugin's presets (the MPC's preset list); the MPC saves the sound with the project,
 and presets of your own with its own preset save. Every value reads as on the FM-1 and in the VST.

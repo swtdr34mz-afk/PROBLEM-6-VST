@@ -2,118 +2,424 @@
   "kit": "mpc-red",
   "qlinkGroups": "rows",
   "pages": [
-    { "name": "OSC",
+    {
+      "name": "OSC",
       "controls": [
-        { "param": "Osc1 Freq",  "widget": "knob", "polarity": "bipolar" },
-        { "param": "Osc1 Shape", "widget": "knob" },
-        { "param": "Osc1 PW",    "widget": "knob" },
-        { "param": "Sub Oct",    "widget": "fader" },
-        { "param": "Osc2 Freq",  "widget": "knob", "polarity": "bipolar" },
-        { "param": "Osc2 Fine",  "widget": "knob", "polarity": "bipolar" },
-        { "param": "Osc2 Shape", "widget": "knob" },
-        { "param": "Osc2 PW",    "widget": "knob" },
-        { "param": "Mix Osc1",   "widget": "fader" },
-        { "param": "Mix Osc2",   "widget": "fader" },
-        { "param": "Noise",      "widget": "fader" },
-        { "param": "Osc2 Mode",  "widget": "switch" }
-      ] },
-    { "name": "FILTER",
+        {
+          "param": "Osc1 Freq",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "Osc1 Shape",
+          "widget": "knob"
+        },
+        {
+          "param": "Osc1 PW",
+          "widget": "knob"
+        },
+        {
+          "param": "Sub Oct",
+          "widget": "fader"
+        },
+        {
+          "param": "Osc2 Freq",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "Osc2 Fine",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "Osc2 Shape",
+          "widget": "knob"
+        },
+        {
+          "param": "Osc2 PW",
+          "widget": "knob"
+        },
+        {
+          "param": "Mix Osc1",
+          "widget": "fader"
+        },
+        {
+          "param": "Mix Osc2",
+          "widget": "fader"
+        },
+        {
+          "param": "Noise",
+          "widget": "fader"
+        },
+        {
+          "param": "Osc2 Mode",
+          "widget": "switch"
+        },
+        {
+          "param": "Amp Veloc",
+          "widget": "knob"
+        },
+        {
+          "param": "Glide",
+          "widget": "knob"
+        },
+        {
+          "param": "Unison",
+          "widget": "switch"
+        },
+        {
+          "param": "Bend Range",
+          "widget": "knob"
+        }
+      ]
+    },
+    {
+      "name": "FILTER",
       "controls": [
-        { "param": "Cutoff",      "widget": "knob" },
-        { "param": "Resonance",   "widget": "knob" },
-        { "param": "LP Env Amt",  "widget": "knob", "polarity": "bipolar" },
-        { "param": "LP Keyboard", "widget": "switch" },
-        { "param": "HP Cutoff",   "widget": "knob" },
-        { "param": "HP Reso",     "widget": "knob" },
-        { "param": "HP Env Amt",  "widget": "knob", "polarity": "bipolar" },
-        { "param": "HP Keyboard", "widget": "switch" },
-        { "param": "LP Velocity", "widget": "knob" },
-        { "param": "HP Velocity", "widget": "knob" },
-        { "param": "FEnv Veloc",  "widget": "knob" },
+        {
+          "param": "Cutoff",
+          "widget": "knob"
+        },
+        {
+          "param": "Resonance",
+          "widget": "knob"
+        },
+        {
+          "param": "LP Env Amt",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "LP Keyboard",
+          "widget": "switch"
+        },
+        {
+          "param": "HP Cutoff",
+          "widget": "knob"
+        },
+        {
+          "param": "HP Reso",
+          "widget": "knob"
+        },
+        {
+          "param": "HP Env Amt",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "HP Keyboard",
+          "widget": "switch"
+        },
+        {
+          "param": "LP Velocity",
+          "widget": "knob"
+        },
+        {
+          "param": "HP Velocity",
+          "widget": "knob"
+        },
+        {
+          "param": "FEnv Veloc",
+          "widget": "knob"
+        },
         "empty",
-        { "param": "F Attack",  "widget": "fader" },
-        { "param": "F Decay",   "widget": "fader" },
-        { "param": "F Sustain", "widget": "fader" },
-        { "param": "F Release", "widget": "fader" }
-      ] },
-    { "name": "AMP",
+        {
+          "param": "F Attack",
+          "widget": "fader"
+        },
+        {
+          "param": "F Decay",
+          "widget": "fader"
+        },
+        {
+          "param": "F Sustain",
+          "widget": "fader"
+        },
+        {
+          "param": "F Release",
+          "widget": "fader"
+        }
+      ]
+    },
+    {
+      "name": "AMP",
       "controls": [
-        { "param": "A Attack",  "widget": "fader" },
-        { "param": "A Decay",   "widget": "fader" },
-        { "param": "A Sustain", "widget": "fader" },
-        { "param": "A Release", "widget": "fader" },
-        { "param": "Amp Veloc",  "widget": "knob" },
-        { "param": "Glide",      "widget": "knob" },
-        { "param": "Unison",     "widget": "switch" },
-        { "param": "Bend Range", "widget": "knob" },
-        { "param": "Vintage", "widget": "knob" },
-        { "param": "Spread",  "widget": "knob" },
-        { "param": "Volume",  "widget": "fader" },
-        { "param": "Quality", "widget": "switch" }
-      ] },
-    { "name": "LFO",
+        {
+          "param": "A Attack",
+          "widget": "fader"
+        },
+        {
+          "param": "A Decay",
+          "widget": "fader"
+        },
+        {
+          "param": "A Sustain",
+          "widget": "fader"
+        },
+        {
+          "param": "A Release",
+          "widget": "fader"
+        },
+        {
+          "param": "Vintage",
+          "widget": "knob"
+        },
+        {
+          "param": "Spread",
+          "widget": "knob"
+        },
+        {
+          "param": "Volume",
+          "widget": "fader"
+        },
+        {
+          "param": "Quality",
+          "widget": "switch"
+        },
+        {
+          "param": "AT Dest",
+          "widget": "knob",
+          "overlay": "menu"
+        },
+        {
+          "param": "AT Amount",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "AT Curve",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "AT Smooth",
+          "widget": "knob"
+        }
+      ]
+    },
+    {
+      "name": "LFO+PM",
       "controls": [
-        { "param": "LFO1 Freq",   "widget": "knob" },
-        { "param": "LFO1 Amount", "widget": "knob" },
-        { "param": "LFO1 Shape",  "widget": "knob", "overlay": "menu" },
-        { "param": "LFO1 Dest",   "widget": "knob", "overlay": "menu" },
-        { "param": "LFO1 Sync",   "widget": "knob", "overlay": "menu" },
-        { "param": "LFO1 Retrig", "widget": "switch" },
-        { "param": "LFO2 Sync",   "widget": "knob", "overlay": "menu" },
-        { "param": "LFO2 Retrig", "widget": "switch" },
-        { "param": "LFO2 Freq",   "widget": "knob" },
-        { "param": "LFO2 Amount", "widget": "knob" },
-        { "param": "LFO2 Shape",  "widget": "knob", "overlay": "menu" },
-        { "param": "LFO2 Dest",   "widget": "knob", "overlay": "menu" }
-      ] },
-    { "name": "MOD",
+        {
+          "param": "LFO1 Freq",
+          "widget": "knob"
+        },
+        {
+          "param": "LFO1 Amount",
+          "widget": "knob"
+        },
+        {
+          "param": "LFO1 Shape",
+          "widget": "knob",
+          "overlay": "menu"
+        },
+        {
+          "param": "LFO1 Dest",
+          "widget": "knob",
+          "overlay": "menu"
+        },
+        {
+          "param": "LFO1 Sync",
+          "widget": "knob",
+          "overlay": "menu"
+        },
+        {
+          "param": "LFO1 Retrig",
+          "widget": "switch"
+        },
+        {
+          "param": "LFO2 Sync",
+          "widget": "knob",
+          "overlay": "menu"
+        },
+        {
+          "param": "LFO2 Retrig",
+          "widget": "switch"
+        },
+        {
+          "param": "LFO2 Freq",
+          "widget": "knob"
+        },
+        {
+          "param": "LFO2 Amount",
+          "widget": "knob"
+        },
+        {
+          "param": "LFO2 Shape",
+          "widget": "knob",
+          "overlay": "menu"
+        },
+        {
+          "param": "LFO2 Dest",
+          "widget": "knob",
+          "overlay": "menu"
+        },
+        {
+          "param": "PM Filt Env",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "PM Osc2",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "PM Osc1 To",
+          "widget": "knob",
+          "overlay": "menu"
+        },
+        {
+          "param": "PM Filter",
+          "widget": "switch"
+        }
+      ]
+    },
+    {
+      "name": "FX",
       "controls": [
-        { "param": "PM Filt Env", "widget": "knob", "polarity": "bipolar" },
-        { "param": "PM Osc2",     "widget": "knob", "polarity": "bipolar" },
-        { "param": "PM Osc1 To",  "widget": "knob", "overlay": "menu" },
-        { "param": "PM Filter",   "widget": "switch" },
-        { "param": "AT Dest",   "widget": "knob", "overlay": "menu" },
-        { "param": "AT Amount", "widget": "knob", "polarity": "bipolar" },
-        { "param": "AT Curve",  "widget": "knob", "polarity": "bipolar" },
-        { "param": "AT Smooth", "widget": "knob" }
-      ] },
-    { "name": "FX",
+        {
+          "param": "Distortion",
+          "widget": "knob"
+        },
+        {
+          "param": "Chorus Mix",
+          "widget": "fader"
+        },
+        {
+          "param": "Chorus Rate",
+          "widget": "knob"
+        },
+        {
+          "param": "Chorus Dpth",
+          "widget": "knob"
+        },
+        {
+          "param": "Rev Type",
+          "widget": "knob",
+          "overlay": "menu"
+        },
+        {
+          "param": "Rev Mix",
+          "widget": "fader"
+        },
+        {
+          "param": "Rev Decay",
+          "widget": "knob"
+        },
+        {
+          "param": "Rev Tone",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "Space Mod",
+          "widget": "knob",
+          "visibleWhen": {
+            "param": "Rev Type",
+            "choice": "SPACE"
+          }
+        },
+        {
+          "param": "Shimmer",
+          "widget": "knob",
+          "visibleWhen": {
+            "param": "Rev Type",
+            "choice": "SPACE"
+          }
+        },
+        {
+          "param": "Swell",
+          "widget": "knob",
+          "visibleWhen": {
+            "param": "Rev Type",
+            "choice": "SPACE"
+          }
+        },
+        {
+          "param": "Predelay",
+          "widget": "knob",
+          "visibleWhen": {
+            "param": "Rev Type",
+            "choice": "SPACE"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DLY+ARP",
       "controls": [
-        { "param": "Distortion",  "widget": "knob" },
-        { "param": "Chorus Mix",  "widget": "fader" },
-        { "param": "Chorus Rate", "widget": "knob" },
-        { "param": "Chorus Dpth", "widget": "knob" },
-        { "param": "Rev Type",  "widget": "knob", "overlay": "menu" },
-        { "param": "Rev Mix",   "widget": "fader" },
-        { "param": "Rev Decay", "widget": "knob" },
-        { "param": "Rev Tone",  "widget": "knob", "polarity": "bipolar" },
-        { "param": "Space Mod", "widget": "knob", "visibleWhen": { "param": "Rev Type", "choice": "SPACE" } },
-        { "param": "Shimmer",   "widget": "knob", "visibleWhen": { "param": "Rev Type", "choice": "SPACE" } },
-        { "param": "Swell",     "widget": "knob", "visibleWhen": { "param": "Rev Type", "choice": "SPACE" } },
-        { "param": "Predelay",  "widget": "knob", "visibleWhen": { "param": "Rev Type", "choice": "SPACE" } }
-      ] },
-    { "name": "DELAY",
-      "controls": [
-        { "param": "Delay L",   "widget": "knob", "overlay": "menu" },
-        { "param": "Delay R",   "widget": "knob", "overlay": "menu" },
-        { "param": "Repeats",   "widget": "knob" },
-        { "param": "Delay Mix", "widget": "fader" },
-        { "param": "Dly Depth",  "widget": "knob" },
-        { "param": "Dly Rate",   "widget": "knob" },
-        { "param": "Dly Tone",   "widget": "knob", "polarity": "bipolar" },
-        { "param": "Delay Sync", "widget": "switch" }
-      ] },
-    { "name": "ARP",
-      "controls": [
-        { "param": "Arp",         "widget": "switch" },
-        { "param": "Arp Mode",    "widget": "knob", "overlay": "menu" },
-        { "param": "Arp Rate",    "widget": "knob", "overlay": "menu" },
-        { "param": "Arp Octaves", "widget": "knob" },
-        { "param": "Arp Gate",    "widget": "knob" },
-        { "param": "Arp Hold",    "widget": "switch" },
-        { "param": "Swing",       "widget": "knob" },
+        {
+          "param": "Delay L",
+          "widget": "knob",
+          "overlay": "menu"
+        },
+        {
+          "param": "Delay R",
+          "widget": "knob",
+          "overlay": "menu"
+        },
+        {
+          "param": "Repeats",
+          "widget": "knob"
+        },
+        {
+          "param": "Delay Mix",
+          "widget": "fader"
+        },
+        {
+          "param": "Dly Depth",
+          "widget": "knob"
+        },
+        {
+          "param": "Dly Rate",
+          "widget": "knob"
+        },
+        {
+          "param": "Dly Tone",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "Delay Sync",
+          "widget": "switch"
+        },
+        {
+          "param": "Arp",
+          "widget": "switch"
+        },
+        {
+          "param": "Arp Mode",
+          "widget": "knob",
+          "overlay": "menu"
+        },
+        {
+          "param": "Arp Rate",
+          "widget": "knob",
+          "overlay": "menu"
+        },
+        {
+          "param": "Arp Octaves",
+          "widget": "knob"
+        },
+        {
+          "param": "Arp Gate",
+          "widget": "knob"
+        },
+        {
+          "param": "Arp Hold",
+          "widget": "switch"
+        },
+        {
+          "param": "Swing",
+          "widget": "knob"
+        },
         "empty"
-      ] }
+      ]
+    }
   ],
-  "style": { "background": "ff141414" }
+  "style": {
+    "background": "ff141414"
+  }
 }
