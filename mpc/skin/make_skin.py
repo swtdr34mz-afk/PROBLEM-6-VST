@@ -29,9 +29,9 @@ MPC = {"volume": 0}
 MPC.update({"p%d" % i: 1 + i for i in range(74)})
 for i, k in enumerate(["hp_vel", "hp_keytrk", "fenv_vel", "arp_on", "arp_mode", "arp_rate", "arp_oct", "arp_gate",
                        "arp_hold", "swing", "quality", "split", "split_point", "scale_l", "scale_r", "key", "follow",
-                       "low_hold", "balance"]):
+                       "low_hold", "balance", "init"]):
     MPC[k] = 75 + i
-NPARAMS = 94
+NPARAMS = 95
 
 FXH = "Local/5/fx"                       # the effect EFFECTS shows (the screen's own value)
 

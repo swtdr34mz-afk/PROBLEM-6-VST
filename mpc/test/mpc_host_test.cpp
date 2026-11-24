@@ -22,9 +22,11 @@
 
 namespace {
 VstTimeInfo ti;
+int automated = 0;                       /* the parameters the plugin told the host of (audioMasterAutomate) */
 VstIntPtr host(AEffect *, VstInt32 op, VstInt32, VstIntPtr, void *ptr, float)
 {
     switch (op) {
+    case audioMasterAutomate: automated++; return 0;
     case audioMasterVersion: return 2400;
     case audioMasterGetTime: return (VstIntPtr)&ti;
     case audioMasterGetSampleRate: return 44100;
@@ -395,6 +397,20 @@ int main(int argc, char **argv)
         render(p, 44100 * 3, {}, {128});
         check(shown && rms(lo, 2205, 22050) < 1e-4 && rms(hi, 2205, 22050) > 1e-3 && rms(lo2, 2205, 22050) > 1e-3,
               "LOW SPLIT: the split, its BALANCE, its values shown");
+    }
+
+    /* INIT: a press gives the INIT program's sound (CUTOFF 255, as it), the host told, and INIT is off again */
+    {
+        int cut = param(p, "Cutoff"), ini = param(p, "Init");
+        p.d(effSetProgram, 0, 0);
+        p.e->setParameter(p.e, cut, 0.2f);
+        automated = 0;
+        p.e->setParameter(p.e, ini, 1.0f);
+        auto s = render(p, 44100, {{0, 0x90, 60, 100}, {22050, 0x80, 60, 0}}, {128});
+        check(p.e->getParameter(p.e, cut) > 0.999f && p.e->getParameter(p.e, ini) < 0.5f && automated >= 74 && finite(s)
+                  && rms(s, 2205, 22050) > 1e-3,
+              "INIT: the INIT program's sound, the MPC told, INIT off again");
+        render(p, 44100 * 3, {}, {128});
     }
 
     /* the arp on the MPC's tempo, its notes ending when the keys go */

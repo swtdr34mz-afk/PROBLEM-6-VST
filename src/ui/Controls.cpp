@@ -167,8 +167,8 @@ void Button::paint(juce::Graphics &g)
         }
     }
     if (key) {
-        drawKeycap(g, r.withSizeKeepingCentre(juce::jmin(r.getWidth() - 10.0f, 40.0f), r.getHeight() - 6.0f), isOn(value), true, pressed,
-                   isMouseOver(), true);
+        drawKeycap(g, r.withSizeKeepingCentre(juce::jmin(r.getWidth() - 10.0f, 40.0f), r.getHeight() - 6.0f), !grey && isOn(value), !grey,
+                   pressed, isMouseOver(), !grey);
         if (!lg.isEmpty())
             drawLegend(g, legend, lg);
         return;

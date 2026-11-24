@@ -70,6 +70,7 @@ public:
     void mouseUp(const juce::MouseEvent &) override;
     juce::StringArray leds;              /* LEDs above (bit i: LED i), as POLY MOD's FILTER: LP, HP */
     bool key = false;                    /* drawn as a dark P6 key with its LED (GLIDE, UNISON) */
+    bool grey = false;                   /* with key: a grey key without an LED, as the program buttons (the MPC's INIT) */
     IsOn isOn;                           /* (public: the MPC skin's renderer, mpc/skin/, follows the same rules) */
     Next next;
 

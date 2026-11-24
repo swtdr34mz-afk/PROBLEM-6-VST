@@ -17,6 +17,8 @@
 //   78..84   ARP on, MODE, RATE, OCTAVES, GATE, HOLD, SWING (settings: the programs leave them)
 //   85       QUALITY: HIGH (the low-pass at 2x) or ECO (less CPU; for the 32-bit MPCs and big projects)
 //   86..93   LOW SPLIT: SPLIT, POINT, SCALE L, SCALE R, KEY, FOLLOW, LOW HOLD, BALANCE (as the VST's, KeySplit.h)
+//   94       INIT: a press (the skin's grey key) sets the sound to the INIT program (a saw, the filter open), then
+//            goes back to off; the arp, the split, QUALITY and VOLUME stay as they are
 //
 // MIDI in: notes and velocity, pitch bend (BEND RANGE), poly and channel pressure (AFTERTOUCH), CC 1 mod wheel,
 // CC 64 sustain, CC 74 cutoff, CC 120 all sound off, CC 121 reset controllers, CC 123 all notes off.
@@ -76,9 +78,10 @@ enum {
     kFollow,
     kLowHold,
     kBalance,
+    kInit,                               // a press: the INIT program's sound
     kNumParams
 };
-static_assert(kNumParams == 94, "the parameters' order is permanent");
+static_assert(kNumParams == 95, "the parameters' order is permanent");
 
 class Prophet67Mpc : public mpc::Plugin
 {
@@ -129,6 +132,7 @@ public:
             addParam(mpc::boolParam("low_hold", "Low Hold", false));
             addParam(mpc::intParam("balance", "Balance", -50, 50, 0));
         }
+        addParam(mpc::boolParam("init", "Init", false));
 
         // the 16 factory programs: VOLUME, the sound, the filters' VELOCITY and KEYBOARD as on the FM-1 (the
         // high-pass's as the low-pass's) and the envelope's VELOCITY off; the arp, SWING and QUALITY they leave
@@ -144,6 +148,23 @@ public:
         }
         engine.prepare(44100.0);         // (the MPC's rate: made here, on the UI thread, never in process)
         rate = 44100.0;
+    }
+
+    /* INIT pressed: the sound (the 74, the filters' VELOCITY and KEYBOARD, the envelope's VELOCITY) as the INIT
+     * program's, the MPC told of each (its screen follows), and INIT itself back to off */
+    void parameterChanged(int index, float plain) override
+    {
+        if (index != kInit || plain < 0.5f || initing)
+            return;
+        initing = true;
+        const uint8_t *d = FACTORY[NPRESETS - 1].p;
+        for (int i = 0; i < NPARAM; i++)
+            setAndTell(kSound + i, (float)d[i]);
+        setAndTell(kHpVel, (float)d[P_FVEL]);
+        setAndTell(kHpKey, (float)d[P_KEYTRK]);
+        setAndTell(kFenvVel, 0.0f);
+        setAndTell(kInit, 0.0f);
+        initing = false;
     }
 
     void prepare(double sampleRate, int) override
@@ -237,6 +258,13 @@ public:
     }
 
 private:
+    void setAndTell(int i, float plain)
+    {
+        set(i, plain);
+        notifyHostParameterChanged(i);
+    }
+    bool initing = false;
+
     static mpc::PluginInfo makeInfo()
     {
         mpc::PluginInfo i;

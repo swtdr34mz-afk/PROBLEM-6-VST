@@ -16,10 +16,11 @@ Stand: 24.11.2026. Für eine neue Unterhaltung: dieses Protokoll anhängen oder 
 
 ## Stand
 
-- `main` enthält alles: Audit/Optimierung der Engine (PR #1), MPC-Plugin mit Skin (PR #2). PR #3 (CI hängt die Zips an
-  ein auf GitHub veröffentlichtes Release) ist offen/gerade gemerged.
-- Tom hat PROPHET 67 bereits auf der MPC laufen gehabt (alte Version). Die neue Version mit den neuen Seiten ist auf
-  der MPC **noch nicht getestet**.
+- `main` enthält: Audit/Optimierung der Engine (PR #1), MPC-Plugin mit Skin (PR #2). **PR #3 muss Tom noch mergen**
+  (Claude darf es nicht): CI hängt die Zips an ein auf GitHub veröffentlichtes Release, LFO-Seite übereinander,
+  grauer INIT-Schalter, `tested.json`, dieses Protokoll.
+- **Auf der MPC XL (MPC OS 3.10.1) getestet, 24.11.2026: „spielt sich hervorragend“** (Stand vor INIT und der neuen
+  LFO-Seite; die nach dem Release kurz nachprüfen). Eingetragen in `tested.json` (Gen2).
 - CI (`.github/workflows/build.yml`): Engine-Tests, MPC-Build (SDK gepinnt auf `a5949cf6fe2c…`, arm32 + arm64 +
   native), Akais Validator (zuletzt **0 Fehler, 0 Warnungen**), eigener Host-Test (16 Checks), Windows-Build mit
   pluginval (Strictness 8). Artifact `PROPHETIC6-MPC` = der fertige MPC-Ordner.
@@ -30,9 +31,11 @@ Stand: 24.11.2026. Für eine neue Unterhaltung: dieses Protokoll anhängen oder 
   `Pr6c`, Dateien `VST/prophetic-6-arm32.so` / `-arm64.so`).
 - Code: `mpc/plugin/src/Prophet67Mpc.cpp` (SDK-Plugin), Engine geteilt mit dem VST (`src/P67Engine.*`, `dsp/`),
   LOW SPLIT geteilt über `src/KeySplit.h`. `mpc/build.py` baut das SDK-Projekt aus dem Repo.
-- **94 Parameter, Reihenfolge fest** (neue nur hinten anhängen): 0 Volume; 1..74 die Sound-Parameter (`p0..p73`);
+- **95 Parameter, Reihenfolge fest** (neue nur hinten anhängen): 0 Volume; 1..74 die Sound-Parameter (`p0..p73`);
   75..77 HP Velocity, HP Keyboard, FEnv Velocity; 78..84 Arp On, Mode, Rate, Octaves, Gate, Hold, Swing; 85 Quality
   (HIGH/ECO); 86..93 LOW SPLIT (Split, Point, Scale L, Scale R, Key, Follow, Low Hold, Balance).
+- 95 mit **94 INIT**: ein Druck (grauer Schalter auf QUICK) setzt den Klang auf das INIT-Programm (Arp, Split,
+  QUALITY, VOLUME bleiben), dann geht INIT wieder auf aus.
 - 16 Werksprogramme. Tempo und Programme kommen von der MPC.
 
 ## Die Oberfläche (Skin)
@@ -48,10 +51,10 @@ Stand: 24.11.2026. Für eine neue Unterhaltung: dieses Protokoll anhängen oder 
 
 | Seite | Inhalt (Zeilen) | Q-Links (Reihe oben → unten; 13–16 ist oben) |
 |---|---|---|
-| QUICK | LPF, MIXER, FX MIX · VINTAGE & SPREAD, POLY MOD, ARP · HOLD/GLIDE/UNISON/BEND, AFTERTOUCH, QUALITY, LOW SPLIT (nur SPLIT, POINT, LOW HOLD) | CUTOFF, RES, ENV AMOUNT, HPF CUTOFF · OSC1, OSC2, SUB, NOISE · VINTAGE, SPREAD, REVERB, DELAY · CHORUS, DISTORT, ARP ON/OFF, QUALITY |
+| QUICK | LPF, MIXER, FX MIX · VINTAGE & SPREAD, POLY MOD, ARP · INIT (grau)/HOLD/GLIDE/UNISON/BEND, AFTERTOUCH, QUALITY, LOW SPLIT (nur SPLIT, POINT, LOW HOLD) | CUTOFF, RES, ENV AMOUNT, HPF CUTOFF · OSC1, OSC2, SUB, NOISE · VINTAGE, SPREAD, REVERB, DELAY · CHORUS, DISTORT, ARP ON/OFF, QUALITY |
 | OSC | OSC 1, OSC 2 · MIXER | OSC 1 · OSC 2 · MIXER |
 | FLT/ENV | HPF, FILTER ENV · LPF, AMP ENV | HPF · FILTER ENV · LPF · AMP ENV |
-| LFO | POLY MOD, LFO 1, LFO 2 | POLY MOD · LFO 1 · LFO 2 · beide DEST |
+| LFO | POLY MOD · LFO 1 · LFO 2 (übereinander) | POLY MOD · LFO 1 · LFO 2 · beide DEST |
 | FX | EFFECTS (alle 5 Effekte inkl. DELAY und DLY MOD, wie im VST) | CHORUS · REVERB · DELAY · DLY MOD + SYNC |
 
 Offene Kleinigkeiten: SPACE (4 Regler) hat keine Q-Links; SWING (aus CLOCK) ist auf keiner Seite; LOW SPLITs
@@ -59,6 +62,7 @@ Scales/Key/Follow/Balance nur in der Parameterliste.
 
 ## Release und Katalog: nächste Schritte
 
+0. PR #3 mergen (GitHub → Pull requests → #3 → Merge).
 1. **Release:** Auf GitHub → Releases → „Draft a new release“ → neuer Tag **`v1.0.0`** auf `main` → veröffentlichen
    (Titel frei, z. B. „PROPHET 67 1.0.0 / PROPHETIC 6 für die MPC“). Die CI hängt die Windows-/Mac-Zips und
    **`PROPHETIC-6-1.0.0-mpc-sdk.zip`** an und schreibt dessen SHA-256 ins Log. (Tags und Releases kann Claude aus
@@ -68,7 +72,8 @@ Scales/Key/Follow/Balance nur in der Parameterliste.
    Katalog wandelt das SDK-Zip selbst um). Screenshot-URL zeigt auf `mpc/catalog/screenshot.png` am Tag `v1.0.0`
    (Screenshot ggf. auf die neue QUICK-Seite aktualisieren, **vor** dem Release). PR-Vorlage ausfüllen: Ausgabe von
    `tools/catalog_check.py <zip> --catalog` und SHA-256 des Zips, „offline only“ bzw. Gerätetest angeben.
-3. **Gerätetest** auf der MPC XL, dann `tested.json` im Repo (Gerät, MPC-OS-Version, Datum) → Stufe „Verified“.
+3. **Gerätetest:** `tested.json` ist eingetragen (MPC XL, Gen2, OS 3.10.1) → nach dem Release „Verified Gen2“. Weitere
+   Geräte dort ergänzen.
 4. Branding-Hinweis: „PROPHETIC 6“ ist nah an „Prophet-6“; die Reviewer könnten nachfragen. Kein Hersteller-Logo im
    Skin (geprüft), Summary sagt „Prophet-6-style“.
 
