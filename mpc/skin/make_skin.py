@@ -16,7 +16,7 @@ control works as on the VST:
   LED lists     each row a radio button
   EFFECTS       SELECT and its LEDs choose the effect shown (a value of the screen's own), with its displays
 
-The pages (the function keys): QUICK, OSC, FILTER, ENV, LFO, FX. On each the 16 Q-Links turn four groups, the top row
+The pages (the function keys): QUICK, OSC, FLT/ENV, LFO, FX. On each the 16 Q-Links turn four groups, the top row
 of Q-Links the first group and so on down, each group framed on the screen. Standard library only.
 """
 import json
@@ -38,19 +38,17 @@ FXH = "Local/5/fx"                       # the effect EFFECTS shows (the screen'
 # The pages, as the renderer names them: (the function key's name, the Q-Links' groups top down; a group in brackets
 # of its own, ("frame", False), is not framed: its controls are not side by side)
 PAGES = [
-    ("QUICK", [["p12", "p13", "p14", "p17"],                     # LOW-PASS FILTER (and its KEYBOARD)
-               ["p8", "p9", "p3", "p10"],                        # MIXER
-               ["p32", "p33", "p34", "p35"],                     # POLY MOD
-               ["p39", "p36", "p41", "p69"]]),                   # FX MIX: DISTORT, CHORUS, REVERB, DELAY
+    ("QUICK", [["p12", "p13", "p14"],                            # CUTOFF, RESONANCE, ENV AMOUNT
+               ["p8", "p9", "p3", "p10"],                        # MIXER: OSC 1, OSC 2, SUB OCTAVE, NOISE
+               (["p52", "p53", "p41", "p69"], False),            # VINTAGE, VOICE SPREAD, REVERB, DELAY
+               (["p36", "p39", "arp_on", "quality"], False)]),   # CHORUS, DISTORT, ARP ON/OFF, QUALITY
     ("OSC", [["p0", "p11#0", "p1", "p2"],                        # OSCILLATOR 1 (SYNC: OSC 2's mode, its first button)
              ["p4", "p5", "p6", "p7"],                           # OSCILLATOR 2
              ["p8", "p9", "p3", "p10"]]),                        # MIXER
-    ("FILTER", [["p12", "p13", "p14", "p17"],                    # LOW-PASS
-                ["p15", "p16", "p19", "hp_keytrk"],              # HIGH-PASS
-                (["p18", "hp_vel"], False)]),                    # their VELOCITY amounts
-    ("ENV", [["p20", "p21", "p22", "p23"],                       # FILTER ENVELOPE
-             ["p24", "p25", "p26", "p27"],                       # AMPLIFIER ENVELOPE
-             (["fenv_vel", "p49"], False)]),                     # their VELOCITY amounts
+    ("FLT/ENV", [["p15", "p16", "p19", "hp_keytrk"],             # HIGH-PASS
+                 ["p20", "p21", "p22", "p23"],                   # FILTER ENVELOPE
+                 ["p12", "p13", "p14", "p17"],                   # LOW-PASS
+                 ["p24", "p25", "p26", "p27"]]),                 # AMPLIFIER ENVELOPE
     ("LFO", [["p32", "p33", "p34", "p35"],                       # POLY MOD
              ["p28", "p58", "p30", "p29"],                       # LFO 1
              ["p54", "p59", "p56", "p55"],                       # LFO 2

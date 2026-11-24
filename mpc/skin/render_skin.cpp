@@ -4,11 +4,10 @@
  * buttons, the LED lists, the seven-segment displays), its sections and panel face (src/ui/Look.cpp), laid out as
  * the VST lays them out (the same items, sizes and spacing as Prophet67Panel::build), on the MPC's pages:
  *
- *   QUICK    LOW-PASS FILTER, MIXER, POLY MOD, FX MIX / ARPEGGIATOR, HOLD, GLIDE, UNISON, BEND / VINTAGE & VOICE
- *            SPREAD, QUALITY, AFTERTOUCH
+ *   QUICK    LOW-PASS FILTER, MIXER, FX MIX / VINTAGE & VOICE SPREAD, POLY MOD, ARPEGGIATOR / HOLD, GLIDE, UNISON,
+ *            BEND, AFTERTOUCH, QUALITY, LOW SPLIT
  *   OSC      OSCILLATOR 1, OSCILLATOR 2 / MIXER
- *   FILTER   LOW-PASS FILTER, HIGH-PASS FILTER
- *   ENV      FILTER ENVELOPE / AMPLIFIER ENVELOPE
+ *   FLT/ENV  HIGH-PASS FILTER, FILTER ENVELOPE / LOW-PASS FILTER, AMPLIFIER ENVELOPE
  *   LFO      POLY MOD, LFO 1, LFO 2
  *   FX       EFFECTS (SELECT, its LEDs and displays, each effect's knobs, DELAY's SYNC)
  *
@@ -267,6 +266,12 @@ struct Builder {
     {
         return {"AFTERTOUCH", {K(P_AT_AMT, "AMOUNT"), K(P_AT_CURVE, "CURVE"), K(P_AT_SMOOTH, "SMOOTH"), K(P_AT_DEST, "DEST"),
                                L(P(P_AT_DEST), {"Off", "Filter", "Swell", "Power", "Vibrato", "LFO 1", "Pitch", "Poly Mod"}, 66, 10.0f)}};
+    }
+    Sec lowSplit()
+    {
+        /* (the MPC's: SPLIT, POINT and LOW HOLD; the scales, KEY, FOLLOW and BALANCE stay at their defaults) */
+        return {"LOW SPLIT", {GK("split", "SPLIT"), L("split", {"Off", "-1 Oct", "-2 Oct", "-3 Oct"}, 42), GK("split_point", "POINT"),
+                              B("low_hold", "LOW HOLD")}};
     }
     Sec arp()
     {
@@ -721,21 +726,21 @@ int main(int argc, char **argv)
     };
     std::vector<Def> defs = {
         {"QUICK", 3, [](Builder &b) {
-             b.row(0, {b.lowPass(), b.mixer(), b.polyMod(),
+             b.row(0, {b.lowPass(), b.mixer(),
                        {"FX MIX", {b.K(P_DIST, "DISTORT"), b.K(P_CH_MIX, "CHORUS"), b.K(P_RV_MIX, "REVERB"), b.K(P_DL_MIX, "DELAY")}}});
-             b.row(126, {b.arp(), {nullptr, {b.keyButton("arp_hold", "HOLD"), b.K(P_GLIDE, "GLIDE AMT"),
-                                             b.keyButton(Builder::P(P_UNISON), "UNISON"), b.wideKnob(P_BEND, "BEND RANGE", 64)}}});
-             b.row(252, {{"VINTAGE & VOICE SPREAD", {b.wideKnob(P_VINTAGE, "VINTAGE", 64), b.wideKnob(P_SPREAD, "VOICE SPREAD", 72)}},
-                         {"QUALITY", {b.L("quality", {"High", "Eco"}, 60)}}, b.afterTouch()});
+             b.row(126, {{"VINTAGE & VOICE SPREAD", {b.wideKnob(P_VINTAGE, "VINTAGE", 64), b.wideKnob(P_SPREAD, "VOICE SPREAD", 72)}},
+                         b.polyMod(), b.arp()});
+             b.row(252, {{nullptr, {b.keyButton("arp_hold", "HOLD"), b.K(P_GLIDE, "GLIDE AMT"), b.keyButton(Builder::P(P_UNISON), "UNISON"),
+                                    b.wideKnob(P_BEND, "BEND RANGE", 64)}},
+                         b.afterTouch(), {"QUALITY", {b.L("quality", {"High", "Eco"}, 60)}}, b.lowSplit()});
          }},
         {"OSC", 2, [](Builder &b) {
              b.row(0, {b.osc1(), b.osc2()});
              b.row(126, {b.mixer()});
          }},
-        {"FILTER", 1, [](Builder &b) { b.row(0, {b.lowPass(), b.highPass()}); }},
-        {"ENV", 2, [](Builder &b) {
-             b.row(0, {b.envelope(false)});
-             b.row(126, {b.envelope(true)});
+        {"FLT/ENV", 2, [](Builder &b) {
+             b.row(0, {b.highPass(), b.envelope(false)});
+             b.row(126, {b.lowPass(), b.envelope(true)});
          }},
         {"LFO", 1, [](Builder &b) { b.row(0, {b.polyMod(), b.lfo(0), b.lfo(1)}); }},
         {"FX", 1, [](Builder &b) { b.row(0, {b.effects()}); }},

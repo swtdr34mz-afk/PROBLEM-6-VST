@@ -30,15 +30,15 @@ to choose (the LFOs' shapes and destinations, AFTERTOUCH's DEST, the arp's rate,
 
 | Page | On it | The Q-Links (top row first) |
 |---|---|---|
-| QUICK | LOW-PASS FILTER, MIXER, POLY MOD, FX MIX · ARPEGGIATOR, HOLD, GLIDE, UNISON, BEND RANGE · VINTAGE & VOICE SPREAD, QUALITY, AFTERTOUCH | LOW-PASS · MIXER · POLY MOD · FX MIX |
+| QUICK | LOW-PASS FILTER, MIXER, FX MIX · VINTAGE & VOICE SPREAD, POLY MOD, ARPEGGIATOR · HOLD, GLIDE, UNISON, BEND RANGE, AFTERTOUCH, QUALITY, LOW SPLIT (SPLIT, POINT, LOW HOLD) | CUTOFF, RESONANCE, ENV AMOUNT · OSC 1, OSC 2, SUB, NOISE · VINTAGE, VOICE SPREAD, REVERB, DELAY · CHORUS, DISTORT, ARP ON/OFF, QUALITY |
 | OSC | OSCILLATOR 1, OSCILLATOR 2 · MIXER | OSC 1 · OSC 2 · MIXER |
-| FILTER | LOW-PASS FILTER, HIGH-PASS FILTER | LOW-PASS · HIGH-PASS · their VELOCITY |
-| ENV | FILTER ENVELOPE · AMPLIFIER ENVELOPE | FILTER ENV · AMP ENV · their VELOCITY |
+| FLT/ENV | HIGH-PASS FILTER, FILTER ENVELOPE · LOW-PASS FILTER, AMPLIFIER ENVELOPE | HIGH-PASS · FILTER ENV · LOW-PASS · AMP ENV |
 | LFO | POLY MOD, LFO 1, LFO 2 | POLY MOD · LFO 1 · LFO 2 · their DESTs |
 | FX | EFFECTS: SELECT and its LEDs choose CHORUS, REVERB, SPACE, DELAY or DLY MOD, as on the VST | CHORUS · REVERB · DELAY · DLY MOD and SYNC |
 
 The tempo and the programs are the MPC's own (the factory programs are in its preset list); the keyboard is its pads.
-LOW SPLIT works (it is in the plugin) but has no page yet: its eight values are in the MPC's parameter list.
+LOW SPLIT's scales, KEY, FOLLOW and BALANCE are not on the pages (at their defaults: an octave split); they are in
+the MPC's parameter list.
 
 The 16 factory programs are the plugin's presets (the MPC's preset list); the MPC saves the sound with the project,
 and presets of your own with its own preset save. Every value reads as on the FM-1 and in the VST.
