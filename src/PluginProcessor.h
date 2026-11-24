@@ -69,6 +69,7 @@ private:
     int hpVelSent = -1, hpKtSent = -1, fenvVelSent = -1;
     int program = 0;
     double rate = 44100.0;
+    float lastGain = -1.0f;              /* VOLUME as the last block ended (its ramp) */
 
     /* the plugin's own settings, read each block */
     struct Globals {

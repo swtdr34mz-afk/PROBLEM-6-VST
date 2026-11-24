@@ -93,11 +93,14 @@ INL float ex2(float x)
     p = p * f + 6.931472057e-01f;
     p = p * f + 1.0f;
     b.f = p;
-    b.i += (int32_t)fl << 23;
+    b.u += (uint32_t)(int32_t)fl << 23;   /* (unsigned: the same bits, no shift of a negative) */
     return b.f;
 }
 INL float hz_of(float midi) { return 440.0f * ex2((midi - 69.0f) * (1.0f / 12.0f)); }
 INL float k_of(float tau_s) { return tau_s <= 0.0f ? 1.0f : 1.0f - fm_expf(-1.0f / (tau_s * SR)); }
+/* a one-pole's coefficient tuned at 44.1 kHz (per sample, or per chunk of samples), at the rate now: the same time
+ * constant at any rate (and exactly the same number at 44.1 kHz) */
+INL float k_sr(float k) { return SRS == 1.0f ? k : 1.0f - fm_powf(1.0f - k, 1.0f / SRS); }
 INL float u7(int v) { return (float)v * (1.0f / 127.0f); }
 INL float bip(int v) { return v >= 64 ? (float)(v - 64) * (1.0f / 63.0f) : (float)(v - 64) * (1.0f / 64.0f); }
 INL float flush_dn(float x) { return fm_fabsf(x) < 1e-15f ? 0.0f : x; }

@@ -29,6 +29,7 @@ public:
     void modWheel(float v);
     void cutoffCC(int v);
     void hpExtra(int vel, int keytrk, int fenvVel);
+    void quality(bool high);                 /* the low-pass at 2x (true, the default) or at the rate (less CPU) */
     void allOff();
     void panic();
     void tempo(float bpm, float swing);

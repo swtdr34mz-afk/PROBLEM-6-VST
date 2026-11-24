@@ -102,11 +102,16 @@ void eng_cutoff_cc(int v);              /* MIDI CC 74 (-1: the patch's own) */
 #ifdef P67_PLUGIN
 void eng_hp_extra(int vel, int keytrk, int fenvVel); /* the plugin's own HIGH-PASS VELOCITY (0..127) and KEYBOARD (KT_*)
                                                       * and FILTER ENVELOPE VELOCITY (0..127), at the next patch */
+void eng_quality(int high);              /* 1: the low-pass at 2x (default); 0: at the rate (less CPU: the MPC's ECO) */
 #endif
 void eng_all_off(void);                 /* every note let go */
 void eng_panic(void);                   /* silence at once */
 void eng_overload(void);                /* the render ran late: let the quietest voice go now */
+#ifdef P67_PLUGIN
+void eng_render(float *l, float *r, uint32_t n, float gain);   /* the plugin: floats, n a multiple of 16 (a chunk) */
+#else
 void eng_render(int32_t *lr, uint32_t n, float gain);
+#endif
 void eng_duck(int on);                  /* a flash write is coming: fade out (and back in) */
 int eng_ducked(void);
 

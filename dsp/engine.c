@@ -14,12 +14,24 @@
 #include "core.h"
 #include "plat.h"
 
+#if defined P67_PLUGIN && !defined LADDER_LINEAR
+#define LADDER_OTA                       /* the low-pass's stages saturate each (ladder, ota) */
+#endif
 #ifndef SMOOTH_K
+#ifdef P67_PLUGIN
+#define SMOOTH_K 0.14f                   /* (the plugin: 90 % in 11 ms; a host's automation moves in coarser steps
+                                          * than a knob's detents) */
+#else
 #define SMOOTH_K 0.25f
+#endif
 #endif
 #define CH 16u                           /* a chunk (0.36 ms): pitches and coefficient targets; the coefficients
                                           * themselves ramp per sample */
+#ifdef P67_PLUGIN
+#define HAAS 128u                        /* the spread's per-voice delay line (a power of two; room for 192 kHz) */
+#else
 #define HAAS 32u                         /* the spread's per-voice delay line (a power of two) */
+#endif
 
 /* ------------------------------------------------------------- the patch --- */
 /* eng_patch's numbers (main loop writes, the render reads; each a single float, no torn values) */
@@ -42,6 +54,21 @@ static struct {
     float at_amt, at_curve, at_k, at_kr;   /* AFTERTOUCH: amount -1..1, the curve's exponent, the smoothing (held,
                                             * and let go: never faster than 150 ms, so a release never jumps) */
 } P;
+#ifdef P67_PLUGIN
+/* the plugin: the patch's continuous numbers as the voices get them, gliding to eng_patch's in about 4 ms (a host's
+ * automation moves in steps; none is heard as a step): Q. The per-voice character from VINTAGE and SPREAD glides the
+ * same way (VT, the targets; the voice's own fields, where they are) */
+static struct {
+    float mix1, mix2, sub, noise, o1_shape, o2_shape, o1_pw, o2_pw, pm_fenv, pm_osc2, lfo_amt[2], avel, fvel, hp_fvel,
+        fenv_vel, hp_env_oct, at_amt, modw, bend;
+    uint8_t init;
+} Q;
+#define PQ Q
+#define PQ_BEND Q.bend
+#else
+#define PQ P
+#define PQ_BEND bend_v
+#endif
 
 /* ------------------------------------------------------------ vintage, spread --- */
 /* Each voice's own character. Hand-set rather than random: every column has its mean near 0 and no voice is extreme
@@ -65,8 +92,22 @@ static const float S_COL[NVOICE] = {0.35f, -0.45f, 0.2f, -0.15f, 0.5f, -0.3f, 0.
 static const float U_DET[NVOICE] = {0.0f, -1.0f, 1.0f, -0.55f, 0.55f, -0.25f, 0.3f};
 
 /* ------------------------------------------------------------- a voice --- */
+#ifdef P67_PLUGIN
+/* the plugin's oscillators: band-limited by a table, a windowed sinc's step (BLEP) and its ramp (BLAMP) over 16
+ * samples, each corner of a wave placed to 1/1024 of a sample (P67Engine.cpp makes the tables): the aliasing about
+ * -80 dB where the FM-1's two-sample BLEP leaves -35 to -45, the top flat to 16 kHz. The output runs BL_H samples
+ * late (0.18 ms), into a ring that takes each correction where it falls */
+#define BL_H 8
+#define BL_OS 1024
+#define BL_N (2 * BL_H * BL_OS + 2)      /* (a table: t = -BL_H .. BL_H, and one more for the interpolation) */
+#define ORING 32u
+#endif
 typedef struct {
     float ph, prev;                      /* phase 0..1, the output a sample late (the BLEP's second half) */
+#ifdef P67_PLUGIN
+    float ring[ORING];
+    uint32_t rp;
+#endif
 } osc_t;
 enum { ES_IDLE, ES_ATT, ES_DEC, ES_REL };
 typedef struct {
@@ -102,10 +143,28 @@ typedef struct {
     float press, ptgt;                   /* AFTERTOUCH: now (smoothed), where it heads (curved) */
     float gl, gr;
     uint8_t hd, far;                     /* the spread's delay on the far side (samples), which side (0 L, 1 R) */
+    float hdf;                           /* (the plugin: that delay in fractions of a sample, gliding) */
     uint8_t hw;
     float hbuf[HAAS];
+#ifdef P67_PLUGIN
+    float ou0[5], ou1[5], od0[5], od1[5], odp;   /* the low-pass's 2x: the half-bands up and down */
+    float subd[16];                      /* the sub-octave, delayed as oscillator 1 is */
+    float g1, g2, gsub, gnoise, gout, ga[5];   /* the mixer's levels and the voice's, per sample (gliding: no step at a
+                                          * chunk's edge); gok: set (a voice from silence starts there) */
+    uint8_t gok;
+#endif
 } voice_t;
 static voice_t V[NVOICE];
+#ifdef P67_PLUGIN
+typedef struct {                         /* a voice's character as eng_patch sets it (q_glide takes the voice there) */
+    float c1, c2, ccut, cres, camp, cpw, cshape, cpw2, cshape2, cdrive, gl, gr, hdf;
+    uint8_t far;
+} vchar_t;
+static vchar_t VT[NVOICE];
+#define CV (&VT[i])
+#else
+#define CV v
+#endif
 #define ENV_END 3.2e-4f                  /* -70 dB: a release ends here */
 #define STEAL 200.0f                     /* a stolen voice's fade, samples (4.5 ms, a smoothstep curve) */
 
@@ -117,6 +176,10 @@ static float bend_v, mod_v;
 static int cc_cut = -1;
 static float lvl_out;
 static uint8_t duck_on;
+#ifdef P67_PLUGIN
+static float dcb_x[2], dcb_y[2];
+static uint8_t q_eco;                    /* (eng_quality) */
+#endif
 static float duck_g = 1.0f, gain_s;
 
 /* unison: the notes held, the last on top */
@@ -144,7 +207,8 @@ static float vib_ph;
 static uint8_t lfo_fast[2];
 static float lfo_cv[2][2];
 static float blk_ls[NLD][NBLK], blk_ltrem[NBLK], blk_l1s[NBLK];
-static uint32_t blk_lfd;                 /* the destinations a fast LFO reaches (a mask of 1 << LD_*) */
+static uint32_t blk_lfd;
+static float blk_zero[NBLK];             /* (nought: a destination no fast LFO reaches) */                 /* the destinations a fast LFO reaches (a mask of 1 << LD_*) */
 /* the filter's knobs (and CC 74), as they reach the voices: a knob moves in detents, so each detent's step is spread
  * over 2.5 ms, per chunk; the envelopes, LFOs and poly mod are never smoothed */
 static float blk_cut[NBLK / CH], blk_res[NBLK / CH], blk_env[NBLK / CH], blk_hp[NBLK / CH], blk_hpk[NBLK / CH];
@@ -163,7 +227,12 @@ typedef struct {
     int16_t id;
     float vel, gain;
 } ev_t;
+#ifdef P67_PLUGIN                        /* (a host may send hundreds at one sample: every note off of a panic, a
+                                          * chord with its pressure and controllers; none may be lost) */
+#define NEV 2048u
+#else
 #define NEV 64u
+#endif
 static ev_t evq[NEV];
 static volatile uint32_t ev_w, ev_r;
 
@@ -255,6 +324,9 @@ void eng_patch(const uint8_t *p)
     P.glide_k = p[P_GLIDE] ? 1.0f - fm_expf(-(float)CH / (env_seconds(p[P_GLIDE] / 2 + 20) * 0.25f * SR)) : 1.0f;
     P.avel = u7(p[P_AVEL]);
     P.bend = (float)p[P_BEND];
+    if (p[P_UNISON] != P.unison && notes_n)
+        ev_put(EV_ALLOFF, 0, 0, 0.0f);   /* UNISON switched: the notes held let go (their release), so none is
+                                          * left with no key to end it */
     P.unison = p[P_UNISON];
     P.at_dest = p[P_AT_DEST] < NAT ? p[P_AT_DEST] : AT_OFF;
     P.at_amt = bip(p[P_AT_AMT]);
@@ -273,16 +345,16 @@ void eng_patch(const uint8_t *p)
          * to 0.6 octave, resonance 40 %, the envelopes' times 55 %, the level 3 dB, the waves' width and shape, how
          * hard the filter's input is driven: an old poly whose voices were each calibrated a different year */
         float tf = 1.0f + 0.55f * a * V_ATT[i], td = 1.0f + 0.50f * a * V_DEC[i], tr = 1.0f + 0.55f * a * V_REL[i];
-        v->c1 = a * 12.0f * V_T1[i] + s * S_DET[i];                     /* cents */
-        v->c2 = a * 15.0f * V_T2[i] + s * S_DET[i] * 0.8f;
-        v->ccut = a * 0.6f * V_CUT[i] + s * S_COL[i] * (1.0f / 12.0f);   /* octaves */
-        v->cres = 1.0f + 0.4f * a * V_RES[i];
-        v->camp = 1.0f + 0.35f * a * V_AMP[i];                           /* about +-3 dB */
-        v->cpw = 0.12f * a * V_PW[i];
-        v->cshape = 0.10f * a * V_SHP[i];
-        v->cpw2 = 0.10f * a * V_PW[NVOICE - 1 - i];
-        v->cshape2 = 0.08f * a * V_SHP[NVOICE - 1 - i];
-        v->cdrive = 1.4f * (1.0f + 0.45f * a * V_DEC[i]);
+        CV->c1 = a * 12.0f * V_T1[i] + s * S_DET[i];                     /* cents */
+        CV->c2 = a * 15.0f * V_T2[i] + s * S_DET[i] * 0.8f;
+        CV->ccut = a * 0.6f * V_CUT[i] + s * S_COL[i] * (1.0f / 12.0f);   /* octaves */
+        CV->cres = 1.0f + 0.4f * a * V_RES[i];
+        CV->camp = 1.0f + 0.35f * a * V_AMP[i];                           /* about +-3 dB */
+        CV->cpw = 0.12f * a * V_PW[i];
+        CV->cshape = 0.10f * a * V_SHP[i];
+        CV->cpw2 = 0.10f * a * V_PW[NVOICE - 1 - i];
+        CV->cshape2 = 0.08f * a * V_SHP[NVOICE - 1 - i];
+        CV->cdrive = 1.4f * (1.0f + 0.45f * a * V_DEC[i]);
         /* the envelopes: an RC's curve. Attack aims past the top (1.3) and stops at 1; decay and release fall to
          * where they go; the times are where a decay is down 40 dB */
         v->ka_f = k_of(env_seconds(p[P_FA]) * tf * 0.6824f);
@@ -291,10 +363,14 @@ void eng_patch(const uint8_t *p)
         v->ka_a = k_of(env_seconds(p[P_AA]) * tf * 0.6824f);
         v->kd_a = k_of(env_seconds(p[P_AD]) * td * 0.2171f);
         v->kr_a = k_of(env_seconds(p[P_AR]) * tr * 0.2171f);
-        v->gl = fm_cosf(th);
-        v->gr = fm_sinf(th);
-        v->far = pan < 0.0f ? 1u : 0u;   /* the side away from it hears it a little later */
+        CV->gl = fm_cosf(th);
+        CV->gr = fm_sinf(th);
+        CV->far = pan < 0.0f ? 1u : 0u;   /* the side away from it hears it a little later */
+#ifdef P67_PLUGIN
+        CV->hdf = fm_fabsf(pan) * 16.0f * s * SRS;   /* (up to 0.36 ms, at any rate; gliding: no click) */
+#else
         v->hd = (uint8_t)(fm_fabsf(pan) * 16.0f * s);
+#endif
     }
     fx_patch(p);
 }
@@ -582,6 +658,75 @@ INL float sat(float x)
         cc -= (J) * e_ * e_ * 0.5f;                                                                                     \
     } while (0)
 
+#ifdef P67_PLUGIN
+static const float *bl_tab;              /* the BLEP (bl_tab) and the BLAMP's residual (bl_tab + BL_N) */
+
+/* a step of height J (bl_tab, the step itself taken out) or a change of slope J (per sample: the ramp's residual,
+ * bl_tab + BL_N), d samples before this one: into the 16 samples around it */
+INL void bl_add(osc_t *o, float J, float d, int ramp)
+{
+    const float *tb = bl_tab + (ramp ? BL_N : 0);
+    float di = d * (float)BL_OS, fr;
+    int i0 = (int)di, j;
+    if (i0 >= BL_OS)
+        i0 = BL_OS - 1;
+    fr = di - (float)i0;
+    for (j = -BL_H; j < BL_H; j++) {
+        const float *q = tb + (j + BL_H) * BL_OS + i0;
+        float b = q[0] + fr * (q[1] - q[0]);
+        if (!ramp && j >= 0)
+            b -= 1.0f;
+        o->ring[(o->rp + (uint32_t)j) & (ORING - 1u)] += J * b;
+    }
+}
+
+/* the waveform's slope (per sample) at a phase: the triangle's part (the saw's is the same everywhere) */
+INL float tri_slope(const wave_t *w, float ph, float inc) { return w->wt * (ph < 0.5f ? 4.0f : -4.0f) * inc; }
+
+INL float osc_tick(osc_t *o, const wave_t *w, float inc, float reset, int *wrapped, float *wd)
+{
+    float old = o->ph, ph = old + inc, out;
+    uint32_t r;
+    *wrapped = 0;
+    if (reset >= 0.0f) {                 /* synced: from where it got to straight back to the start */
+        float pr = old + inc * (1.0f - reset);
+        if (pr >= 1.0f)
+            pr -= 1.0f;
+        bl_add(o, wave_at(w, 0.0f) - wave_at(w, pr), reset, 0);
+        if (w->wt > 0.0f)
+            bl_add(o, tri_slope(w, 0.0f, inc) - tri_slope(w, pr, inc), reset, 1);
+        ph = inc * reset;
+        *wrapped = 1;
+        *wd = reset;
+    } else {
+        if (ph >= 1.0f) {
+            ph -= 1.0f;
+            *wrapped = 1;
+            *wd = ph / inc;
+            if (*wd > 0.999f)
+                *wd = 0.999f;
+            bl_add(o, 2.0f * w->wp - 2.0f * w->ws, *wd, 0);   /* the saw falls, the pulse rises */
+            if (w->wt > 0.0f)
+                bl_add(o, 8.0f * w->wt * inc, *wd, 1);        /* the triangle's corner at the bottom */
+            if (w->wp > 0.0f && ph >= w->pw)                    /* and the pulse already fell again (very short) */
+                bl_add(o, -2.0f * w->wp, fm_minf((ph - w->pw) / inc, 0.999f), 0);
+        } else {
+            if (w->wp > 0.0f && old < w->pw && ph >= w->pw)
+                bl_add(o, -2.0f * w->wp, fm_minf((ph - w->pw) / inc, 0.999f), 0);
+            if (w->wt > 0.0f && old < 0.5f && ph >= 0.5f)    /* its corner at the top */
+                bl_add(o, -8.0f * w->wt * inc, fm_minf((ph - 0.5f) / inc, 0.999f), 1);
+        }
+    }
+    o->ph = ph;
+    r = o->rp & (ORING - 1u);
+    o->ring[r] += wave_at(w, ph);
+    r = (o->rp - (uint32_t)BL_H) & (ORING - 1u);
+    out = o->ring[r];
+    o->ring[r] = 0.0f;
+    o->rp++;
+    return out;
+}
+#else
 /* one sample of an oscillator. reset: hard sync, d samples ago (-1: none). wrapped: set when its phase came round
  * (and how long ago, in *wd) */
 INL float osc_tick(osc_t *o, const wave_t *w, float inc, float reset, int *wrapped, float *wd)
@@ -616,6 +761,7 @@ INL float osc_tick(osc_t *o, const wave_t *w, float inc, float reset, int *wrapp
     o->prev = cur + cc;
     return out;
 }
+#endif
 
 /* ------------------------------------------------------------- the render --- */
 static float vb_l[2][NBLK], vb_r[2][NBLK];   /* the voices of each core, summed */
@@ -655,10 +801,100 @@ INL void env_advance(voice_t *v)
     }
 }
 
+#if defined P67_PLUGIN && defined LADDER_OTA
+/* a transconductor's curve: L tanh(x / L), L the level it saturates at (a Padé tanh, flat at +-3: no division by
+ * anything near nought, slope 1 at the middle) */
+#ifndef OTA_L
+#define OTA_L 1.2f
+#endif
+INL float ota(float x)
+{
+    float t = x * (1.0f / OTA_L), t2;
+    if (t > 3.0f)
+        return OTA_L;
+    if (t < -3.0f)
+        return -OTA_L;
+    t2 = t * t;
+    return OTA_L * t * (27.0f + t2) / (27.0f + 9.0f * t2);
+}
+#endif
+
+/* the low-pass's loop, one tick: the feedback solved without a delay, the input saturating, four one-poles */
+INL float ladder(voice_t *v, float x, float qG, float qig, float qG4, float kres, float drv, float idrv)
+{
+    float G2 = qG * qG, S, u, rs, y1, y2, y3, y4;
+    S = (G2 * qG * v->s1 + G2 * v->s2 + qG * v->s3 + v->s4) * qig;
+    u = (x - kres * S) * qG4;
+    u = sat(u * drv) * idrv;
+#if defined P67_PLUGIN && defined LADDER_OTA
+    /* the plugin: each stage a transconductor, as the Prophet-6's (the Prophet-5's design): what drives it is its
+     * input less its output, through a soft curve (ota), so a stage pushed hard slews instead of following, and the
+     * resonance rounds off as it rises: the filter's cream. At the levels a voice plays at it is very nearly linear */
+    rs = ota(u - v->s1) * qG;
+    y1 = rs + v->s1;
+    v->s1 = y1 + rs;
+    rs = ota(y1 - v->s2) * qG;
+    y2 = rs + v->s2;
+    v->s2 = y2 + rs;
+    rs = ota(y2 - v->s3) * qG;
+    y3 = rs + v->s3;
+    v->s3 = y3 + rs;
+    rs = ota(y3 - v->s4) * qG;
+    y4 = rs + v->s4;
+    v->s4 = y4 + rs;
+#else
+    rs = (u - v->s1) * qG;
+    y1 = rs + v->s1;
+    v->s1 = y1 + rs;
+    rs = (y1 - v->s2) * qG;
+    y2 = rs + v->s2;
+    v->s2 = y2 + rs;
+    rs = (y2 - v->s3) * qG;
+    y3 = rs + v->s3;
+    v->s3 = y3 + rs;
+    rs = (y3 - v->s4) * qG;
+    y4 = rs + v->s4;
+    v->s4 = y4 + rs;
+#endif
+    return y4;
+}
+
+#ifdef P67_PLUGIN
+/* the low-pass's 2x: a polyphase IIR half-band (two paths of four first-order allpasses, the even coefficients one
+ * path, the odd the other; elliptic, after de Soras' design: -91 dB from 24.7 kHz at 88.2, flat to 19.4 kHz). Up: the
+ * two paths give the pair; down: half of the even path's sample and the odd path's last one */
+static const float HB_A0[4] = {0.0472898531f, 0.3385179585f, 0.6552730688f, 0.8745126132f};
+static const float HB_A1[4] = {0.1727806110f, 0.5069776792f, 0.7764899192f, 0.9589457184f};
+INL float hb_ap4(float x, float *t, const float *a)
+{
+    float y0 = a[0] * (x - t[1]) + t[0], y1 = a[1] * (y0 - t[2]) + t[1], y2 = a[2] * (y1 - t[3]) + t[2],
+          y3 = a[3] * (y2 - t[4]) + t[3];
+    t[0] = x;
+    t[1] = y0;
+    t[2] = y1;
+    t[3] = y2;
+    t[4] = y3;
+    return y3;
+}
+#endif
+
 HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, float *restrict R)
 {
     uint32_t n = blk_n, c, s, k;
     int j;
+    /* what is tuned per sample or per chunk at 44.1 kHz, at the rate now: the steal's fade (4.5 ms), the drift's
+     * glide, the noise's level in the audible band (white noise at a higher rate spreads its power wider) */
+    const float steal_d = 1.0f / (STEAL * SRS), drift_k = k_sr(0.0016f);
+    const float noise_g = SRS == 1.0f ? 1.0f : fm_sqrtf(SRS);
+#ifdef P67_PLUGIN
+    const int lp_os = SR < 70000.0f && !q_eco ? 2 : 1;   /* the low-pass's rate: twice, below 70 kHz (unless ECO) */
+#else
+    const int lp_os = 1;
+#endif
+    const float w_lp = 3.1415927f / (SR * (float)lp_os);
+#ifdef P67_PLUGIN
+    const float kg_v = 1.0f - fm_expf(-1.0f / (0.001f * SR));   /* (the levels' glide: 2 x 1 ms) */
+#endif
     for (s = 0; s < n; s++)
         L[s] = R[s] = 0.0f;
     for (j = 0; j < nv; j++) {
@@ -672,32 +908,36 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
             float p, inc1, inc2, sh1, pw1, cut, hp, G, gh, kh, a1, a2, kres, comp, pm_s, pm_p, pm_l, pm_h, pm_f;
             float vel_f, famt, hamt, fen, ug, ig, G4, drv, idrv, dG, dig, dG4, dk, dc, dgh, dkh, da1, da2, ft, fk, at, ak;
             int hp_on, pm_sp;
-            float m1, m2, msub, mnoise, sh2b, pw2b;
+            float m1, m2, msub, mnoise, sh2b, pw2b, at_f1, at_f2, at_pw, at_lp, at_hp;
+            const float *lsp[NLD];
             wave_t w1, w2;
             /* a fast LFO 1 (per sample: blk_ls), and AFTERTOUCH's share of it to its destination */
             uint32_t lfd = blk_lfd;
             int at_l1 = P.at_dest == AT_LFO && lfo_fast[0] && P.lfo_dest[0] < NLD && P.lfo_dest[0] != LD_AMP;
             int lowf = P.o2_mode == O2M_LOW || P.o2_mode == O2M_LOWFIX;
             int sync = P.o2_mode == O2M_SYNC;
-            int o2_used = (P.mix2 > 0.0f && !lowf) || sync || blk_fm || blk_pms || blk_pmp || blk_pml || blk_pmh;
+            int o2_used = (PQ.mix2 > 0.0f && !lowf) || sync || blk_fm || blk_pms || blk_pmp || blk_pml || blk_pmh;
+#ifdef P67_PLUGIN
+            (void)o2_used;
+#endif
             /* VINTAGE's drift: a slow wander, a new heading now and then */
             if (P.vint > 0.0f) {
                 if (v->dr_n == 0) {
                     v->dt1 = rnd_f(&v->seed) * 10.0f * P.vint;
                     v->dt2 = rnd_f(&v->seed) * 10.0f * P.vint;
-                    v->dr_n = (uint16_t)(1100u + (rnd_u(&v->seed) & 2047u));   /* 0.2 .. 0.57 s */
+                    v->dr_n = (uint16_t)((float)(1100u + (rnd_u(&v->seed) & 2047u)) * SRS);   /* 0.2 .. 0.57 s */
                 }
                 v->dr_n--;
-                v->dr1 += (v->dt1 - v->dr1) * 0.0016f;
-                v->dr2 += (v->dt2 - v->dr2) * 0.0016f;
+                v->dr1 += (v->dt1 - v->dr1) * drift_k;
+                v->dr2 += (v->dt2 - v->dr2) * drift_k;
             } else {
                 v->dr1 = v->dr2 = 0.0f;
             }
             v->pitch += (v->target - v->pitch) * P.glide_k;
-            p = v->pitch + bend_v * P.bend;
+            p = v->pitch + PQ_BEND * P.bend;
             /* AFTERTOUCH: the key's pressure (or the channel's), smoothed, to where it goes */
             v->press += (ri_maxf(v->ptgt, chan_press) - v->press) * (v->gate || v->sus ? P.at_k : P.at_kr);
-            pp = v->press * P.at_amt;
+            pp = v->press * PQ.at_amt;
             switch (P.at_dest) {
             case AT_FILTER: at_cut = 4.0f * pp; break;
             case AT_SWELL: at_amp = ri_maxf(0.0f, 1.0f + 1.5f * pp); at_cut = 0.7f * pp; break;
@@ -712,8 +952,8 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
             case AT_POLYMOD: at_pm = ri_maxf(0.0f, 1.0f + 2.0f * pp); break;
             default: break;
             }
-            pmfe = P.pm_fenv * at_pm;   /* (AFTERTOUCH to POLY MOD: both its amounts) */
-            pmo2 = P.pm_osc2 * at_pm;
+            pmfe = PQ.pm_fenv * at_pm;   /* (AFTERTOUCH to POLY MOD: both its amounts) */
+            pmo2 = PQ.pm_osc2 * at_pm;
             if (P.at_dest == AT_LFO) {   /* more (or less) of LFO 1, to its destination */
                 int d;
                 for (d = 0; d < NLD; d++)
@@ -735,8 +975,8 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
             }
             /* poly mod by the filter envelope (this chunk) */
             fen = v->fe.v;
-            sh1 = P.o1_shape + v->cshape;
-            pw1 = P.o1_pw + v->cpw;
+            sh1 = PQ.o1_shape + v->cshape;
+            pw1 = PQ.o1_pw + v->cpw;
             if (P.pm_dosc & PMO_FREQ)
                 inc1 *= ex2(pmfe * fen * 3.0f);   /* up to 3 octaves */
             if (P.pm_dosc & PMO_SHAPE)
@@ -747,10 +987,10 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
             inc1 = fm_minf(inc1, 0.45f);
             inc2 = fm_minf(inc2, 0.45f);
             /* the filters this chunk */
-            vel_f = 1.0f - P.fvel + P.fvel * v->vel;
-            vel_f *= 1.0f - P.fenv_vel + P.fenv_vel * v->vel;   /* (FILTER ENVELOPE's VELOCITY, the plugin's: both filters) */
+            vel_f = 1.0f - PQ.fvel + PQ.fvel * v->vel;
+            vel_f *= 1.0f - PQ.fenv_vel + PQ.fenv_vel * v->vel;   /* (FILTER ENVELOPE's VELOCITY, the plugin's: both filters) */
             famt = blk_env[c] * vel_f;
-            hamt = P.hp_env_oct * (1.0f - P.hp_fvel + P.hp_fvel * v->vel) * (1.0f - P.fenv_vel + P.fenv_vel * v->vel);
+            hamt = PQ.hp_env_oct * (1.0f - PQ.hp_fvel + PQ.hp_fvel * v->vel) * (1.0f - PQ.fenv_vel + PQ.fenv_vel * v->vel);
             cut = blk_cut[c] + v->ccut + v->ncut + famt * fen + P.keytrk * (p - 60.0f) * (1.0f / 12.0f);
             hp = blk_hp[c] + hamt * fen + P.hp_keytrk * (p - 60.0f) * (1.0f / 12.0f);
             if (P.pm_dfilt == PMF_LPF || P.pm_dfilt == PMF_BOTH)
@@ -763,7 +1003,12 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
             {
                 float tk = blk_res[c] * v->cres, tg, tG, tig, tG4, tgh, tkh, ta1, tc, inv = 1.0f / (float)CH;
                 tc = 1.0f + tk * 0.32f;   /* some of the bass the resonance takes, back (not all: a Prophet's) */
-                tg = tan_w(3.1415927f / SR * fm_clampf(ex2(cut), 12.0f, 17500.0f));
+#if defined P67_PLUGIN && defined LADDER_OTA
+                /* (the stages' saturation holds a self-oscillating filter a little low, as on an uncalibrated
+                 * analogue one: calibrated, as the Prophet-6 is, from where it starts to sing to the top) */
+                cut += (0.0135f + 1.26e-6f * fm_minf(ex2(cut), 17500.0f)) * fm_clampf((tk - 3.7f) * (1.0f / 0.55f), 0.0f, 1.0f);
+#endif
+                tg = tan_w(w_lp * fm_clampf(ex2(cut), 12.0f, 17500.0f));
                 tig = 1.0f / (1.0f + tg);
                 tG = tg * tig;
                 tG4 = 1.0f / (1.0f + tk * tG * tG * tG * tG);
@@ -819,40 +1064,60 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
             pm_h = blk_pmh ? pmo2 * 4.0f : 0.0f;
             if (at_l1)
                 lfd |= 1u << P.lfo_dest[0];
-            sh2b = P.o2_shape + v->cshape2;
-            pw2b = P.o2_pw + v->cpw2 + lm[LD_PW] * 0.42f;
+            {                            /* (each destination's fast LFO: its line, or nought) */
+                int d;
+                for (d = 0; d < NLD; d++)
+                    lsp[d] = (blk_lfd & (1u << d)) && d != LD_AMP ? blk_ls[d] : blk_zero;
+                at_f1 = at_l1 && (P.lfo_dest[0] == LD_FREQ || P.lfo_dest[0] == LD_FREQ1) ? 1.0f : 0.0f;
+                at_f2 = at_l1 && (P.lfo_dest[0] == LD_FREQ || P.lfo_dest[0] == LD_FREQ2) ? 1.0f : 0.0f;
+                at_pw = at_l1 && P.lfo_dest[0] == LD_PW ? 1.0f : 0.0f;
+                at_lp = at_l1 && P.lfo_dest[0] == LD_LPF ? 1.0f : 0.0f;
+                at_hp = at_l1 && P.lfo_dest[0] == LD_HPF ? 1.0f : 0.0f;
+            }
+            sh2b = PQ.o2_shape + v->cshape2;
+            pw2b = PQ.o2_pw + v->cpw2 + lm[LD_PW] * 0.42f;
             wave_set(&w2, sh2b, pw2b);
             wave_set(&w1, sh1, pw1);
             drv = v->cdrive * at_drv;
             idrv = 1.0f / drv;
             ug = v->camp * blk_trem[c] * at_amp * v->gain
-                 * (1.0f - P.avel + P.avel * v->vel);
+                 * (1.0f - PQ.avel + PQ.avel * v->vel);
             hp_on = hp > 4.6f || pm_h != 0.0f || (lfd & (1u << LD_HPF));
             pm_sp = pm_s != 0.0f || pm_p != 0.0f;
-            m1 = 0.5f * P.mix1;
-            m2 = lowf ? 0.0f : 0.5f * P.mix2;
-            msub = 0.5f * P.sub;
-            mnoise = 0.7f * P.noise;
+            m1 = 0.5f * PQ.mix1;
+            m2 = lowf ? 0.0f : 0.5f * PQ.mix2;
+            msub = 0.5f * PQ.sub;
+            mnoise = 0.7f * PQ.noise * noise_g;
             env_targets(v, &ft, &fk, &at, &ak);
+#ifdef P67_PLUGIN
+            if (!v->gok) {
+                v->g1 = m1;
+                v->g2 = m2;
+                v->gsub = msub;
+                v->gnoise = mnoise;
+                v->gout = ug;
+                v->ga[0] = m1;
+                v->ga[1] = m2;
+                v->ga[2] = msub;
+                v->ga[3] = mnoise;
+                v->ga[4] = ug;
+                v->gok = 1;
+            }
+#endif
             for (s = 0; s < CH && c * CH + s < n; s++) {
-                float o1, o2, sub, x, u, S, y1, y2, y3, y4, t, hv1, hv2, hv3, out, rs, ae, stG;
+                float o1, o2, sub, x, y4, t, hv1, hv2, hv3, out, ae;
                 float lf1 = 0.0f, lf2 = 0.0f, lpw = 0.0f, llp = 0.0f, lhp = 0.0f, ltr = 1.0f, i2 = inc2;
                 int wr1, wr2;
                 float wd1 = 0.0f, wd2 = 0.0f;
                 k = c * CH + s;
                 if (lfd) {               /* a fast LFO, this sample (its amounts as the chunk's: LFO 1's 12
                                           * semitones, 0.42 of PW, 4 octaves of LPF, 3 of HPF) */
-                    float l[NLD];
-                    int d;
-                    for (d = 0; d < NLD; d++)
-                        l[d] = (blk_lfd & (1u << d)) ? blk_ls[d][k] : 0.0f;
-                    if (at_l1)
-                        l[P.lfo_dest[0]] += pp * blk_l1s[k];
-                    lf1 = l[LD_FREQ] + l[LD_FREQ1];   /* octaves */
-                    lf2 = l[LD_FREQ] + l[LD_FREQ2];
-                    lpw = l[LD_PW] * 0.42f;
-                    llp = l[LD_LPF] * 4.0f;
-                    lhp = l[LD_HPF] * 3.0f;
+                    float at1 = at_l1 ? pp * blk_l1s[k] : 0.0f;
+                    lf1 = lsp[LD_FREQ][k] + lsp[LD_FREQ1][k] + at_f1 * at1;   /* octaves */
+                    lf2 = lsp[LD_FREQ][k] + lsp[LD_FREQ2][k] + at_f2 * at1;
+                    lpw = (lsp[LD_PW][k] + at_pw * at1) * 0.42f;
+                    llp = (lsp[LD_LPF][k] + at_lp * at1) * 4.0f;
+                    lhp = (lsp[LD_HPF][k] + at_hp * at1) * 3.0f;
                     if (lfd & (1u << LD_AMP))
                         ltr = blk_ltrem[k];
                     if (lf2 != 0.0f)
@@ -874,7 +1139,7 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
                 v->ae.v = fm_minf(v->ae.v + (at - v->ae.v) * ak, 1.0f);
                 ae = v->ae.v;
                 if (v->fade < 1.0f) {    /* taken (or let go at once): out along a smooth curve, then silent */
-                    v->fade -= 1.0f / STEAL;
+                    v->fade -= steal_d;
                     if (v->fade <= 0.0f) {
                         v->fade = 1.0f;
                         v->fe.v = v->ae.v = 0.0f;
@@ -891,7 +1156,11 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
                     }
                 }
                 /* oscillator 2 first: it is poly mod's source and the sync's master */
+#ifdef P67_PLUGIN
+                if (1) {                 /* (the plugin: always, so its ring never holds a stale wave) */
+#else
                 if (o2_used) {
+#endif
                     o2 = osc_tick(&v->o2, &w2, i2, -1.0f, &wr2, &wd2);
                 } else {                 /* not heard, not used: it only runs on (free-running, as a VCO) */
                     o2 = 0.0f;
@@ -908,9 +1177,29 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
                     v->flip = 1.0f - v->flip;
                 t = (v->o1.ph + v->flip) * 0.5f;     /* the sub-octave: a triangle an octave down */
                 sub = 1.0f - 4.0f * fm_fabsf(t - 0.5f);
+#ifdef P67_PLUGIN
+                v->subd[v->o1.rp & 15u] = sub;       /* (as late as oscillator 1, less the one sample it always was) */
+                sub = v->subd[(v->o1.rp - (uint32_t)(BL_H - 1)) & 15u];
+#endif
+#ifdef P67_PLUGIN
+                v->ga[0] += (m1 - v->ga[0]) * kg_v;   /* (two stages: an S-curve, no corner) */
+                v->ga[1] += (m2 - v->ga[1]) * kg_v;
+                v->ga[2] += (msub - v->ga[2]) * kg_v;
+                v->ga[3] += (mnoise - v->ga[3]) * kg_v;
+                v->ga[4] += (ug - v->ga[4]) * kg_v;
+                v->g1 += (v->ga[0] - v->g1) * kg_v;
+                v->g2 += (v->ga[1] - v->g2) * kg_v;
+                v->gsub += (v->ga[2] - v->gsub) * kg_v;
+                v->gnoise += (v->ga[3] - v->gnoise) * kg_v;
+                v->gout += (v->ga[4] - v->gout) * kg_v;
+                x = v->g1 * o1 + v->g2 * o2 + v->gsub * sub;
+                if (v->gnoise > 1e-7f)
+                    x += v->gnoise * noise_seed_f(&v->seed);
+#else
                 x = m1 * o1 + m2 * o2 + msub * sub;
                 if (mnoise > 0.0f)
                     x += mnoise * noise_seed_f(&v->seed);
+#endif
                 /* the high-pass (2-pole, state variable) */
                 if (hp_on) {             /* (at its bottom, below 24 Hz, it is left out) */
                     float qa1 = a1, qa2 = a2, qg = gh;
@@ -926,43 +1215,53 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
                     v->h2 = 2.0f * hv2 - v->h2;
                     x = x - kh * hv1 - hv2;
                 }
-                /* the low-pass: four one-poles in a loop, solved without a delay; the input saturates */
+                /* the low-pass: four one-poles in a loop, solved without a delay; the input saturates. In the
+                 * plugin below 70 kHz it runs at twice the rate (lp_os): its response the analogue one up to the top
+                 * of the band, its saturation without aliasing */
                 {
-                    float qG = G, qig = ig, qG4 = G4, G2;
+                    float qG = G, qig = ig, qG4 = G4;
                     if (pm_l != 0.0f || llp != 0.0f) {   /* oscillator 2 or a fast LFO moving it: this sample */
-                        float gs = tan_w(3.1415927f / SR * fm_clampf(ex2(cut + pm_l * o2 + llp), 12.0f, 17500.0f));
+                        float gs = tan_w(w_lp * fm_clampf(ex2(cut + pm_l * o2 + llp), 12.0f, 17500.0f));
                         qig = 1.0f / (1.0f + gs);
                         qG = gs * qig;
                         qG4 = 1.0f / (1.0f + kres * qG * qG * qG * qG);
                     }
-                    G2 = qG * qG;
-                    S = (G2 * qG * v->s1 + G2 * v->s2 + qG * v->s3 + v->s4) * qig;
-                    u = (x - kres * S) * qG4;
-                    stG = qG;
+#ifdef P67_PLUGIN
+                    if (lp_os == 2) {
+                        float e0 = hb_ap4(x, v->ou0, HB_A0), e1 = hb_ap4(x, v->ou1, HB_A1), z0, z1;
+                        z0 = ladder(v, e0, qG, qig, qG4, kres, drv, idrv);
+                        z1 = ladder(v, e1, qG, qig, qG4, kres, drv, idrv);
+                        y4 = 0.5f * (hb_ap4(z0, v->od0, HB_A0) + hb_ap4(v->odp, v->od1, HB_A1));
+                        v->odp = z1;
+                    } else
+#endif
+                        y4 = ladder(v, x, qG, qig, qG4, kres, drv, idrv);
                 }
-                u = sat(u * drv) * idrv;
-                rs = (u - v->s1) * stG;
-                y1 = rs + v->s1;
-                v->s1 = y1 + rs;
-                rs = (y1 - v->s2) * stG;
-                y2 = rs + v->s2;
-                v->s2 = y2 + rs;
-                rs = (y2 - v->s3) * stG;
-                y3 = rs + v->s3;
-                v->s3 = y3 + rs;
-                rs = (y3 - v->s4) * stG;
-                y4 = rs + v->s4;
-                v->s4 = y4 + rs;
+#ifdef P67_PLUGIN
+                out = y4 * comp * ae * v->gout * ltr * 0.9f;
+#else
                 out = y4 * comp * ae * ug * ltr * 0.9f;
+#endif
                 /* its place: a pan, and on the far side a fraction of a millisecond late */
+#ifdef P67_PLUGIN
+                if (0) {                 /* (the plugin: always through the line, so it is never stale when SPREAD
+                                          * comes up from nought) */
+#else
                 if (v->hd == 0) {
+#endif
                     L[k] += out * v->gl;
                     R[k] += out * v->gr;
                     continue;
                 }
                 v->hbuf[v->hw & (HAAS - 1u)] = out;
                 {
+#ifdef P67_PLUGIN                        /* (between two samples: the delay glides) */
+                    uint32_t hi = (uint32_t)v->hdf;
+                    float hf = v->hdf - (float)hi, h0 = v->hbuf[(v->hw - hi) & (HAAS - 1u)],
+                          late = h0 + hf * (v->hbuf[(v->hw - hi - 1u) & (HAAS - 1u)] - h0);
+#else
                     float late = v->hbuf[(v->hw - v->hd) & (HAAS - 1u)];
+#endif
                     if (v->far) {
                         L[k] += out * v->gl;
                         R[k] += late * v->gr;
@@ -977,14 +1276,30 @@ HOT static void voices_render(const uint8_t *list, int nv, float *restrict L, fl
             if (v->ae.st == ES_IDLE && !v->pend && v->fade >= 1.0f)
                 break;                   /* finished: the rest of the block is silence for it */
         }
-        if (v->ae.st == ES_IDLE && !v->pend)
+        if (v->ae.st == ES_IDLE && !v->pend) {
             v->cinit = 0;                /* silent: the next note's coefficients start where it starts */
+#ifdef P67_PLUGIN
+            v->gok = 0;
+#endif
+        }
         v->s1 = flush_dn(v->s1);
         v->s2 = flush_dn(v->s2);
         v->s3 = flush_dn(v->s3);
         v->s4 = flush_dn(v->s4);
         v->h1 = flush_dn(v->h1);
         v->h2 = flush_dn(v->h2);
+#ifdef P67_PLUGIN
+        {
+            int q;
+            for (q = 0; q < 5; q++) {
+                v->ou0[q] = flush_dn(v->ou0[q]);
+                v->ou1[q] = flush_dn(v->ou1[q]);
+                v->od0[q] = flush_dn(v->od0[q]);
+                v->od1[q] = flush_dn(v->od1[q]);
+            }
+            v->odp = flush_dn(v->odp);
+        }
+#endif
     }
 }
 
@@ -1012,13 +1327,75 @@ static float lfo_shape_at(int k, float ph)
     }
 }
 
+#ifdef P67_PLUGIN
+/* Q toward P (and the wheels toward where they are), and each voice's character toward VT: once a block, about
+ * 4 ms; close enough, exactly there (so what is off is off) */
+#define QG(f, t) Q.f = (fm_fabsf((t) - Q.f) < 1e-6f || !Q.init) ? (t) : Q.f + ((t) - Q.f) * k
+static void q_glide(uint32_t n)
+{
+    float k = 1.0f - fm_expf(-(float)n / (0.004f * SR));
+    int i;
+    QG(mix1, P.mix1);
+    QG(mix2, P.mix2);
+    QG(sub, P.sub);
+    QG(noise, P.noise);
+    QG(o1_shape, P.o1_shape);
+    QG(o2_shape, P.o2_shape);
+    QG(o1_pw, P.o1_pw);
+    QG(o2_pw, P.o2_pw);
+    QG(pm_fenv, P.pm_fenv);
+    QG(pm_osc2, P.pm_osc2);
+    QG(lfo_amt[0], P.lfo_amt[0]);
+    QG(lfo_amt[1], P.lfo_amt[1]);
+    QG(avel, P.avel);
+    QG(fvel, P.fvel);
+    QG(hp_fvel, P.hp_fvel);
+    QG(fenv_vel, P.fenv_vel);
+    QG(hp_env_oct, P.hp_env_oct);
+    QG(at_amt, P.at_amt);
+    {
+        float kw = 1.0f - fm_expf(-(float)n / (0.003f * SR));   /* the wheels: 3 ms (a 7-bit mod wheel in no steps) */
+        float t = mod_v;
+        Q.modw = (fm_fabsf(t - Q.modw) < 1e-6f || !Q.init) ? t : Q.modw + (t - Q.modw) * kw;
+        t = bend_v;
+        Q.bend = (fm_fabsf(t - Q.bend) < 1e-6f || !Q.init) ? t : Q.bend + (t - Q.bend) * kw;
+    }
+    for (i = 0; i < NVOICE; i++) {       /* each voice's character (a silent one: at once) */
+        voice_t *v = &V[i];
+        const vchar_t *t = &VT[i];
+        float kv = (v->ae.st == ES_IDLE && !v->pend) || !Q.init ? 1.0f : k;
+#define VG(f) v->f += (t->f - v->f) * kv
+        VG(c1);
+        VG(c2);
+        VG(ccut);
+        VG(cres);
+        VG(camp);
+        VG(cpw);
+        VG(cshape);
+        VG(cpw2);
+        VG(cshape2);
+        VG(cdrive);
+        VG(gl);
+        VG(gr);
+        VG(hdf);
+#undef VG
+        v->far = t->far;
+    }
+    Q.init = 1;
+}
+#undef QG
+#endif
+
 static void lfo_block(uint32_t n)
 {
     uint32_t c;
     int k, d;
     float amt[2], m = mod_v, pos = clock_pos(), spt = clock_spt();
-    amt[0] = fm_minf(1.0f, P.lfo_amt[0] + m * m * 0.6f);   /* the mod wheel adds to LFO 1, as the Prophet's */
-    amt[1] = P.lfo_amt[1];
+#ifdef P67_PLUGIN
+    m = Q.modw;
+#endif
+    amt[0] = fm_minf(1.0f, PQ.lfo_amt[0] + m * m * 0.6f);   /* the mod wheel adds to LFO 1, as the Prophet's */
+    amt[1] = PQ.lfo_amt[1];
     for (k = 0; k < 2; k++) {
         if (lfo_reset && P.lfo_retrig[k]) {
             lfo_ph[k] = 0.0f;
@@ -1124,7 +1501,12 @@ static void lfo_block(uint32_t n)
             vib_ph -= 1.0f;
         blk_vib[c] = 1.0f - 4.0f * fm_fabsf(vib_ph - 0.5f);
         {
-            const float k = SMOOTH_K;    /* two stages, each a chunk's share: a detent's step becomes an S-curve
+#ifdef P67_PLUGIN
+            const float ke = k_sr(0.07f);  /* (ENV AMT: its steps the largest, up to 9 octaves over 64: 22 ms) */
+#else
+            const float ke = k_sr(SMOOTH_K);
+#endif
+            const float k = k_sr(SMOOTH_K);   /* two stages, each a chunk's share: a detent's step becomes an S-curve
                                           * (no corner to hear at its start), 90 % there in about 6 ms */
             float tc = P.cut_oct + (cc_cut >= 0 ? cutoff_oct((float)cc_cut * (255.0f / 127.0f)) - P.cut_oct : 0.0f);
             if (!SM.init) {
@@ -1142,12 +1524,12 @@ static void lfo_block(uint32_t n)
             }
             SM.c1 += (tc - SM.c1) * k;
             SM.r1 += (P.res_k - SM.r1) * k;
-            SM.e1 += (P.env_oct - SM.e1) * k;
+            SM.e1 += (P.env_oct - SM.e1) * ke;
             SM.h1 += (P.hp_oct - SM.h1) * k;
             SM.k1 += (P.hp_k - SM.k1) * k;
             SM.cut += (SM.c1 - SM.cut) * k;
             SM.res += (SM.r1 - SM.res) * k;
-            SM.env += (SM.e1 - SM.env) * k;
+            SM.env += (SM.e1 - SM.env) * ke;
             SM.hp += (SM.h1 - SM.hp) * k;
             SM.hpk += (SM.k1 - SM.hpk) * k;
             blk_cut[c] = SM.cut;
@@ -1159,11 +1541,18 @@ static void lfo_block(uint32_t n)
     }
 }
 
+#ifdef P67_PLUGIN
+void eng_render(float *ol, float *orr, uint32_t n, float gain)
+#else
 void eng_render(int32_t *lr, uint32_t n, float gain)
+#endif
 {
     uint32_t s, t0, t1, t2;
     int on2;
-    float lvl = 0.0f;
+    float lvl = 0.0f, kg = k_sr(0.004f), kduck = k_sr(0.003f);
+#ifdef P67_PLUGIN
+    const float dcb_r = 1.0f - 6.2831853f * 4.0f / SR;
+#endif
     if (n > NBLK)
         n = NBLK;
     while (ev_r != ev_w) {               /* the notes that came */
@@ -1193,6 +1582,13 @@ void eng_render(int32_t *lr, uint32_t n, float gain)
                 V[i].ae.v = V[i].fe.v = 0.0f;
                 V[i].ae.st = V[i].fe.st = ES_IDLE;
                 V[i].s1 = V[i].s2 = V[i].s3 = V[i].s4 = V[i].h1 = V[i].h2 = 0.0f;
+#ifdef P67_PLUGIN
+                std::memset(V[i].ou0, 0, sizeof V[i].ou0);
+                std::memset(V[i].ou1, 0, sizeof V[i].ou1);
+                std::memset(V[i].od0, 0, sizeof V[i].od0);
+                std::memset(V[i].od1, 0, sizeof V[i].od1);
+                V[i].odp = 0.0f;
+#endif
             }
             fx_clear();
             clock_panic();
@@ -1200,13 +1596,16 @@ void eng_render(int32_t *lr, uint32_t n, float gain)
         }
     }
     clock_block(n);                      /* the sequencer's and the arp's notes for this block */
+#ifdef P67_PLUGIN
+    q_glide(n);
+#endif
     blk_n = n;
     lfo_block(n);
-    blk_fm = (P.pm_dosc & PMO_FREQ) && P.pm_osc2 != 0.0f;
-    blk_pms = (P.pm_dosc & PMO_SHAPE) && P.pm_osc2 != 0.0f;
-    blk_pmp = (P.pm_dosc & PMO_PW) && P.pm_osc2 != 0.0f;
-    blk_pml = (P.pm_dfilt == PMF_LPF || P.pm_dfilt == PMF_BOTH) && P.pm_osc2 != 0.0f;
-    blk_pmh = (P.pm_dfilt == PMF_HPF || P.pm_dfilt == PMF_BOTH) && P.pm_osc2 != 0.0f;
+    blk_fm = (P.pm_dosc & PMO_FREQ) && PQ.pm_osc2 != 0.0f;
+    blk_pms = (P.pm_dosc & PMO_SHAPE) && PQ.pm_osc2 != 0.0f;
+    blk_pmp = (P.pm_dosc & PMO_PW) && PQ.pm_osc2 != 0.0f;
+    blk_pml = (P.pm_dfilt == PMF_LPF || P.pm_dfilt == PMF_BOTH) && PQ.pm_osc2 != 0.0f;
+    blk_pmh = (P.pm_dfilt == PMF_HPF || P.pm_dfilt == PMF_BOTH) && PQ.pm_osc2 != 0.0f;
     {
         int i, k;
         act_n = 0;
@@ -1237,6 +1636,16 @@ void eng_render(int32_t *lr, uint32_t n, float gain)
     fx_process(vb_l[0], vb_r[0], n);
     for (s = 0; s < n; s++) {
         float l = vb_l[0][s], r = vb_r[0][s], a;
+#ifdef P67_PLUGIN
+        {                                /* the outputs AC-coupled, as the Prophet-6's (4 Hz: what the filter's drive
+                                          * leaves of DC goes; nothing heard is touched) */
+            float yl = l - dcb_x[0] + dcb_r * dcb_y[0], yr = r - dcb_x[1] + dcb_r * dcb_y[1];
+            dcb_x[0] = l;
+            dcb_x[1] = r;
+            dcb_y[0] = l = flush_dn(yl);
+            dcb_y[1] = r = flush_dn(yr);
+        }
+#endif
         /* the output: soft above -3 dB, never over */
         a = fm_fabsf(l);
         if (a > 0.7f)
@@ -1245,12 +1654,20 @@ void eng_render(int32_t *lr, uint32_t n, float gain)
         if (a > 0.7f)
             r = (r > 0.0f ? 1.0f : -1.0f) * (0.7f + 0.3f * fm_tanhf((a - 0.7f) * 3.3333f));
         lvl = fm_maxf(lvl, fm_fabsf(l) + fm_fabsf(r));
-        gain_s += (gain - gain_s) * 0.004f;
-        duck_g += ((duck_on ? 0.0f : 1.0f) - duck_g) * 0.003f;
+        gain_s += (gain - gain_s) * kg;
+        duck_g += ((duck_on ? 0.0f : 1.0f) - duck_g) * kduck;
+#ifdef P67_PLUGIN
+        ol[s] = l * gain_s * duck_g;
+        orr[s] = r * gain_s * duck_g;
+    }
+    /* (the meter's fall: 0.97 a block of 128 at 44.1 kHz, the same per second at any block and rate) */
+    lvl_out = lvl * 0.5f > lvl_out ? lvl * 0.5f : lvl_out * fm_exp2f(-0.0439433f * (float)n / (128.0f * SRS));
+#else
         lr[2u * s] = (int32_t)(l * gain_s * duck_g);
         lr[2u * s + 1u] = (int32_t)(r * gain_s * duck_g);
     }
     lvl_out = lvl * 0.5f > lvl_out ? lvl * 0.5f : lvl_out * 0.97f;
+#endif
     {                                    /* the load: this core busy (less its wait); the second core's job at least
                                           * until this core stopped waiting for it */
         uint32_t t3 = plat_ticks24(), blk = n * 1000000u / 44100u * PLAT_TICKS_PER_US;
@@ -1294,6 +1711,9 @@ void eng_init(void)
         V[i].o2.ph = 0.37f * (float)i - (float)(int)(0.37f * (float)i);
         V[i].dr_n = (uint16_t)(i * 97);
     }
+#ifdef P67_PLUGIN
+    bl_tab = p67_blep_tables();
+#endif
     fx_init();
     clock_init();
 }
@@ -1319,6 +1739,9 @@ void eng_hp_extra(int vel, int keytrk, int fenvVel)   /* (taken at the next patc
     hp_extra_vel = (float)vel * (1.0f / 127.0f);
     hp_extra_kt = keytrk == KT_FULL ? 1.0f : keytrk == KT_HALF ? 0.5f : 0.0f;
 }
+#endif
+#ifdef P67_PLUGIN
+void eng_quality(int high) { q_eco = (uint8_t)(high ? 0 : 1); }
 #endif
 void eng_duck(int on) { duck_on = (uint8_t)(on != 0); }
 int eng_ducked(void) { return duck_g < 0.001f; }
