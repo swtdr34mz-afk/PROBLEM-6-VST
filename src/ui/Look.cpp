@@ -5,16 +5,35 @@
 
 namespace p67
 {
-static juce::Typeface::Ptr face(Face f)
+/* the fonts and the tag: plain pointers, made when first drawn and freed when the last editor closes (UiResources).
+ * Never function statics: those are freed while the host unloads the DLL, under Windows' loader lock, where freeing
+ * fonts and images can hang the host (FL Studio froze when the plugin was closed). */
+struct Store
 {
-    static juce::Typeface::Ptr t[4] = {
-        juce::Typeface::createSystemTypefaceFor(BinaryData::FiraSansSemiBold_ttf, BinaryData::FiraSansSemiBold_ttfSize),
-        juce::Typeface::createSystemTypefaceFor(BinaryData::FiraSansBold_ttf, BinaryData::FiraSansBold_ttfSize),
-        juce::Typeface::createSystemTypefaceFor(BinaryData::FiraSansExtraBold_ttf, BinaryData::FiraSansExtraBold_ttfSize),
-        juce::Typeface::createSystemTypefaceFor(BinaryData::AnonymousProBold_ttf, BinaryData::AnonymousProBold_ttfSize),
-    };
-    return t[(int)f];
+    juce::Typeface::Ptr t[4];
+    juce::Image tag;
+};
+static Store *store = nullptr;
+static Store &get()
+{
+    if (store == nullptr)
+    {
+        store = new Store();
+        store->t[0] = juce::Typeface::createSystemTypefaceFor(BinaryData::FiraSansSemiBold_ttf, BinaryData::FiraSansSemiBold_ttfSize);
+        store->t[1] = juce::Typeface::createSystemTypefaceFor(BinaryData::FiraSansBold_ttf, BinaryData::FiraSansBold_ttfSize);
+        store->t[2] = juce::Typeface::createSystemTypefaceFor(BinaryData::FiraSansExtraBold_ttf, BinaryData::FiraSansExtraBold_ttfSize);
+        store->t[3] = juce::Typeface::createSystemTypefaceFor(BinaryData::AnonymousProBold_ttf, BinaryData::AnonymousProBold_ttfSize);
+        store->tag = juce::ImageFileFormat::loadFrom(BinaryData::swtdr34mztag_png, BinaryData::swtdr34mztag_pngSize);
+    }
+    return *store;
 }
+UiResources::~UiResources()
+{
+    delete store;
+    store = nullptr;
+}
+
+static juce::Typeface::Ptr face(Face f) { return get().t[(int)f]; }
 
 juce::Font font(Face f, float height) { return juce::Font(juce::FontOptions(face(f)).withHeight(height)); }
 
@@ -498,7 +517,7 @@ void drawPanelFace(juce::Graphics &g, juce::Rectangle<float> r, int dots, int se
 }
 void drawTag(juce::Graphics &g, juce::Rectangle<float> r)
 {
-    static const juce::Image tag = juce::ImageCache::getFromMemory(BinaryData::swtdr34mztag_png, BinaryData::swtdr34mztag_pngSize);
+    const juce::Image &tag = get().tag;
     if (tag.isNull())
         return;
     auto fit = juce::RectanglePlacement(juce::RectanglePlacement::centred).appliedTo(tag.getBounds().toFloat(), r);

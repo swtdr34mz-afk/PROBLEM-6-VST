@@ -62,6 +62,7 @@ public:
 
 private:
     Prophet67Processor &proc;
+    juce::SharedResourcePointer<p67::UiResources> resources; // (before the panel: freed after it)
     Prophet67Panel panel;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Prophet67Editor)
 };

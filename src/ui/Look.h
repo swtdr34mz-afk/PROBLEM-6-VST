@@ -17,6 +17,14 @@ const juce::Colour panelTop{0xff252629}, panelBottom{0xff1c1d1f}, frame{0xffd8d7
 }
 
 enum class Face { label, title, logo, mono };
+
+/* the editors' fonts and images: they live while an editor is open (a SharedResourcePointer in each) and go when the
+ * last one closes, on the message thread (see Look.cpp) */
+struct UiResources
+{
+    UiResources() = default;
+    ~UiResources();
+};
 juce::Font font(Face f, float height);
 
 class Look : public juce::LookAndFeel_V4
