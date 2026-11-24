@@ -64,7 +64,8 @@ Läuft auf Apple Silicon und Intel (macOS 10.13 und neuer), Windows 10/11 64-bit
 - **The host's tempo** drives the arp, the synced LFOs and the synced delay; while the host plays, they lock to its
   bar position (an LFO on 1 BAR starts each bar on the bar).
 - **MIDI in:** notes with velocity, poly aftertouch and channel pressure (to the AFTERTOUCH page's DEST), pitch bend
-  (BEND semitones), CC 1 mod wheel (more LFO 1), CC 64 sustain, CC 74 cutoff, CC 120 / 123 all off.
+  (BEND semitones), CC 1 mod wheel (more LFO 1), CC 64 sustain, CC 74 cutoff, CC 120 all sound off (silent at once),
+  CC 121 reset all controllers, CC 123 all notes off (their release).
 - **LOW SPLIT** works on the MIDI notes as on the FM-1's keys: below POINT the left hand is transposed by SPLIT and
   snapped to SCALE L; above it SCALE R follows KEY, the left hand's ROOT, or lies on the WHITE keys; LOW HOLD keeps the
   left hand's chord; BALANCE sets the two hands' levels.
@@ -74,6 +75,32 @@ Läuft auf Apple Silicon und Intel (macOS 10.13 und neuer), Windows 10/11 64-bit
   SELECT, 0-9, the program's name) and a four-octave keyboard with pitch and mod wheels. Under the name, the control
   in hand shows its name and value. Double-click a knob for its default, SHIFT-drag for fine. Drag the window's corner
   to size it (kept with the project).
+
+## The sound engine in the plugin
+
+The firmware's engine, made for a computer where the FM-1's limits do not hold (all `P67_PLUGIN`):
+
+- **LFO 1's top as the Prophet-6's:** up to FREQUENCY 112 as before; above, into the audio range (280 Hz at 126);
+  on S+H with FREQUENCY at 127, the P6's hidden sixth shape, noise, through the CV path's bandwidth (1.6 kHz) so it
+  moves the filter as a smooth, dense wander. A fast LFO 1 works per sample.
+- **The low-pass filter** runs at twice the rate below 70 kHz (a polyphase IIR half-band, -91 dB): its response is the
+  analogue one up to the top of the band at any rate, and its saturation does not alias. Each of its four stages is a
+  transconductor with a soft curve (the Prophet-5/6 design): pushed hard, a stage slews; the resonance rounds off as it
+  rises. A self-oscillating filter plays in tune (within 1 cent, C2 to C7).
+- **Oscillators** band-limited by a 16-sample table BLEP for every step (saw, pulse, hard sync) and BLAMP for every
+  corner (triangle): aliasing about -70 to -95 dB where the firmware's two-sample BLEP leaves -35 to -45; flat to 16 kHz.
+- **The same at any sample rate** (44.1 to 192 kHz) and **any buffer size** (1 sample to 2048, and MIDI splitting a
+  block anywhere): the engine runs on a fixed grid of 16 samples, every time constant is in seconds.
+- **No zipper, no clicks:** every continuous parameter glides (2 x 2 ms, an S-curve; ENV AMOUNT 22 ms, the cutoff and
+  resonance 11 ms), each voice's VINTAGE and SPREAD character too (the spread's delay in fractions of a sample); the
+  effects' levels per sample; a new reverb type crossfades; the chorus and the delay always run, so turning them up
+  starts from what they hold; VOLUME ramps over each block; the outputs are AC-coupled (4 Hz), as the Prophet-6's.
+- **Reliability:** MIDI events are never dropped (2048 in a block); switching UNISON lets the held notes go (no note is
+  left without a key to end it); denormals flushed; float paths throughout (no 16-bit delay lines).
+
+`tests/engine_tests.cpp` checks all of it (every preset at five rates, eleven buffer patterns bit for bit, 22
+parameters automated, effects switched under a chord, a fuzz of notes, pedal, unison and arp, the filter's tuning,
+the CPU); CI runs it on every push, and pluginval checks the Windows VST3.
 
 **Not in this version:** the FM-1's 16-bar step sequencer — in a DAW the piano roll does that job; it may come later.
 The FM-1's CPU limits do not apply, so all seven voices always play at full quality.
@@ -88,10 +115,13 @@ cmake --build build --config Release
 ```
 
 The results are under `build/Prophet67_artefacts/Release/`. GitHub Actions (`.github/workflows/build.yml`) builds
-Windows and the Mac (universal) on every push.
+Windows on every push (the Mac job is ready, commented out), runs the engine's tests on Linux and pluginval on the VST3.
+
+The engine's tests alone (no JUCE): `cmake -S tests -B build-tests && cmake --build build-tests && build-tests/engine_tests`
+(`engine_tests bench` for the CPU, `engine_tests render <preset> <rate> <out.wav>` to listen).
 
 `dsp/` is the firmware's `dsp/` with small `P67_PLUGIN` guards (any sample rate: the delay lines are scaled to it and
-sized for up to 96 kHz; no second core; no RAM placement). `src/P67Engine.cpp` builds those C files as the members of one
+sized for up to 192 kHz; no second core; no RAM placement). `src/P67Engine.cpp` builds those C files as the members of one
 C++ class, so each plugin instance has its own voices and effects. `shim/plat.h` stands in for the FM-1 platform.
 
 ## Licence

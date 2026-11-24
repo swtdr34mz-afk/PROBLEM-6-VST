@@ -12,6 +12,17 @@ permissions:
   contents: write
 
 jobs:
+  # the engine's tests (tests/engine_tests.cpp): every preset at every rate, any buffer size, automation, a fuzz of
+  # notes, the filter's tuning, the CPU; no JUCE needed
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: build
+        run: cmake -S tests -B build-tests -DCMAKE_BUILD_TYPE=Release && cmake --build build-tests --parallel 4
+      - name: run
+        run: build-tests/engine_tests
+
   build:
     strategy:
       fail-fast: false
@@ -33,6 +44,25 @@ jobs:
       - name: build
         shell: bash
         run: cmake --build build --config Release --parallel 4
+
+      - name: pluginval (Windows)
+        # the plugin checked as a host would: loading, its parameters fuzzed, state saved and restored, the editor
+        # opened, every buffer size and rate (Tracktion's pluginval, strictness 8)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_Windows.zip -OutFile pluginval.zip
+          Expand-Archive pluginval.zip -DestinationPath pluginval
+          $p = Start-Process -FilePath pluginval/pluginval.exe -ArgumentList '--strictness-level','8','--timeout-ms','600000','--output-dir','pluginval-log','--validate','"build/Prophet67_artefacts/Release/VST3/PROPHET 67.vst3"' -Wait -PassThru -NoNewWindow
+          Get-ChildItem pluginval-log -ErrorAction SilentlyContinue | ForEach-Object { Get-Content $_.FullName | Select-Object -Last 60 }
+          if ($p.ExitCode -ne 0) { throw "pluginval failed ($($p.ExitCode))" }
+
+      - uses: actions/upload-artifact@v4
+        if: always() && runner.os == 'Windows'
+        with:
+          name: pluginval-log
+          path: pluginval-log
+          if-no-files-found: ignore
 
       - name: package (Windows)
         if: runner.os == 'Windows'

@@ -197,6 +197,7 @@ void Prophet67Processor::prepareToPlay(double sampleRate, int)
         held[i] = latched[i] = false;
     }
     root = -1;
+    lastGain = -1.0f;
 }
 
 void Prophet67Processor::setCurrentProgram(int index)
@@ -370,12 +371,21 @@ void Prophet67Processor::handleMidi(const juce::MidiMessage &m)
             engine.modWheel((float)v / 127.0f);
         else if (cc == 74)
             engine.cutoffCC(v);
-        else if (cc == 120 || cc == 123) {
-            engine.allOff();
+        else if (cc == 120 || cc == 123) {   /* ALL SOUND OFF: silent at once; ALL NOTES OFF: let go (their release) */
+            if (cc == 120)
+                engine.panic();
+            else
+                engine.allOff();
             for (int n = 0; n < 128; n++) {
                 mapped[n] = -1;
                 held[n] = latched[n] = false;
             }
+        } else if (cc == 121) {          /* RESET ALL CONTROLLERS: the wheels, the pedal, the pressure, CC 74 */
+            engine.bend(0.0f);
+            engine.modWheel(0.0f);
+            engine.sustain(false);
+            engine.pressAll(0.0f);
+            engine.cutoffCC(-1);
         }
     } else if (m.isAllNotesOff() || m.isAllSoundOff())
         engine.allOff();
@@ -466,9 +476,13 @@ void Prophet67Processor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
         voiceLevel[v].store(engine.voiceEnv(v), std::memory_order_relaxed);
     arpSteps.store(engine.arpSteps(), std::memory_order_relaxed);
     float gain = g.volume * g.volume * 2.0f;   /* (0.7: about 0 dB) */
-    buffer.applyGain(0, 0, n, gain);
+    if (lastGain < 0.0f)
+        lastGain = gain;
+    /* VOLUME moves in a ramp over the block, never a step */
+    buffer.applyGainRamp(0, 0, n, lastGain, gain);
     if (buffer.getNumChannels() > 1)
-        buffer.applyGain(1, 0, n, gain);
+        buffer.applyGainRamp(1, 0, n, lastGain, gain);
+    lastGain = gain;
     for (int c = 2; c < buffer.getNumChannels(); c++)
         buffer.clear(c, 0, n);
 }
