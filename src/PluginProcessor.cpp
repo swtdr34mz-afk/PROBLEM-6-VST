@@ -133,7 +133,7 @@ int Prophet67Processor::writePreset(const juce::String &name)
     loadUserPresets();
     for (size_t i = 0; i < userPresets.size(); i++)
         if (userPresets[i].name == clean) {
-            program = NPRESETS + (int)i;
+            program = NFACTORY + (int)i;
             updateHostDisplay(ChangeDetails().withProgramChanged(true));
             return program;
         }
@@ -144,8 +144,10 @@ const uint8_t *Prophet67Processor::programData(int index) const
 {
     if (index >= 0 && index < NPRESETS)
         return FACTORY[index].p;
-    if (index >= NPRESETS && index < NPRESETS + (int)userPresets.size())
-        return userPresets[(size_t)(index - NPRESETS)].p;
+    if (index >= NPRESETS && index < NFACTORY)
+        return VST_PRESETS[index - NPRESETS].p;
+    if (index >= NFACTORY && index < NFACTORY + (int)userPresets.size())
+        return userPresets[(size_t)(index - NFACTORY)].p;
     return nullptr;
 }
 
@@ -177,24 +179,26 @@ void Prophet67Processor::setCurrentProgram(int index)
         if (auto *p = apvts.getParameter(paramId(i)))
             p->setValueNotifyingHost(p->convertTo0to1((float)d[i]));
     int hv = d[P_FVEL], hk = d[P_KEYTRK];      /* the high-pass's: a program of your own keeps them, else as the low-pass's */
-    if (index >= NPRESETS) {
-        hv = userPresets[(size_t)(index - NPRESETS)].hpVel;
-        hk = userPresets[(size_t)(index - NPRESETS)].hpKt;
+    if (index >= NFACTORY) {
+        hv = userPresets[(size_t)(index - NFACTORY)].hpVel;
+        hk = userPresets[(size_t)(index - NFACTORY)].hpKt;
     }
     if (auto *p = apvts.getParameter("hp_vel"))
         p->setValueNotifyingHost(p->convertTo0to1((float)hv));
     if (auto *p = apvts.getParameter("hp_keytrk"))
         p->setValueNotifyingHost(p->convertTo0to1((float)hk));
     if (auto *p = apvts.getParameter("fenv_vel"))
-        p->setValueNotifyingHost(p->convertTo0to1(index >= NPRESETS ? (float)userPresets[(size_t)(index - NPRESETS)].fenvVel : 0.0f));
+        p->setValueNotifyingHost(p->convertTo0to1(index >= NFACTORY ? (float)userPresets[(size_t)(index - NFACTORY)].fenvVel : 0.0f));
 }
 
 const juce::String Prophet67Processor::getProgramName(int index)
 {
     if (index >= 0 && index < NPRESETS)
         return juce::String(FACTORY[index].name, (size_t)NAME_LEN);   /* (a name of 12 has no nought) */
-    if (index >= NPRESETS && index < NPRESETS + (int)userPresets.size())
-        return userPresets[(size_t)(index - NPRESETS)].name;
+    if (index >= NPRESETS && index < NFACTORY)
+        return juce::String(VST_PRESETS[index - NPRESETS].name, (size_t)NAME_LEN);
+    if (index >= NFACTORY && index < NFACTORY + (int)userPresets.size())
+        return userPresets[(size_t)(index - NFACTORY)].name;
     return {};
 }
 

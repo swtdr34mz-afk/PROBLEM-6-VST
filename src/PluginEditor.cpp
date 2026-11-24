@@ -749,12 +749,26 @@ void Prophet67Panel::timerCallback()
 void Prophet67Panel::presetMenu()
 {
     juce::PopupMenu m;
+    auto item = [this](juce::PopupMenu &menu, int i) {
+        menu.addItem(i + 1, juce::String(i).paddedLeft('0', 3) + "   " + proc.getProgramName(i), true, i == proc.getCurrentProgram());
+    };
     m.addSectionHeader("FACTORY");
-    for (int i = 0; i < proc.getNumPrograms(); i++) {
-        if (i == NPRESETS)
-            m.addSectionHeader("YOUR PROGRAMS");
-        m.addItem(i + 1, juce::String(i).paddedLeft('0', 3) + "   " + proc.getProgramName(i), true, i == proc.getCurrentProgram());
+    for (int i = 0; i < NPRESETS; i++)
+        item(m, i);
+    m.addSectionHeader("SOUND LIBRARY");        /* the VST's own 50, by kind */
+    for (int g = 0; g < NVST_GROUPS; g++) {
+        juce::PopupMenu sub;
+        int end = g + 1 < NVST_GROUPS ? VST_GROUPS[g + 1].first : NVST_PRESETS;
+        bool here = false;
+        for (int k = VST_GROUPS[g].first; k < end; k++) {
+            item(sub, NPRESETS + k);
+            here |= proc.getCurrentProgram() == NPRESETS + k;
+        }
+        m.addSubMenu(VST_GROUPS[g].name, sub, true, nullptr, here);
     }
+    m.addSectionHeader("YOUR PROGRAMS");
+    for (int i = Prophet67Processor::NFACTORY; i < proc.getNumPrograms(); i++)
+        item(m, i);
     if (proc.userPresets.empty())
         m.addItem(-1, "(WRITE keeps the sound as a program of your own)", false, false);
     juce::Component::SafePointer<Prophet67Panel> self(this);

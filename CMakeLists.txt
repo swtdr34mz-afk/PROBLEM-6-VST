@@ -66,7 +66,8 @@ target_sources(Prophet67 PRIVATE
     src/ui/Look.cpp
     src/ui/Controls.cpp
     dsp/params.c
-    dsp/presets.c)
+    dsp/presets.c
+    src/vst_presets.c)
 
 target_include_directories(Prophet67 PRIVATE shim dsp src)
 

@@ -14,7 +14,8 @@ add_executable(engine_tests
     engine_tests.cpp
     ${R}/src/P67Engine.cpp
     ${R}/dsp/params.c
-    ${R}/dsp/presets.c)
+    ${R}/dsp/presets.c
+    ${R}/src/vst_presets.c)
 target_include_directories(engine_tests PRIVATE ${R}/shim ${R}/dsp ${R}/src)
 target_compile_definitions(engine_tests PRIVATE P67_PLUGIN=1 PLAT_HOST=1 _USE_MATH_DEFINES)
 if(MSVC)

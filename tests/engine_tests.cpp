@@ -9,6 +9,7 @@
  *
  * Built by CMake (-DP67_TESTS=ON) or by hand: see tests/CMakeLists.txt. */
 #include "P67Engine.h"
+#include "vst_presets.h"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -37,10 +38,10 @@ struct Patch {
     uint8_t p[NPARAM];
     int hpVel = 0, hpKt = 0, fenvVel = 0;
 };
-Patch preset(int i)
+Patch preset(int i)                          /* 0..15 the factory's, 16.. the VST's own (vst_presets.c) */
 {
     Patch pt;
-    std::memcpy(pt.p, FACTORY[i].p, NPARAM);
+    std::memcpy(pt.p, i < NPRESETS ? FACTORY[i].p : VST_PRESETS[i - NPRESETS].p, NPARAM);
     pt.hpVel = pt.p[P_FVEL];
     pt.hpKt = pt.p[P_KEYTRK];
     return pt;
@@ -334,7 +335,7 @@ void testPresets()
 {
     std::puts("presets at every rate (finite, bounded, the voices end)");
     for (int sr : RATES)
-        for (int i = 0; i < NPRESETS; i++) {
+        for (int i = 0; i < NPRESETS + NVST_PRESETS; i++) {
             Patch pt = preset(i);
             Out o = render(pt, sr, S(7.0, sr), demo(sr));
             Patch d = dry(pt);
@@ -342,7 +343,7 @@ void testPresets()
             double tail = rms(od.L, S(23.5, sr));
             bool ok = finite(o) && peak(o) < 2.0 && od.voicesAtEnd == 0 && tail < 1e-5;
             if (!ok || sr == 44100)
-                check(ok, fmt("%-12s %6d", FACTORY[i].name, sr).c_str(),
+                check(ok, fmt("%-12.12s %6d", i < NPRESETS ? FACTORY[i].name : VST_PRESETS[i - NPRESETS].name, sr).c_str(),
                       fmt("peak %.2f  voices left %d  dry tail %.1f dB", peak(o), od.voicesAtEnd, 20 * std::log10(tail + 1e-12)));
         }
 }
