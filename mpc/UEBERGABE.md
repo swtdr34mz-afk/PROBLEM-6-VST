@@ -88,6 +88,12 @@ Scales/Key/Follow/Balance nur in der Parameterliste.
 4. Branding-Hinweis: „PROPHETIC 6“ ist nah an „Prophet-6“; die Reviewer könnten nachfragen. Kein Hersteller-Logo im
    Skin (geprüft), Summary sagt „Prophet-6-style“.
 
+## Neue Version
+
+Bei jedem Release die Versionsnummer an **zwei** Stellen gleich setzen: `CMakeLists.txt` (`project(PROPHET67 VERSION …)`,
+VST) und `mpc/plugin/plugin.json` (`"version"`, MPC). Sonst bricht die CI beim MPC-Zip ab („plugin.json's version is
+not …“), wie bei v1.0.1 passiert.
+
 ## Arbeitsregeln (wie bisher)
 
 - Auf Branches arbeiten, PRs, kein direkter Push auf `main`.
