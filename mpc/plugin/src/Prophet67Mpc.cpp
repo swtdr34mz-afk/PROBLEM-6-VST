@@ -16,12 +16,14 @@
 //   75..77   HP VELOCITY, HP KEYBOARD, FILTER ENVELOPE VELOCITY (the VST's own)
 //   78..84   ARP on, MODE, RATE, OCTAVES, GATE, HOLD, SWING (settings: the programs leave them)
 //   85       QUALITY: HIGH (the low-pass at 2x) or ECO (less CPU; for the 32-bit MPCs and big projects)
+//   86..93   LOW SPLIT: SPLIT, POINT, SCALE L, SCALE R, KEY, FOLLOW, LOW HOLD, BALANCE (as the VST's, KeySplit.h)
 //
 // MIDI in: notes and velocity, pitch bend (BEND RANGE), poly and channel pressure (AFTERTOUCH), CC 1 mod wheel,
 // CC 64 sustain, CC 74 cutoff, CC 120 all sound off, CC 121 reset controllers, CC 123 all notes off.
 
 #include "mpc_plugin.h"
 #include "P67Engine.h"
+#include "KeySplit.h"
 #include "p67_data.h"
 
 #include <cmath>
@@ -29,7 +31,7 @@
 
 namespace {
 
-// the MPC's screen names: short (about 12 characters), each its own (ui.json finds controls by them)
+// the MPC's screen names: short (about 12 characters), each its own
 const char *const NAMES[NPARAM] = {
     "Osc1 Freq",   "Osc1 Shape",  "Osc1 PW",     "Sub Oct",                         // OSC 1
     "Osc2 Freq",   "Osc2 Fine",   "Osc2 Shape",  "Osc2 PW",                         // OSC 2
@@ -66,9 +68,17 @@ enum {
     kArpHold,
     kSwing,
     kQuality,
+    kSplit,                              // LOW SPLIT (KeySplit.h)
+    kSplitPoint,
+    kScaleL,
+    kScaleR,
+    kKey,
+    kFollow,
+    kLowHold,
+    kBalance,
     kNumParams
 };
-static_assert(kNumParams == 86, "the parameters' order is permanent");
+static_assert(kNumParams == 94, "the parameters' order is permanent");
 
 class Prophet67Mpc : public mpc::Plugin
 {
@@ -103,6 +113,22 @@ public:
 #else
         addParam(mpc::choiceParam("quality", "Quality", {"HIGH", "ECO"}, 0));
 #endif
+        {
+            using namespace p67split;
+            std::vector<std::string> scales{"CHROMA"}, keys;
+            for (int i = 0; i < NSC; i++)
+                scales.push_back(SCALES[i].name);
+            for (int i = 0; i < 12; i++)
+                keys.push_back(NOTE[i]);
+            addParam(mpc::choiceParam("split", "Split", {SPLIT_NAME[0], SPLIT_NAME[1], SPLIT_NAME[2], SPLIT_NAME[3]}, 0));
+            addParam(mpc::intParam("split_point", "Split Point", 24, 96, 60));
+            addParam(mpc::choiceParam("scale_l", "Scale L", scales, 0));
+            addParam(mpc::choiceParam("scale_r", "Scale R", scales, 0));
+            addParam(mpc::choiceParam("key", "Key", keys, 0));
+            addParam(mpc::choiceParam("follow", "Follow", {FOLLOW_NAME[0], FOLLOW_NAME[1], FOLLOW_NAME[2]}, 1));
+            addParam(mpc::boolParam("low_hold", "Low Hold", false));
+            addParam(mpc::intParam("balance", "Balance", -50, 50, 0));
+        }
 
         // the 16 factory programs: VOLUME, the sound, the filters' VELOCITY and KEYBOARD as on the FM-1 (the
         // high-pass's as the low-pass's) and the envelope's VELOCITY off; the arp, SWING and QUALITY they leave
@@ -132,8 +158,7 @@ public:
     void reset() override              // resume, or a program / state loaded: the voices let go at once
     {
         engine.panic();
-        for (int n = 0; n < 128; n++)
-            held[n] = false;
+        split.reset();
         forceSend();
     }
 
@@ -200,6 +225,14 @@ public:
             out = std::to_string(v) + "%";
             return true;
         }
+        if (index == kSplitPoint) {      /* a note: C4 is 60 */
+            out = std::string(p67split::NOTE[mpc::clamp(v, 0, 127) % 12]) + std::to_string(mpc::clamp(v, 0, 127) / 12 - 1);
+            return true;
+        }
+        if (index == kBalance) {
+            out = (v > 0 ? "+" : "") + std::to_string(v);
+            return true;
+        }
         return false;
     }
 
@@ -258,8 +291,7 @@ private:
         if (!arpSent || on != arpOn || mode != arpMode || rt != arpRate || oct != arpOct || gate != arpGate) {
             if (!arpSent || on != arpOn) {   /* the arp on or off: what sounds lets go */
                 engine.allOff();
-                for (int k = 0; k < 128; k++)
-                    held[k] = false;
+                split.forget(false);
             }
             engine.arp(on, mode, rt, oct, (float)gate * 0.01f);
         }
@@ -272,22 +304,25 @@ private:
         arpGate = gate;
         arpHold = hold;
         arpSent = true;
+        p67split::Settings ss;           /* LOW SPLIT (LOW HOLD off: what only it held goes) */
+        ss.split = getInt(kSplit);
+        ss.point = getInt(kSplitPoint);
+        ss.scaleL = getInt(kScaleL);
+        ss.scaleR = getInt(kScaleR);
+        ss.key = getInt(kKey);
+        ss.follow = getInt(kFollow);
+        ss.lowHold = getBool(kLowHold);
+        ss.balance = getInt(kBalance);
+        split.set(engine, ss);
     }
 
     void midi(const mpc::MidiEvent &e)
     {
         const uint8_t st = e.status();
-        if (e.isNoteOn()) {
-            int k = e.note();
-            if (held[k])             /* (the same key again: let it go first) */
-                noteUp(k);
-            held[k] = true;
-            if (arpOn)
-                engine.arpKey(k, true, (float)e.velocity() / 127.0f);
-            else
-                engine.noteOn(k, k, (float)e.velocity() / 127.0f, 1.0f);
+        if (e.isNoteOn()) {              /* (through LOW SPLIT; the same key again lets it go first) */
+            split.noteDown(engine, e.note(), (float)e.velocity() / 127.0f);
         } else if (e.isNoteOff()) {
-            noteUp(e.note());
+            split.noteUp(engine, e.note());
         } else if (e.isPitchBend()) {
             engine.bend((float)e.pitchBend() / 8192.0f);
         } else if (st == 0xA0) {         /* poly pressure */
@@ -307,8 +342,7 @@ private:
                     engine.panic();
                 else
                     engine.allOff();
-                for (int k = 0; k < 128; k++)
-                    held[k] = false;
+                split.forget(true);
             } else if (cc == 121) {      /* RESET ALL CONTROLLERS */
                 engine.bend(0.0f);
                 engine.modWheel(0.0f);
@@ -319,17 +353,6 @@ private:
         }
     }
 
-    void noteUp(int k)
-    {
-        if (!held[k])
-            return;
-        held[k] = false;
-        if (arpOn)
-            engine.arpKey(k, false, 0.0f);
-        else
-            engine.noteOff(k);
-    }
-
     P67Engine engine;
     double rate = 0.0;
     uint8_t sent[NPARAM] = {};
@@ -337,7 +360,7 @@ private:
     int hpVel = -1, hpKey = -1, fenvVel = -1;
     bool arpSent = false, arpOn = false, arpHold = false;
     int arpMode = 0, arpRate = 2, arpOct = 1, arpGate = 50;
-    bool held[128] = {};
+    p67split::KeySplit split;            // LOW SPLIT on the MIDI notes
     float lastGain = -1.0f;
 };
 

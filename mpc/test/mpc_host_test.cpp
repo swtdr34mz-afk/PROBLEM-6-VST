@@ -212,6 +212,15 @@ std::vector<Ev> phrase(int len)
 }
 } // namespace
 
+int param(Plug &p, const char *name)      /* a parameter's index, by its name */
+{
+    for (int i = 0; i < p.e->numParams; i++)
+        if (p.str(effGetParamName, i) == name)
+            return i;
+    std::printf("no parameter %s\n", name);
+    std::exit(1);
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 2) {
@@ -363,11 +372,29 @@ int main(int argc, char **argv)
             e.push_back({44100 * 3, 0x80, (uint8_t)k, 0});
         p.d(effSetProgram, 0, 0);
         auto s = render(p, 44100 * 4, e, {128});
-        int qi = p.e->numParams - 1;
+        int qi = param(p, "Quality");
         p.e->setParameter(p.e, qi, 1.0f);   /* ECO */
         auto s2 = render(p, 44100 * 2, {{0, 0x90, 60, 100}, {44100, 0x80, 60, 0}}, {128});
         p.e->setParameter(p.e, qi, 0.0f);
         check(finite(s) && finite(s2) && p.str(effGetParamDisplay, qi).size() > 0, "QUALITY HIGH and ECO both play");
+    }
+
+    /* LOW SPLIT: SPLIT -1 OCT at C4, BALANCE all to the right: a note below is silent, one above plays; off: both */
+    {
+        int sp = param(p, "Split"), bal = param(p, "Balance");
+        p.d(effSetProgram, 0, 0);
+        p.e->setParameter(p.e, sp, 1.0f / 3.0f);
+        p.e->setParameter(p.e, bal, 1.0f);
+        bool shown = p.str(effGetParamDisplay, sp) == "-1 OCT" && p.str(effGetParamDisplay, bal) == "+50"
+                     && p.str(effGetParamDisplay, param(p, "Split Point")) == "C4";
+        auto lo = render(p, 44100, {{0, 0x90, 48, 100}, {22050, 0x80, 48, 0}}, {128});
+        auto hi = render(p, 44100, {{0, 0x90, 72, 100}, {22050, 0x80, 72, 0}}, {128});
+        p.e->setParameter(p.e, sp, 0.0f);
+        p.e->setParameter(p.e, bal, 0.5f);
+        auto lo2 = render(p, 44100, {{0, 0x90, 48, 100}, {22050, 0x80, 48, 0}}, {128});
+        render(p, 44100 * 3, {}, {128});
+        check(shown && rms(lo, 2205, 22050) < 1e-4 && rms(hi, 2205, 22050) > 1e-3 && rms(lo2, 2205, 22050) > 1e-3,
+              "LOW SPLIT: the split, its BALANCE, its values shown");
     }
 
     /* the arp on the MPC's tempo, its notes ending when the keys go */
@@ -389,7 +416,7 @@ int main(int argc, char **argv)
         std::vector<Ev> e;
         for (int k : {36, 43, 48, 55, 60, 64, 67})
             e.push_back({0, 0x90, (uint8_t)k, 100});
-        int qi = p.e->numParams - 1;
+        int qi = param(p, "Quality");
         double c[2];
         for (int q = 0; q < 2; q++) {
             p.d(effSetProgram, 0, 0);

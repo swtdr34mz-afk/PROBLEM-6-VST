@@ -54,10 +54,8 @@ public:
     void paint(juce::Graphics &) override;
     void mouseDown(const juce::MouseEvent &) override;
     float rowH = 13.0f;
-
-private:
     juce::StringArray names;
-    juce::Rectangle<float> item(int i) const;
+    juce::Rectangle<float> item(int i) const;   /* (public: the MPC skin's renderer, mpc/skin/, crops each row) */
 };
 
 class Button : public ParamView
@@ -72,10 +70,10 @@ public:
     void mouseUp(const juce::MouseEvent &) override;
     juce::StringArray leds;              /* LEDs above (bit i: LED i), as POLY MOD's FILTER: LP, HP */
     bool key = false;                    /* drawn as a dark P6 key with its LED (GLIDE, UNISON) */
+    IsOn isOn;                           /* (public: the MPC skin's renderer, mpc/skin/, follows the same rules) */
+    Next next;
 
 private:
-    IsOn isOn;
-    Next next;
     bool pressed = false;
 };
 

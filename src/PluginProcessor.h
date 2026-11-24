@@ -8,6 +8,7 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <atomic>
 #include "P67Engine.h"
+#include "KeySplit.h"
 
 class Prophet67Processor : public juce::AudioProcessor
 {
@@ -73,25 +74,15 @@ private:
 
     /* the plugin's own settings, read each block */
     struct Globals {
-        bool arpOn = false, arpHold = false, lowHold = false;
+        bool arpOn = false, arpHold = false;
         int arpMode = 0, arpRate = 2, arpOct = 1, arpGate = 50, swing = 0;
-        int split = 0, point = 60, scaleL = 0, scaleR = 0, key = 0, follow = 1, balance = 0;
         float volume = 0.7f;
     } g, gSent;
+    p67split::Settings sp;               /* LOW SPLIT's, read each block */
     bool arpSent = false;
     void readGlobals();
 
-    /* the LOW SPLIT on MIDI notes (the firmware's logic, app.c key_map) */
-    int mapped[128];                     /* the note each incoming note plays (-1 none) */
-    bool held[128] = {}, latched[128] = {};
-    int root = -1;
-    int keyMap(int note) const;
-    bool isLeft(int note) const { return g.split > 0 && note < g.point; }
-    float zoneGain(int note) const;
-    void noteDown(int note, float vel);
-    void noteUp(int note);
-    void stopNote(int note);
-    void rootUpdate();
+    p67split::KeySplit split;            /* the LOW SPLIT on MIDI notes (KeySplit.h) */
     void handleMidi(const juce::MidiMessage &m);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Prophet67Processor)

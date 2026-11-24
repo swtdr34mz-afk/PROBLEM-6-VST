@@ -5,7 +5,7 @@ M-Vave FM-1 firmware, built with Akai's MPC Plugin SDK. A 7-voice analogue-style
 Prophet-6: two oscillators (triangle - saw - pulse, sub octave, noise, hard sync, LOW FREQ), poly mod, a resonant
 high-pass into a creamy 4-pole low-pass, filter and amp envelopes, VINTAGE and SPREAD, two LFOs (LFO 1 into the
 audio range; on S+H at the top, the Prophet-6's noise), distortion, chorus, delay, five reverbs (ROOM, HALL, PLATE,
-SPRING, SPACE) and an arpeggiator on the MPC's tempo.
+SPRING, SPACE), an arpeggiator on the MPC's tempo and the LOW SPLIT with its scales.
 
 ## Installieren (kurz auf Deutsch)
 
@@ -22,26 +22,36 @@ nehmen denselben Ordner; jedes Gerät lädt seine eigene Datei darin.
 
 ## On the screen
 
-Six pages (the MPC's six function keys), each in rows of four (one Q-Link group each):
+The MPC shows the VST's own panel: the same picture, drawn by the VST's own code at the MPC's 1280 pixels across
+(`mpc/skin/`), and every control on it works as in the VST: turn a knob (drag it up and down, or its Q-Link; a
+double tap opens the MPC's large editor, or the list for a choice), tap a button (POLY MOD's FREQ 1 / SHAPE 1 / PW 1,
+OSC 2's SYNC, LOW FREQ and KEYBOARD, the filters' KEYBOARD, the VELOCITY buttons, RETRIG, ARP ON/OFF, HOLD, UNISON,
+LOW HOLD), tap an LED to choose (the LFOs' shapes and destinations, AFTERTOUCH's DEST, the arp's rate, octaves and
+mode, the split). EFFECTS' SELECT and its LEDs choose the effect whose knobs it shows, as in the VST.
 
-| Page | Rows |
+The function keys choose which controls the 16 Q-Links turn; the page is the whole panel each time, the Q-Links'
+four groups framed (the top row of Q-Links the first, down to the bottom row):
+
+| Page | The Q-Links' rows, top to bottom |
 |---|---|
-| OSC | oscillator 1 (FREQ, SHAPE, PW, SUB) · oscillator 2 (FREQ, FINE, SHAPE, PW) · the mixer (OSC 1, OSC 2, NOISE, OSC 2 MODE) · GLIDE, UNISON, BEND RANGE, AMP VELOCITY |
-| FILTER | low-pass (CUTOFF, RESONANCE, ENV AMT, KEYBOARD) · high-pass (CUTOFF, RESO, ENV AMT, KEYBOARD) · the velocities · the filter envelope |
-| AMP | the amp envelope · VINTAGE, SPREAD, VOLUME, QUALITY · aftertouch (DEST, AMOUNT, CURVE, SMOOTH) |
-| LFO+PM | LFO 1 · both LFOs' SYNC and RETRIG · LFO 2 · poly mod |
-| FX | distortion and chorus · the reverb · SPACE's own (shown on SPACE) |
-| DLY+ARP | the delay's times, REPEATS, MIX · its modulation, TONE, SYNC · the arp (on, MODE, RATE, OCTAVES · GATE, HOLD, SWING) |
+| OSC | POLY MOD · OSCILLATOR 1 (with OSC 2's SYNC) · OSCILLATOR 2 · MIXER |
+| FLT/AMP | FILTER ENVELOPE · LOW-PASS (and its KEYBOARD) · HIGH-PASS (and its KEYBOARD) · AMPLIFIER ENVELOPE |
+| LFO/AT | LFO 1 · LFO 1's DEST and LFO 2 · LFO 2's AMT and DEST, AFTERTOUCH's AMOUNT and CURVE · its SMOOTH and DEST |
+| FX (press again for the next) | CHORUS, REVERB, SPACE, DELAY, DLY MOD: the effect's knobs · VINTAGE, VOICE SPREAD, DISTORT · SWING · MASTER VOL |
+| ARP/SPLT | the arp's VALUE, OCTAVES, MODE, GATE · LOW SPLIT's SPLIT, POINT, SCALE L, SCALE R · KEY, FOLLOW, BALANCE, QUALITY · GLIDE, BEND RANGE |
+
+The tempo and the program are the MPC's own: the CLOCK and PROGRAM displays stay dark, and the program buttons
+are the panel's picture (the factory programs are in the MPC's preset list). The keyboard is the MPC's pads.
 
 The 16 factory programs are the plugin's presets (the MPC's preset list); the MPC saves the sound with the project,
 and presets of your own with its own preset save. Every value reads as on the FM-1 and in the VST.
 
-**MIDI:** notes and velocity from the pads or keys, pitch bend (BEND RANGE), poly and channel pressure (the
-AFTERTOUCH page), CC 1 mod wheel (more LFO 1), CC 64 sustain, CC 74 cutoff, CC 120 / 121 / 123.
+**MIDI:** notes and velocity from the pads or keys, pitch bend (BEND RANGE), poly and channel pressure (AFTERTOUCH), CC 1 mod wheel (more LFO 1), CC 64 sustain, CC 74 cutoff, CC 120 / 121 / 123.
 
 ## CPU
 
-The MPC is a small ARM computer, and this is a full analogue-style poly with five effects. **QUALITY** chooses:
+The MPC is a small ARM computer, and this is a full analogue-style poly with five effects. **QUALITY** (a Q-Link on the ARP/SPLT page: the
+third row's fourth) chooses:
 
 - **HIGH** (the default on the MPC XL and Live III): the low-pass at twice the rate, as in the VST: its full top end,
   no aliasing from its saturation.
@@ -54,8 +64,8 @@ If the MPC's CPU meter runs high, use ECO, fewer notes at once, or bounce the tr
 
 ## Not in this version
 
-The LOW SPLIT and the scales of the VST (the MPC's pads and keyboard modes do that job), the VST's panel (the MPC
-draws its own screen from `Plugin Skins/`), and the FM-1's sequencer (the MPC's sequencer is the one to use).
+The FM-1's sequencer (the MPC's sequencer is the one to use), and the VST's own programs of your own (WRITE): the
+MPC keeps presets with its own preset save.
 
 ## Build
 
