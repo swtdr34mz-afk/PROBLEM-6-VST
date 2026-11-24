@@ -55,6 +55,19 @@ jobs:
         with:
           name: PROPHET67-MPC
           path: PROPHET67-MPC.zip
+      # a tag v*: the same folder as the Open MPC catalog's SDK zip (<Name>-<version>-mpc-sdk.zip; the catalog makes its
+      # installer from it), its version the tag's, checked against plugin.json
+      - name: release (the Open MPC catalog's zip)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          grep -q "\"version\": \"$v\"" mpc/plugin/plugin.json || { echo "::error::plugin.json's version is not $v"; exit 1; }
+          cp PROPHET67-MPC.zip "PROPHET-67-$v-mpc-sdk.zip"
+          sha256sum "PROPHET-67-$v-mpc-sdk.zip"
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          files: PROPHET-67-*-mpc-sdk.zip
 
   build:
     strategy:
