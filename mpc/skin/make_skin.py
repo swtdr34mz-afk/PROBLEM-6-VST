@@ -38,7 +38,7 @@ FXH = "Local/5/fx"                       # the effect EFFECTS shows (the screen'
 # The pages, as the renderer names them: (the function key's name, the Q-Links' groups top down; a group in brackets
 # of its own, ("frame", False), is not framed: its controls are not side by side)
 PAGES = [
-    ("QUICK", [["p12", "p13", "p14"],                            # CUTOFF, RESONANCE, ENV AMOUNT
+    ("QUICK", [["p12", "p13", "p14", "p15"],                     # CUTOFF, RESONANCE, ENV AMOUNT, HP CUTOFF (not on the page)
                ["p8", "p9", "p3", "p10"],                        # MIXER: OSC 1, OSC 2, SUB OCTAVE, NOISE
                (["p52", "p53", "p41", "p69"], False),            # VINTAGE, VOICE SPREAD, REVERB, DELAY
                (["p36", "p39", "arp_on", "quality"], False)]),   # CHORUS, DISTORT, ARP ON/OFF, QUALITY
