@@ -122,7 +122,8 @@ cmake --build build --config Release
 ```
 
 The results are under `build/Prophet67_artefacts/Release/`. GitHub Actions (`.github/workflows/build.yml`) builds
-Windows on every push (the Mac job is ready, commented out), runs the engine's tests on Linux and pluginval on the VST3.
+Windows and the Mac (on GitHub's Intel Mac, for Apple Silicon and Intel in one file; auval checks the AU) on every
+push, runs the engine's tests on Linux and pluginval on the VST3.
 
 The engine's tests alone (no JUCE): `cmake -S tests -B build-tests && cmake --build build-tests && build-tests/engine_tests`
 (`engine_tests bench` for the CPU, `engine_tests render <preset> <rate> <out.wav>` to listen).
