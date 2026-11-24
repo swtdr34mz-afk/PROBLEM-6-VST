@@ -46,6 +46,13 @@ Trotzdem ausführen*.
 
 Läuft auf Apple Silicon und Intel (macOS 10.13 und neuer), Windows 10/11 64-bit.
 
+## On the MPC
+
+PROPHET 67 also runs on Akai MPC standalone hardware (MPC XL, Live III, and the 32-bit MPCs), built with Akai's MPC
+Plugin SDK from the same engine: `mpc/` (the plugin's README: `mpc/plugin/README.md`). Download: Actions → the
+newest run → Artifacts → **PROPHET67-MPC**; copy its folder into `VST2 Plugins` on a drive of the MPC (MPC OS 3.10.1
+or later, Preferences → Enhancements (Beta) → Enable Enhancements and External Plugin Support).
+
 ## In the plugin
 
 - **All 74 sound parameters** are host parameters: automatable, named by section ("FILTER CUTOFF", "DELAY TIME L", …),
