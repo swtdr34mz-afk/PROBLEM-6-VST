@@ -4,11 +4,11 @@
  * buttons, the LED lists, the seven-segment displays), its sections and panel face (src/ui/Look.cpp), laid out as
  * the VST lays them out (the same items, sizes and spacing as Prophet67Panel::build), on the MPC's pages:
  *
- *   QUICK    LOW-PASS FILTER, MIXER, FX MIX / VINTAGE & VOICE SPREAD, POLY MOD, ARPEGGIATOR / HOLD, GLIDE, UNISON,
+ *   HOME     LOW-PASS FILTER, MIXER, FX MIX / VINTAGE & VOICE SPREAD, POLY MOD, ARPEGGIATOR / HOLD, GLIDE, UNISON,
  *            BEND (and INIT), AFTERTOUCH, QUALITY, LOW SPLIT
  *   OSC      OSCILLATOR 1, OSCILLATOR 2 / MIXER
  *   FLT/ENV  HIGH-PASS FILTER, FILTER ENVELOPE / LOW-PASS FILTER, AMPLIFIER ENVELOPE
- *   LFO      POLY MOD / LFO 1 / LFO 2
+ *   LFO      LFO 1 / LFO 2
  *   FX       EFFECTS (SELECT, its LEDs and displays, each effect's knobs, DELAY's SYNC)
  *
  * Each page is drawn as large as it fits the MPC's 1280 x 628 (at most twice the VST's size), and cut up: its
@@ -727,7 +727,7 @@ int main(int argc, char **argv)
         std::function<void(Builder &)> build;
     };
     std::vector<Def> defs = {
-        {"QUICK", 3, [](Builder &b) {
+        {"HOME", 3, [](Builder &b) {
              b.row(0, {b.lowPass(), b.mixer(),
                        {"FX MIX", {b.K(P_DIST, "DISTORT"), b.K(P_CH_MIX, "CHORUS"), b.K(P_RV_MIX, "REVERB"), b.K(P_DL_MIX, "DELAY")}}});
              b.row(126, {{"VINTAGE & VOICE SPREAD", {b.wideKnob(P_VINTAGE, "VINTAGE", 64), b.wideKnob(P_SPREAD, "VOICE SPREAD", 72)}},
@@ -744,10 +744,9 @@ int main(int argc, char **argv)
              b.row(0, {b.highPass(), b.envelope(false)});
              b.row(126, {b.lowPass(), b.envelope(true)});
          }},
-        {"LFO", 3, [](Builder &b) {
-             b.row(0, {b.polyMod()});
-             b.row(126, {b.lfo(0)});
-             b.row(252, {b.lfo(1)});
+        {"LFO", 2, [](Builder &b) {       /* (POLY MOD is on HOME) */
+             b.row(0, {b.lfo(0)});
+             b.row(126, {b.lfo(1)});
          }},
         {"FX", 1, [](Builder &b) { b.row(0, {b.effects()}); }},
     };

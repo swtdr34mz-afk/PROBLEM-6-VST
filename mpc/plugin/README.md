@@ -30,10 +30,10 @@ to choose (the LFOs' shapes and destinations, AFTERTOUCH's DEST, the arp's rate,
 
 | Page | On it | The Q-Links (top row first) |
 |---|---|---|
-| QUICK | LOW-PASS FILTER, MIXER, FX MIX · VINTAGE & VOICE SPREAD, POLY MOD, ARPEGGIATOR · INIT (grey: the INIT program's sound), HOLD, GLIDE, UNISON, BEND RANGE, AFTERTOUCH, QUALITY, LOW SPLIT (SPLIT, POINT, LOW HOLD) | CUTOFF, RESONANCE, ENV AMOUNT, HP CUTOFF · OSC 1, OSC 2, SUB, NOISE · VINTAGE, VOICE SPREAD, REVERB, DELAY · CHORUS, DISTORT, ARP ON/OFF, QUALITY |
+| HOME | LOW-PASS FILTER, MIXER, FX MIX · VINTAGE & VOICE SPREAD, POLY MOD, ARPEGGIATOR · INIT (grey: the INIT program's sound), HOLD, GLIDE, UNISON, BEND RANGE, AFTERTOUCH, QUALITY, LOW SPLIT (SPLIT, POINT, LOW HOLD) | CUTOFF, RESONANCE, ENV AMOUNT, HP CUTOFF · OSC 1, OSC 2, SUB, NOISE · VINTAGE, VOICE SPREAD, REVERB, DELAY · CHORUS, DISTORT, ARP ON/OFF, QUALITY |
 | OSC | OSCILLATOR 1, OSCILLATOR 2 · MIXER | OSC 1 · OSC 2 · MIXER |
 | FLT/ENV | HIGH-PASS FILTER, FILTER ENVELOPE · LOW-PASS FILTER, AMPLIFIER ENVELOPE | HIGH-PASS · FILTER ENV · LOW-PASS · AMP ENV |
-| LFO | POLY MOD · LFO 1 · LFO 2 | POLY MOD · LFO 1 · LFO 2 · their DESTs |
+| LFO | LFO 1 · LFO 2 (POLY MOD is on HOME) | LFO 1 · LFO 2 · their DESTs and RETRIGs |
 | FX | EFFECTS: SELECT and its LEDs choose CHORUS, REVERB, SPACE, DELAY or DLY MOD, as on the VST | CHORUS · REVERB · DELAY · DLY MOD and SYNC |
 
 The tempo and the programs are the MPC's own (the factory programs are in its preset list); the keyboard is its pads.
@@ -47,7 +47,7 @@ and presets of your own with its own preset save. Every value reads as on the FM
 
 ## CPU
 
-The MPC is a small ARM computer, and this is a full analogue-style poly with five effects. **QUALITY** (on the QUICK page) chooses:
+The MPC is a small ARM computer, and this is a full analogue-style poly with five effects. **QUALITY** (on the HOME page) chooses:
 
 - **HIGH** (the default on the MPC XL and Live III): the low-pass at twice the rate, as in the VST: its full top end,
   no aliasing from its saturation.

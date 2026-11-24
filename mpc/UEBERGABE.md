@@ -1,6 +1,6 @@
 # Übergabe: PROPHETIC 6, das MPC-Plugin von PROPHET 67
 
-Stand: 24.11.2026. Für eine neue Unterhaltung: dieses Protokoll anhängen oder einfügen, dazu das Repository
+Stand: 24.11.2026, Mittag. Für eine neue Unterhaltung: dieses Protokoll anhängen oder einfügen, dazu das Repository
 `swtdr34mz-afk/PROPHET-67-VST` verbinden.
 
 ## Worum es geht
@@ -14,7 +14,18 @@ Stand: 24.11.2026. Für eine neue Unterhaltung: dieses Protokoll anhängen oder 
   unten (statt des alten Badges) und auf jeder MPC-Seite rechts unten.
 - Ziel: PROPHETIC 6 im **OpenMPC Plugin Manager** (Katalog `open-mpc/mpc-vst-plugins`).
 
-## Stand
+## Stand (Mittag, 24.11.)
+
+- **Release `v1.0.0` ist veröffentlicht** (PR #3 gemergt). MPC-Zip `PROPHETIC-6-1.0.0-mpc-sdk.zip`,
+  SHA-256 `4677a096bf0d11c89acb801c63c2ab2ee6dd4afe7d1ed72c199e16f0fce00644`.
+- **Katalog-PR ist offen:** open-mpc/mpc-vst-plugins **#1158** („catalog: add PROPHETIC 6“), aus Toms Fork
+  `swtdr34mz-afk/PROPHETIC-6`, Branch `add-prophetic-6`. Wartet auf die Betreuer (Checks müssen sie erst freigeben).
+  `catalog_check.py` wurde nicht lokal ausgeführt; falls die Reviewer die Ausgabe wollen, nachreichen.
+- **Fertig, aber noch nicht im Repo:** QUICK heißt jetzt **HOME**; LFO-Seite nur noch LFO 1 + LFO 2 (POLY MOD ist auf
+  HOME), dadurch Maßstab 2. Tom hat das Bild abgenommen. Liegt als Patch `0001-…patch` bei: auf einem Branch mit
+  `git am` einspielen, PR, danach Release `v1.0.1` (der Katalog nimmt neue Releases selbst auf).
+
+## Stand davor
 
 - `main` enthält: Audit/Optimierung der Engine (PR #1), MPC-Plugin mit Skin (PR #2). **PR #3 muss Tom noch mergen**
   (Claude darf es nicht): CI hängt die Zips an ein auf GitHub veröffentlichtes Release, LFO-Seite übereinander,
@@ -34,7 +45,7 @@ Stand: 24.11.2026. Für eine neue Unterhaltung: dieses Protokoll anhängen oder 
 - **95 Parameter, Reihenfolge fest** (neue nur hinten anhängen): 0 Volume; 1..74 die Sound-Parameter (`p0..p73`);
   75..77 HP Velocity, HP Keyboard, FEnv Velocity; 78..84 Arp On, Mode, Rate, Octaves, Gate, Hold, Swing; 85 Quality
   (HIGH/ECO); 86..93 LOW SPLIT (Split, Point, Scale L, Scale R, Key, Follow, Low Hold, Balance).
-- 95 mit **94 INIT**: ein Druck (grauer Schalter auf QUICK) setzt den Klang auf das INIT-Programm (Arp, Split,
+- 95 mit **94 INIT**: ein Druck (grauer Schalter auf HOME) setzt den Klang auf das INIT-Programm (Arp, Split,
   QUALITY, VOLUME bleiben), dann geht INIT wieder auf aus.
 - 16 Werksprogramme. Tempo und Programme kommen von der MPC.
 
@@ -51,10 +62,10 @@ Stand: 24.11.2026. Für eine neue Unterhaltung: dieses Protokoll anhängen oder 
 
 | Seite | Inhalt (Zeilen) | Q-Links (Reihe oben → unten; 13–16 ist oben) |
 |---|---|---|
-| QUICK | LPF, MIXER, FX MIX · VINTAGE & SPREAD, POLY MOD, ARP · INIT (grau)/HOLD/GLIDE/UNISON/BEND, AFTERTOUCH, QUALITY, LOW SPLIT (nur SPLIT, POINT, LOW HOLD) | CUTOFF, RES, ENV AMOUNT, HPF CUTOFF · OSC1, OSC2, SUB, NOISE · VINTAGE, SPREAD, REVERB, DELAY · CHORUS, DISTORT, ARP ON/OFF, QUALITY |
+| HOME (früher QUICK) | LPF, MIXER, FX MIX · VINTAGE & SPREAD, POLY MOD, ARP · INIT (grau)/HOLD/GLIDE/UNISON/BEND, AFTERTOUCH, QUALITY, LOW SPLIT (nur SPLIT, POINT, LOW HOLD) | CUTOFF, RES, ENV AMOUNT, HPF CUTOFF · OSC1, OSC2, SUB, NOISE · VINTAGE, SPREAD, REVERB, DELAY · CHORUS, DISTORT, ARP ON/OFF, QUALITY |
 | OSC | OSC 1, OSC 2 · MIXER | OSC 1 · OSC 2 · MIXER |
 | FLT/ENV | HPF, FILTER ENV · LPF, AMP ENV | HPF · FILTER ENV · LPF · AMP ENV |
-| LFO | POLY MOD · LFO 1 · LFO 2 (übereinander) | POLY MOD · LFO 1 · LFO 2 · beide DEST |
+| LFO | LFO 1 · LFO 2 (übereinander, Maßstab 2; POLY MOD nur auf HOME) | LFO 1 · LFO 2 · beide DEST + RETRIG |
 | FX | EFFECTS (alle 5 Effekte inkl. DELAY und DLY MOD, wie im VST) | CHORUS · REVERB · DELAY · DLY MOD + SYNC |
 
 Offene Kleinigkeiten: SPACE (4 Regler) hat keine Q-Links; SWING (aus CLOCK) ist auf keiner Seite; LOW SPLITs
@@ -70,7 +81,7 @@ Scales/Key/Follow/Balance nur in der Parameterliste.
 2. **Katalog-PR** (mit Toms GitHub-Konto): `open-mpc/mpc-vst-plugins` forken → Branch → Datei
    `catalog/plugins/prophetic-6.json` = `mpc/catalog/prophetic-6.json` aus diesem Repo (kein `asset_pattern`: der
    Katalog wandelt das SDK-Zip selbst um). Screenshot-URL zeigt auf `mpc/catalog/screenshot.png` am Tag `v1.0.0`
-   (Screenshot ggf. auf die neue QUICK-Seite aktualisieren, **vor** dem Release). PR-Vorlage ausfüllen: Ausgabe von
+   (Screenshot ggf. auf die neue HOME-Seite aktualisieren, **vor** dem Release). PR-Vorlage ausfüllen: Ausgabe von
    `tools/catalog_check.py <zip> --catalog` und SHA-256 des Zips, „offline only“ bzw. Gerätetest angeben.
 3. **Gerätetest:** `tested.json` ist eingetragen (MPC XL, Gen2, OS 3.10.1) → nach dem Release „Verified Gen2“. Weitere
    Geräte dort ergänzen.
