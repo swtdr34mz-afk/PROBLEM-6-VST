@@ -2790,7 +2790,7 @@
                   "data": {
                     "version": 3,
                     "knobType": "FilmStrip",
-                    "filmStrip": "home_114_knob_split.png",
+                    "filmStrip": "home_112_knob_split.png",
                     "numFrames": 4,
                     "invert": false,
                     "dragOrientation": "Vertical",
@@ -2807,7 +2807,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 75 85"
+                  "bounds": "0 0 76 85"
                 }
               },
               {
@@ -2834,7 +2834,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 75 103"
+                  "bounds": "0 0 76 103"
                 }
               }
             ]
@@ -2892,7 +2892,7 @@
                   "data": {
                     "version": 3,
                     "knobType": "FilmStrip",
-                    "filmStrip": "home_123_knob_split_point.png",
+                    "filmStrip": "home_121_knob_split_point.png",
                     "numFrames": 73,
                     "invert": false,
                     "dragOrientation": "Vertical",
@@ -2909,7 +2909,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 75 85"
+                  "bounds": "0 0 80 127"
                 }
               },
               {
@@ -2936,7 +2936,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 75 103"
+                  "bounds": "0 0 80 127"
                 }
               }
             ]
@@ -5545,7 +5545,7 @@
                     "version": 3,
                     "knobType": "FilmStrip",
                     "filmStrip": "lfo_000_knob_p28.png",
-                    "numFrames": 74,
+                    "numFrames": 75,
                     "invert": false,
                     "dragOrientation": "Vertical",
                     "handleName": "Data"
@@ -5561,7 +5561,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 116 132"
+                  "bounds": "0 0 115 130"
                 }
               },
               {
@@ -5588,7 +5588,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 116 160"
+                  "bounds": "0 0 115 158"
                 }
               }
             ]
@@ -5663,7 +5663,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 116 132"
+                  "bounds": "0 0 115 130"
                 }
               },
               {
@@ -5690,14 +5690,14 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 116 160"
+                  "bounds": "0 0 115 158"
                 }
               }
             ]
           }
         },
         {
-          "key": "lfo knob 3 p29",
+          "key": "lfo knob 4 p29",
           "value": {
             "version": 2,
             "actions": [
@@ -5748,8 +5748,8 @@
                   "data": {
                     "version": 3,
                     "knobType": "FilmStrip",
-                    "filmStrip": "lfo_012_knob_p29.png",
-                    "numFrames": 74,
+                    "filmStrip": "lfo_017_knob_p29.png",
+                    "numFrames": 75,
                     "invert": false,
                     "dragOrientation": "Vertical",
                     "handleName": "Data"
@@ -5765,7 +5765,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 116 132"
+                  "bounds": "0 0 114 130"
                 }
               },
               {
@@ -5792,14 +5792,14 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 116 160"
+                  "bounds": "0 0 114 158"
                 }
               }
             ]
           }
         },
         {
-          "key": "lfo knob 6 p54",
+          "key": "lfo knob 8 p54",
           "value": {
             "version": 2,
             "actions": [
@@ -5850,7 +5850,7 @@
                   "data": {
                     "version": 3,
                     "knobType": "FilmStrip",
-                    "filmStrip": "lfo_029_knob_p54.png",
+                    "filmStrip": "lfo_041_knob_p54.png",
                     "numFrames": 74,
                     "invert": false,
                     "dragOrientation": "Vertical",
@@ -5867,7 +5867,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 116 132"
+                  "bounds": "0 0 115 131"
                 }
               },
               {
@@ -5894,14 +5894,14 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 116 160"
+                  "bounds": "0 0 115 158"
                 }
               }
             ]
           }
         },
         {
-          "key": "lfo knob 7 p59",
+          "key": "lfo knob 9 p59",
           "value": {
             "version": 2,
             "actions": [
@@ -5952,7 +5952,7 @@
                   "data": {
                     "version": 3,
                     "knobType": "FilmStrip",
-                    "filmStrip": "lfo_030_knob_p59.png",
+                    "filmStrip": "lfo_042_knob_p59.png",
                     "numFrames": 12,
                     "invert": false,
                     "dragOrientation": "Vertical",
@@ -5969,7 +5969,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 116 132"
+                  "bounds": "0 0 115 131"
                 }
               },
               {
@@ -5996,14 +5996,14 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 116 160"
+                  "bounds": "0 0 115 158"
                 }
               }
             ]
           }
         },
         {
-          "key": "lfo knob 9 p55",
+          "key": "lfo knob 12 p55",
           "value": {
             "version": 2,
             "actions": [
@@ -6054,7 +6054,7 @@
                   "data": {
                     "version": 3,
                     "knobType": "FilmStrip",
-                    "filmStrip": "lfo_041_knob_p55.png",
+                    "filmStrip": "lfo_058_knob_p55.png",
                     "numFrames": 74,
                     "invert": false,
                     "dragOrientation": "Vertical",
@@ -6071,7 +6071,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "Always",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 116 132"
+                  "bounds": "0 0 114 131"
                 }
               },
               {
@@ -6098,7 +6098,7 @@
                   "showWhenDataModelInvalid": "Show",
                   "whenVisible": "WhenFocussed",
                   "boundsType": "Absolute",
-                  "bounds": "0 0 116 160"
+                  "bounds": "0 0 114 158"
                 }
               }
             ]
@@ -10704,37 +10704,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "home_110_led_quality_0_on.png",
-                  "offImage": "home_111_led_quality_0_off.png",
-                  "buttonId": 0,
-                  "numButtonsInGroup": 2,
-                  "handleName": "Parameter 85",
-                  "gestureBehaviour": "Instant"
-                }
-              },
-              "handle remapping": {
-                "version": 1,
-                "map": []
-              },
-              "bounds": {
-                "version": 1,
-                "acceptsHWFocus": "No",
-                "showWhenDataModelInvalid": "Hide",
-                "whenVisible": "Always",
-                "boundsType": "Absolute",
-                "bounds": "849 455 77 17"
-              }
-            },
-            {
-              "version": 2,
-              "componentData": {
-                "version": 1,
-                "name": "quality",
-                "type": "Button",
-                "data": {
-                  "version": 2,
-                  "onImage": "home_112_led_quality_1_on.png",
-                  "offImage": "home_113_led_quality_1_off.png",
+                  "onImage": "home_110_button_quality_0.png",
+                  "offImage": "home_110_button_quality_0.png",
                   "buttonId": 1,
                   "numButtonsInGroup": 2,
                   "handleName": "Parameter 85",
@@ -10746,12 +10717,43 @@
                 "map": []
               },
               "bounds": {
-                "version": 1,
+                "version": 2,
                 "acceptsHWFocus": "No",
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "849 472 77 16"
+                "bounds": "849 429 72 103",
+                "additionalInvalidatingHandles": ["IndexedEnabling/0/2/Parameter 85"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "quality",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "home_111_button_quality_1.png",
+                  "offImage": "home_111_button_quality_1.png",
+                  "buttonId": 0,
+                  "numButtonsInGroup": 2,
+                  "handleName": "Parameter 85",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "849 429 72 103",
+                "additionalInvalidatingHandles": ["IndexedEnabling/1/2/Parameter 85"]
               }
             },
             {
@@ -10780,7 +10782,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "963 429 75 103"
+                "bounds": "957 429 76 103"
               }
             },
             {
@@ -10791,8 +10793,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "home_115_led_split_0_on.png",
-                  "offImage": "home_116_led_split_0_off.png",
+                  "onImage": "home_113_led_split_0_on.png",
+                  "offImage": "home_114_led_split_0_off.png",
                   "buttonId": 0,
                   "numButtonsInGroup": 4,
                   "handleName": "Parameter 86",
@@ -10809,7 +10811,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "1038 438 54 17"
+                "bounds": "1033 438 54 17"
               }
             },
             {
@@ -10820,8 +10822,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "home_117_led_split_1_on.png",
-                  "offImage": "home_118_led_split_1_off.png",
+                  "onImage": "home_115_led_split_1_on.png",
+                  "offImage": "home_116_led_split_1_off.png",
                   "buttonId": 1,
                   "numButtonsInGroup": 4,
                   "handleName": "Parameter 86",
@@ -10838,7 +10840,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "1038 455 54 17"
+                "bounds": "1033 455 54 17"
               }
             },
             {
@@ -10849,8 +10851,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "home_119_led_split_2_on.png",
-                  "offImage": "home_120_led_split_2_off.png",
+                  "onImage": "home_117_led_split_2_on.png",
+                  "offImage": "home_118_led_split_2_off.png",
                   "buttonId": 2,
                   "numButtonsInGroup": 4,
                   "handleName": "Parameter 86",
@@ -10867,7 +10869,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "1038 472 54 16"
+                "bounds": "1033 472 54 16"
               }
             },
             {
@@ -10878,8 +10880,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "home_121_led_split_3_on.png",
-                  "offImage": "home_122_led_split_3_off.png",
+                  "onImage": "home_119_led_split_3_on.png",
+                  "offImage": "home_120_led_split_3_off.png",
                   "buttonId": 3,
                   "numButtonsInGroup": 4,
                   "handleName": "Parameter 86",
@@ -10896,7 +10898,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "1038 488 54 17"
+                "bounds": "1033 488 54 17"
               }
             },
             {
@@ -10925,7 +10927,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "1092 429 75 103"
+                "bounds": "1087 416 80 127"
               }
             },
             {
@@ -10936,8 +10938,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "home_124_button_low_hold_0.png",
-                  "offImage": "home_124_button_low_hold_0.png",
+                  "onImage": "home_122_button_low_hold_0.png",
+                  "offImage": "home_122_button_low_hold_0.png",
                   "buttonId": 1,
                   "numButtonsInGroup": 2,
                   "handleName": "Parameter 92",
@@ -10966,8 +10968,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "home_125_button_low_hold_1.png",
-                  "offImage": "home_125_button_low_hold_1.png",
+                  "onImage": "home_123_button_low_hold_1.png",
+                  "offImage": "home_123_button_low_hold_1.png",
                   "buttonId": 0,
                   "numButtonsInGroup": 2,
                   "handleName": "Parameter 92",
@@ -12591,7 +12593,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "286 112 116 160"
+                "bounds": "81 115 115 158"
               }
             },
             {
@@ -12620,7 +12622,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "402 112 116 160"
+                "bounds": "223 115 115 158"
               }
             },
             {
@@ -12631,8 +12633,158 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_002_led_p30_0_on.png",
-                  "offImage": "lfo_003_led_p30_0_off.png",
+                  "onImage": "lfo_002_button_p30_0.png",
+                  "offImage": "lfo_002_button_p30_0.png",
+                  "buttonId": 1,
+                  "numButtonsInGroup": 5,
+                  "handleName": "Parameter 31",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "367 166 99 107",
+                "additionalInvalidatingHandles": ["IndexedEnabling/0/5/Parameter 31"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p30",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_003_button_p30_1.png",
+                  "offImage": "lfo_003_button_p30_1.png",
+                  "buttonId": 2,
+                  "numButtonsInGroup": 5,
+                  "handleName": "Parameter 31",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "367 166 99 107",
+                "additionalInvalidatingHandles": ["IndexedEnabling/1/5/Parameter 31"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p30",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_004_button_p30_2.png",
+                  "offImage": "lfo_004_button_p30_2.png",
+                  "buttonId": 3,
+                  "numButtonsInGroup": 5,
+                  "handleName": "Parameter 31",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "367 166 99 107",
+                "additionalInvalidatingHandles": ["IndexedEnabling/2/5/Parameter 31"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p30",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_005_button_p30_3.png",
+                  "offImage": "lfo_005_button_p30_3.png",
+                  "buttonId": 4,
+                  "numButtonsInGroup": 5,
+                  "handleName": "Parameter 31",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "367 166 99 107",
+                "additionalInvalidatingHandles": ["IndexedEnabling/3/5/Parameter 31"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p30",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_006_button_p30_4.png",
+                  "offImage": "lfo_006_button_p30_4.png",
+                  "buttonId": 0,
+                  "numButtonsInGroup": 5,
+                  "handleName": "Parameter 31",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "367 166 99 107",
+                "additionalInvalidatingHandles": ["IndexedEnabling/4/5/Parameter 31"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p30",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_007_led_p30_0_on.png",
+                  "offImage": "lfo_008_led_p30_0_off.png",
                   "buttonId": 0,
                   "numButtonsInGroup": 5,
                   "handleName": "Parameter 31",
@@ -12649,7 +12801,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "518 113 128 26"
+                "bounds": "494 107 138 29"
               }
             },
             {
@@ -12660,8 +12812,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_004_led_p30_1_on.png",
-                  "offImage": "lfo_005_led_p30_1_off.png",
+                  "onImage": "lfo_009_led_p30_1_on.png",
+                  "offImage": "lfo_010_led_p30_1_off.png",
                   "buttonId": 1,
                   "numButtonsInGroup": 5,
                   "handleName": "Parameter 31",
@@ -12678,7 +12830,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "518 139 128 26"
+                "bounds": "494 136 138 30"
               }
             },
             {
@@ -12689,8 +12841,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_006_led_p30_2_on.png",
-                  "offImage": "lfo_007_led_p30_2_off.png",
+                  "onImage": "lfo_011_led_p30_2_on.png",
+                  "offImage": "lfo_012_led_p30_2_off.png",
                   "buttonId": 2,
                   "numButtonsInGroup": 5,
                   "handleName": "Parameter 31",
@@ -12707,7 +12859,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "518 165 128 26"
+                "bounds": "494 166 138 30"
               }
             },
             {
@@ -12718,8 +12870,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_008_led_p30_3_on.png",
-                  "offImage": "lfo_009_led_p30_3_off.png",
+                  "onImage": "lfo_013_led_p30_3_on.png",
+                  "offImage": "lfo_014_led_p30_3_off.png",
                   "buttonId": 3,
                   "numButtonsInGroup": 5,
                   "handleName": "Parameter 31",
@@ -12736,7 +12888,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "518 191 128 26"
+                "bounds": "494 196 138 29"
               }
             },
             {
@@ -12747,8 +12899,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_010_led_p30_4_on.png",
-                  "offImage": "lfo_011_led_p30_4_off.png",
+                  "onImage": "lfo_015_led_p30_4_on.png",
+                  "offImage": "lfo_016_led_p30_4_off.png",
                   "buttonId": 4,
                   "numButtonsInGroup": 5,
                   "handleName": "Parameter 31",
@@ -12765,7 +12917,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "518 217 128 26"
+                "bounds": "494 225 138 30"
               }
             },
             {
@@ -12773,7 +12925,7 @@
               "componentData": {
                 "version": 1,
                 "name": "p29",
-                "type": "lfo knob 3 p29",
+                "type": "lfo knob 4 p29",
                 "data": {
                   "version": 1,
                   "handleName": "Data"
@@ -12794,7 +12946,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "646 112 116 160"
+                "bounds": "660 115 114 158"
               }
             },
             {
@@ -12805,8 +12957,218 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_013_led_p31_0_on.png",
-                  "offImage": "lfo_014_led_p31_0_off.png",
+                  "onImage": "lfo_018_button_p31_0.png",
+                  "offImage": "lfo_018_button_p31_0.png",
+                  "buttonId": 1,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 32",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 166 99 107",
+                "additionalInvalidatingHandles": ["IndexedEnabling/0/7/Parameter 32"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p31",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_019_button_p31_1.png",
+                  "offImage": "lfo_019_button_p31_1.png",
+                  "buttonId": 2,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 32",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 166 99 107",
+                "additionalInvalidatingHandles": ["IndexedEnabling/1/7/Parameter 32"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p31",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_020_button_p31_2.png",
+                  "offImage": "lfo_020_button_p31_2.png",
+                  "buttonId": 3,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 32",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 166 99 107",
+                "additionalInvalidatingHandles": ["IndexedEnabling/2/7/Parameter 32"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p31",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_021_button_p31_3.png",
+                  "offImage": "lfo_021_button_p31_3.png",
+                  "buttonId": 4,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 32",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 166 99 107",
+                "additionalInvalidatingHandles": ["IndexedEnabling/3/7/Parameter 32"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p31",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_022_button_p31_4.png",
+                  "offImage": "lfo_022_button_p31_4.png",
+                  "buttonId": 5,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 32",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 166 99 107",
+                "additionalInvalidatingHandles": ["IndexedEnabling/4/7/Parameter 32"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p31",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_023_button_p31_5.png",
+                  "offImage": "lfo_023_button_p31_5.png",
+                  "buttonId": 6,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 32",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 166 99 107",
+                "additionalInvalidatingHandles": ["IndexedEnabling/5/7/Parameter 32"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p31",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_024_button_p31_6.png",
+                  "offImage": "lfo_024_button_p31_6.png",
+                  "buttonId": 0,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 32",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 166 99 107",
+                "additionalInvalidatingHandles": ["IndexedEnabling/6/7/Parameter 32"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p31",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_025_led_p31_0_on.png",
+                  "offImage": "lfo_026_led_p31_0_off.png",
                   "buttonId": 0,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 32",
@@ -12823,7 +13185,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 105 132 21"
+                "bounds": "930 93 143 25"
               }
             },
             {
@@ -12834,8 +13196,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_015_led_p31_1_on.png",
-                  "offImage": "lfo_016_led_p31_1_off.png",
+                  "onImage": "lfo_027_led_p31_1_on.png",
+                  "offImage": "lfo_028_led_p31_1_off.png",
                   "buttonId": 1,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 32",
@@ -12852,7 +13214,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 126 132 21"
+                "bounds": "930 118 143 25"
               }
             },
             {
@@ -12863,8 +13225,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_017_led_p31_2_on.png",
-                  "offImage": "lfo_018_led_p31_2_off.png",
+                  "onImage": "lfo_029_led_p31_2_on.png",
+                  "offImage": "lfo_030_led_p31_2_off.png",
                   "buttonId": 2,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 32",
@@ -12881,7 +13243,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 147 132 21"
+                "bounds": "930 143 143 24"
               }
             },
             {
@@ -12892,8 +13254,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_019_led_p31_3_on.png",
-                  "offImage": "lfo_020_led_p31_3_off.png",
+                  "onImage": "lfo_031_led_p31_3_on.png",
+                  "offImage": "lfo_032_led_p31_3_off.png",
                   "buttonId": 3,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 32",
@@ -12910,7 +13272,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 168 132 21"
+                "bounds": "930 167 143 25"
               }
             },
             {
@@ -12921,8 +13283,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_021_led_p31_4_on.png",
-                  "offImage": "lfo_022_led_p31_4_off.png",
+                  "onImage": "lfo_033_led_p31_4_on.png",
+                  "offImage": "lfo_034_led_p31_4_off.png",
                   "buttonId": 4,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 32",
@@ -12939,7 +13301,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 189 132 21"
+                "bounds": "930 192 143 25"
               }
             },
             {
@@ -12950,8 +13312,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_023_led_p31_5_on.png",
-                  "offImage": "lfo_024_led_p31_5_off.png",
+                  "onImage": "lfo_035_led_p31_5_on.png",
+                  "offImage": "lfo_036_led_p31_5_off.png",
                   "buttonId": 5,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 32",
@@ -12968,7 +13330,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 210 132 21"
+                "bounds": "930 217 143 24"
               }
             },
             {
@@ -12979,8 +13341,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_025_led_p31_6_on.png",
-                  "offImage": "lfo_026_led_p31_6_off.png",
+                  "onImage": "lfo_037_led_p31_6_on.png",
+                  "offImage": "lfo_038_led_p31_6_off.png",
                   "buttonId": 6,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 32",
@@ -12997,7 +13359,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 231 132 21"
+                "bounds": "930 241 143 25"
               }
             },
             {
@@ -13008,8 +13370,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_027_button_p60_0.png",
-                  "offImage": "lfo_027_button_p60_0.png",
+                  "onImage": "lfo_039_button_p60_0.png",
+                  "offImage": "lfo_039_button_p60_0.png",
                   "buttonId": 1,
                   "numButtonsInGroup": 2,
                   "handleName": "Parameter 61",
@@ -13026,7 +13388,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "894 164 100 108",
+                "bounds": "1100 166 99 107",
                 "additionalInvalidatingHandles": ["IndexedEnabling/0/2/Parameter 61"]
               }
             },
@@ -13038,8 +13400,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_028_button_p60_1.png",
-                  "offImage": "lfo_028_button_p60_1.png",
+                  "onImage": "lfo_040_button_p60_1.png",
+                  "offImage": "lfo_040_button_p60_1.png",
                   "buttonId": 0,
                   "numButtonsInGroup": 2,
                   "handleName": "Parameter 61",
@@ -13056,7 +13418,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "894 164 100 108",
+                "bounds": "1100 166 99 107",
                 "additionalInvalidatingHandles": ["IndexedEnabling/1/2/Parameter 61"]
               }
             },
@@ -13065,7 +13427,7 @@
               "componentData": {
                 "version": 1,
                 "name": "p54",
-                "type": "lfo knob 6 p54",
+                "type": "lfo knob 8 p54",
                 "data": {
                   "version": 1,
                   "handleName": "Data"
@@ -13086,7 +13448,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "286 364 116 160"
+                "bounds": "81 363 115 158"
               }
             },
             {
@@ -13094,7 +13456,7 @@
               "componentData": {
                 "version": 1,
                 "name": "p59",
-                "type": "lfo knob 7 p59",
+                "type": "lfo knob 9 p59",
                 "data": {
                   "version": 1,
                   "handleName": "Data"
@@ -13115,7 +13477,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "402 364 116 160"
+                "bounds": "223 363 115 158"
               }
             },
             {
@@ -13126,8 +13488,158 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_031_led_p56_0_on.png",
-                  "offImage": "lfo_032_led_p56_0_off.png",
+                  "onImage": "lfo_043_button_p56_0.png",
+                  "offImage": "lfo_043_button_p56_0.png",
+                  "buttonId": 1,
+                  "numButtonsInGroup": 5,
+                  "handleName": "Parameter 57",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "367 415 99 106",
+                "additionalInvalidatingHandles": ["IndexedEnabling/0/5/Parameter 57"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p56",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_044_button_p56_1.png",
+                  "offImage": "lfo_044_button_p56_1.png",
+                  "buttonId": 2,
+                  "numButtonsInGroup": 5,
+                  "handleName": "Parameter 57",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "367 415 99 106",
+                "additionalInvalidatingHandles": ["IndexedEnabling/1/5/Parameter 57"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p56",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_045_button_p56_2.png",
+                  "offImage": "lfo_045_button_p56_2.png",
+                  "buttonId": 3,
+                  "numButtonsInGroup": 5,
+                  "handleName": "Parameter 57",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "367 415 99 106",
+                "additionalInvalidatingHandles": ["IndexedEnabling/2/5/Parameter 57"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p56",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_046_button_p56_3.png",
+                  "offImage": "lfo_046_button_p56_3.png",
+                  "buttonId": 4,
+                  "numButtonsInGroup": 5,
+                  "handleName": "Parameter 57",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "367 415 99 106",
+                "additionalInvalidatingHandles": ["IndexedEnabling/3/5/Parameter 57"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p56",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_047_button_p56_4.png",
+                  "offImage": "lfo_047_button_p56_4.png",
+                  "buttonId": 0,
+                  "numButtonsInGroup": 5,
+                  "handleName": "Parameter 57",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "367 415 99 106",
+                "additionalInvalidatingHandles": ["IndexedEnabling/4/5/Parameter 57"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p56",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_048_led_p56_0_on.png",
+                  "offImage": "lfo_049_led_p56_0_off.png",
                   "buttonId": 0,
                   "numButtonsInGroup": 5,
                   "handleName": "Parameter 57",
@@ -13144,7 +13656,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "518 365 128 26"
+                "bounds": "494 356 138 29"
               }
             },
             {
@@ -13155,8 +13667,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_033_led_p56_1_on.png",
-                  "offImage": "lfo_034_led_p56_1_off.png",
+                  "onImage": "lfo_050_led_p56_1_on.png",
+                  "offImage": "lfo_051_led_p56_1_off.png",
                   "buttonId": 1,
                   "numButtonsInGroup": 5,
                   "handleName": "Parameter 57",
@@ -13173,7 +13685,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "518 391 128 26"
+                "bounds": "494 385 138 30"
               }
             },
             {
@@ -13184,8 +13696,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_035_led_p56_2_on.png",
-                  "offImage": "lfo_036_led_p56_2_off.png",
+                  "onImage": "lfo_052_led_p56_2_on.png",
+                  "offImage": "lfo_053_led_p56_2_off.png",
                   "buttonId": 2,
                   "numButtonsInGroup": 5,
                   "handleName": "Parameter 57",
@@ -13202,7 +13714,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "518 417 128 26"
+                "bounds": "494 415 138 29"
               }
             },
             {
@@ -13213,8 +13725,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_037_led_p56_3_on.png",
-                  "offImage": "lfo_038_led_p56_3_off.png",
+                  "onImage": "lfo_054_led_p56_3_on.png",
+                  "offImage": "lfo_055_led_p56_3_off.png",
                   "buttonId": 3,
                   "numButtonsInGroup": 5,
                   "handleName": "Parameter 57",
@@ -13231,7 +13743,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "518 443 128 26"
+                "bounds": "494 444 138 30"
               }
             },
             {
@@ -13242,8 +13754,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_039_led_p56_4_on.png",
-                  "offImage": "lfo_040_led_p56_4_off.png",
+                  "onImage": "lfo_056_led_p56_4_on.png",
+                  "offImage": "lfo_057_led_p56_4_off.png",
                   "buttonId": 4,
                   "numButtonsInGroup": 5,
                   "handleName": "Parameter 57",
@@ -13260,7 +13772,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "518 469 128 26"
+                "bounds": "494 474 138 30"
               }
             },
             {
@@ -13268,7 +13780,7 @@
               "componentData": {
                 "version": 1,
                 "name": "p55",
-                "type": "lfo knob 9 p55",
+                "type": "lfo knob 12 p55",
                 "data": {
                   "version": 1,
                   "handleName": "Data"
@@ -13289,7 +13801,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "646 364 116 160"
+                "bounds": "660 363 114 158"
               }
             },
             {
@@ -13300,8 +13812,218 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_042_led_p57_0_on.png",
-                  "offImage": "lfo_043_led_p57_0_off.png",
+                  "onImage": "lfo_059_button_p57_0.png",
+                  "offImage": "lfo_059_button_p57_0.png",
+                  "buttonId": 1,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 58",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 415 99 106",
+                "additionalInvalidatingHandles": ["IndexedEnabling/0/7/Parameter 58"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p57",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_060_button_p57_1.png",
+                  "offImage": "lfo_060_button_p57_1.png",
+                  "buttonId": 2,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 58",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 415 99 106",
+                "additionalInvalidatingHandles": ["IndexedEnabling/1/7/Parameter 58"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p57",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_061_button_p57_2.png",
+                  "offImage": "lfo_061_button_p57_2.png",
+                  "buttonId": 3,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 58",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 415 99 106",
+                "additionalInvalidatingHandles": ["IndexedEnabling/2/7/Parameter 58"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p57",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_062_button_p57_3.png",
+                  "offImage": "lfo_062_button_p57_3.png",
+                  "buttonId": 4,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 58",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 415 99 106",
+                "additionalInvalidatingHandles": ["IndexedEnabling/3/7/Parameter 58"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p57",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_063_button_p57_4.png",
+                  "offImage": "lfo_063_button_p57_4.png",
+                  "buttonId": 5,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 58",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 415 99 106",
+                "additionalInvalidatingHandles": ["IndexedEnabling/4/7/Parameter 58"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p57",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_064_button_p57_5.png",
+                  "offImage": "lfo_064_button_p57_5.png",
+                  "buttonId": 6,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 58",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 415 99 106",
+                "additionalInvalidatingHandles": ["IndexedEnabling/5/7/Parameter 58"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p57",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_065_button_p57_6.png",
+                  "offImage": "lfo_065_button_p57_6.png",
+                  "buttonId": 0,
+                  "numButtonsInGroup": 7,
+                  "handleName": "Parameter 58",
+                  "gestureBehaviour": "Instant"
+                }
+              },
+              "handle remapping": {
+                "version": 1,
+                "map": []
+              },
+              "bounds": {
+                "version": 2,
+                "acceptsHWFocus": "No",
+                "showWhenDataModelInvalid": "Hide",
+                "whenVisible": "Always",
+                "boundsType": "Absolute",
+                "bounds": "802 415 99 106",
+                "additionalInvalidatingHandles": ["IndexedEnabling/6/7/Parameter 58"]
+              }
+            },
+            {
+              "version": 2,
+              "componentData": {
+                "version": 1,
+                "name": "p57",
+                "type": "Button",
+                "data": {
+                  "version": 2,
+                  "onImage": "lfo_066_led_p57_0_on.png",
+                  "offImage": "lfo_067_led_p57_0_off.png",
                   "buttonId": 0,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 58",
@@ -13318,7 +14040,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 357 132 21"
+                "bounds": "930 342 143 25"
               }
             },
             {
@@ -13329,8 +14051,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_044_led_p57_1_on.png",
-                  "offImage": "lfo_045_led_p57_1_off.png",
+                  "onImage": "lfo_068_led_p57_1_on.png",
+                  "offImage": "lfo_069_led_p57_1_off.png",
                   "buttonId": 1,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 58",
@@ -13347,7 +14069,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 378 132 21"
+                "bounds": "930 367 143 25"
               }
             },
             {
@@ -13358,8 +14080,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_046_led_p57_2_on.png",
-                  "offImage": "lfo_047_led_p57_2_off.png",
+                  "onImage": "lfo_070_led_p57_2_on.png",
+                  "offImage": "lfo_071_led_p57_2_off.png",
                   "buttonId": 2,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 58",
@@ -13376,7 +14098,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 399 132 21"
+                "bounds": "930 392 143 24"
               }
             },
             {
@@ -13387,8 +14109,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_048_led_p57_3_on.png",
-                  "offImage": "lfo_049_led_p57_3_off.png",
+                  "onImage": "lfo_072_led_p57_3_on.png",
+                  "offImage": "lfo_073_led_p57_3_off.png",
                   "buttonId": 3,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 58",
@@ -13405,7 +14127,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 420 132 21"
+                "bounds": "930 416 143 25"
               }
             },
             {
@@ -13416,8 +14138,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_050_led_p57_4_on.png",
-                  "offImage": "lfo_051_led_p57_4_off.png",
+                  "onImage": "lfo_074_led_p57_4_on.png",
+                  "offImage": "lfo_075_led_p57_4_off.png",
                   "buttonId": 4,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 58",
@@ -13434,7 +14156,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 441 132 21"
+                "bounds": "930 441 143 25"
               }
             },
             {
@@ -13445,8 +14167,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_052_led_p57_5_on.png",
-                  "offImage": "lfo_053_led_p57_5_off.png",
+                  "onImage": "lfo_076_led_p57_5_on.png",
+                  "offImage": "lfo_077_led_p57_5_off.png",
                   "buttonId": 5,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 58",
@@ -13463,7 +14185,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 462 132 21"
+                "bounds": "930 466 143 24"
               }
             },
             {
@@ -13474,8 +14196,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_054_led_p57_6_on.png",
-                  "offImage": "lfo_055_led_p57_6_off.png",
+                  "onImage": "lfo_078_led_p57_6_on.png",
+                  "offImage": "lfo_079_led_p57_6_off.png",
                   "buttonId": 6,
                   "numButtonsInGroup": 7,
                   "handleName": "Parameter 58",
@@ -13492,7 +14214,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "762 483 132 21"
+                "bounds": "930 490 143 25"
               }
             },
             {
@@ -13503,8 +14225,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_056_button_p61_0.png",
-                  "offImage": "lfo_056_button_p61_0.png",
+                  "onImage": "lfo_080_button_p61_0.png",
+                  "offImage": "lfo_080_button_p61_0.png",
                   "buttonId": 1,
                   "numButtonsInGroup": 2,
                   "handleName": "Parameter 62",
@@ -13521,7 +14243,7 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "894 416 100 108",
+                "bounds": "1100 415 99 106",
                 "additionalInvalidatingHandles": ["IndexedEnabling/0/2/Parameter 62"]
               }
             },
@@ -13533,8 +14255,8 @@
                 "type": "Button",
                 "data": {
                   "version": 2,
-                  "onImage": "lfo_057_button_p61_1.png",
-                  "offImage": "lfo_057_button_p61_1.png",
+                  "onImage": "lfo_081_button_p61_1.png",
+                  "offImage": "lfo_081_button_p61_1.png",
                   "buttonId": 0,
                   "numButtonsInGroup": 2,
                   "handleName": "Parameter 62",
@@ -13551,13 +14273,13 @@
                 "showWhenDataModelInvalid": "Hide",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "894 416 100 108",
+                "bounds": "1100 415 99 106",
                 "additionalInvalidatingHandles": ["IndexedEnabling/1/2/Parameter 62"]
               }
             }
           ]
         },
-        "qlinkBoundsData": ["286 112 476 160", "286 364 476 160"]
+        "qlinkBoundsData": ["75 101 705 178", "75 350 705 177"]
       },
       {
         "version": 1,
@@ -15015,7 +15737,7 @@
                 "showWhenDataModelInvalid": "Show",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "388 246 152 72"
+                "bounds": "384 246 160 72"
               }
             },
             {
@@ -15043,7 +15765,7 @@
                 "showWhenDataModelInvalid": "Show",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "388 322 152 72",
+                "bounds": "384 322 160 72",
                 "additionalInvalidatingHandles": ["IndexedEnabling/0/5/Local/5/fx"]
               }
             },
@@ -15072,7 +15794,7 @@
                 "showWhenDataModelInvalid": "Show",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "388 322 152 72",
+                "bounds": "384 322 160 72",
                 "additionalInvalidatingHandles": ["IndexedEnabling/1/5/Local/5/fx"]
               }
             },
@@ -15101,7 +15823,7 @@
                 "showWhenDataModelInvalid": "Show",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "388 322 152 72",
+                "bounds": "384 322 160 72",
                 "additionalInvalidatingHandles": ["IndexedEnabling/2/5/Local/5/fx"]
               }
             },
@@ -15130,7 +15852,7 @@
                 "showWhenDataModelInvalid": "Show",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "388 322 152 72",
+                "bounds": "384 322 160 72",
                 "additionalInvalidatingHandles": ["IndexedEnabling/3/5/Local/5/fx"]
               }
             },
@@ -15159,7 +15881,7 @@
                 "showWhenDataModelInvalid": "Show",
                 "whenVisible": "Always",
                 "boundsType": "Absolute",
-                "bounds": "388 322 152 72",
+                "bounds": "384 322 160 72",
                 "additionalInvalidatingHandles": ["IndexedEnabling/4/5/Local/5/fx"]
               }
             }

@@ -20,6 +20,7 @@
  *   p67_skin_render <out folder> [--vst-panel] */
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "KeySplit.h"
 
 using namespace juce;
 using namespace p67;
@@ -28,7 +29,6 @@ namespace {
 constexpr int TW = 1280, TH = 628;       /* a page on the MPC */
 constexpr int KW = 58, BW = 50;          /* (PluginEditor.cpp) */
 const char *const FX_NAME[5] = {"Chorus", "Reverb", "Space", "Delay", "Dly Mod"};
-const char *const FX_CODE[5] = {"CHO", "REV", "SPC", "DLY", "MOD"};
 
 bool bipolarKind(int i)
 {
@@ -110,6 +110,75 @@ struct FxSel : Component {
             g.setFont(font(Face::label, 10.5f));
             g.drawText(FX_NAME[i], it.withTrimmedLeft(12.0f), Justification::centredLeft, false);
         }
+    }
+};
+
+/* the MPC's own displays (2026-11-25): a dark glass window with clean, soft light text, in place of the VST's red
+ * seven-segment displays (easier on the eyes on the MPC's screen, and as sharp as the screen) */
+void drawLcd(Graphics &g, Rectangle<float> r, const String &text, float maxH)
+{
+    g.setColour(Colour(0xff0d0e10));
+    g.fillRoundedRectangle(r, 4.0f);
+    g.setColour(Colour(0xff050506));
+    g.drawRoundedRectangle(r.reduced(0.5f), 4.0f, 1.0f);
+    g.setColour(Colour(0x30ffffff));   /* (a faint lit edge below: the glass set into the panel) */
+    g.drawLine(r.getX() + 4.0f, r.getBottom() - 0.5f, r.getRight() - 4.0f, r.getBottom() - 0.5f, 0.8f);
+    auto t = r.reduced(5.0f, 2.0f);
+    float h = jmin(maxH, t.getHeight() * 0.78f);
+    auto f = font(Face::label, h);
+    while (h > 6.0f && textWidth(f, text) > t.getWidth())
+        f = font(Face::label, h -= 0.5f);
+    g.setColour(Colour(0xffe9e4d8));
+    g.setFont(f);
+    g.drawText(text, t, Justification::centred, false);
+}
+struct LcdDisplay : Component {
+    std::function<String()> text;
+    float maxH;
+    LcdDisplay(std::function<String()> t, float h = 17.0f) : text(std::move(t)), maxH(h) {}
+    void paint(Graphics &g) override { drawLcd(g, getLocalBounds().toFloat().reduced(2.0f), text(), maxH); }
+};
+
+/* the MPC's note names: C1 is note 36, so middle C (60) is C3, as the MPC names its pads and keys */
+String mpcNote(int n) { return String(p67split::NOTE[n % 12]) + String(n / 12 - 2); }
+
+/* LOW SPLIT's POINT: the knob with its note under it (a knob to the renderer: a picture for every note) */
+struct NoteKnob : Knob {
+    NoteKnob(APVTS &s, const String &id) : Knob(s, id, "", nullptr) {}
+    void paint(Graphics &g) override
+    {
+        auto r = getLocalBounds().toFloat();
+        auto lg = r.removeFromBottom(14.0f);
+        auto lcd = r.removeFromBottom(22.0f);
+        r.removeFromBottom(2.0f);
+        float d = jmin(r.getWidth(), r.getHeight());
+        auto k = r.withSizeKeepingCentre(d, d).toNearestInt();
+        auto rp = getRotaryParameters();
+        getLookAndFeel().drawRotarySlider(g, k.getX(), k.getY(), k.getWidth(), k.getHeight(),
+                                          (float)valueToProportionOfLength(getValue()), rp.startAngleRadians, rp.endAngleRadians, *this);
+        drawLcd(g, lcd.withSizeKeepingCentre(jmin(lcd.getWidth(), 46.0f), lcd.getHeight()), mpcNote((int)std::lround(getValue())), 13.0f);
+        drawLegend(g, "POINT", lg, 10.0f);
+    }
+};
+
+/* QUALITY as a button (2026-11-25: easier to hit than the LEDs): HIGH and ECO lit above it, a press the other */
+struct QualityButton : p67::Button {
+    QualityButton(APVTS &s) : p67::Button(s, "quality", "HIGH / ECO", nullptr, [](int) { return false; }, [](int v) { return v ? 0 : 1; }) {}
+    void paint(Graphics &g) override
+    {
+        auto r = getLocalBounds().toFloat();
+        auto lg = r.removeFromBottom(14.0f);
+        auto top = r.removeFromTop(22.0f);
+        const char *names[2] = {"High", "Eco"};
+        for (int i = 0; i < 2; i++) {
+            auto c = top.withX(top.getX() + top.getWidth() * 0.5f * (float)i).withWidth(top.getWidth() * 0.5f);
+            g.setColour(col::legend);
+            g.setFont(font(Face::label, 9.5f));
+            g.drawText(names[i], c.withTrimmedBottom(9.0f), Justification::centredBottom, false);
+            drawLed(g, {c.getCentreX(), c.getBottom() - 4.0f}, 3.0f, value == i ? 1.0f : 0.0f);
+        }
+        drawButton(g, r.withSizeKeepingCentre(jmin(r.getWidth() - 6.0f, 44.0f), jmin(r.getHeight() - 6.0f, 24.0f)), false, false, false);
+        drawLegend(g, "HIGH / ECO", lg, 9.5f);
     }
 };
 
@@ -257,12 +326,18 @@ struct Builder {
     }
     Sec lfo(int l)
     {
+        /* (2026-11-25, for the touchscreen: WAVE and DEST step through the LEDs' choices; the section as wide as the page) */
+        auto step = [this](String id, const char *leg, int n) {
+            return BR(id, leg, [](int) { return false; }, [n](int v) { return (v + 1) % n; });
+        };
+        String shape = P(l ? P_L2_SHAPE : P_LFO_SHAPE), dest = P(l ? P_L2_DEST : P_LFO_DEST);
         return {l ? "LFO 2" : "LFO 1",
-                {K(l ? P_L2_RATE : P_LFO_RATE, "FREQUENCY"), K(l ? P_L2_SYNC : P_L1_SYNC, "SYNC"),
-                 L(P(l ? P_L2_SHAPE : P_LFO_SHAPE), {"Triangle", "Sawtooth", "Ramp", "Square", "Random"}, 64),
-                 K(l ? P_L2_AMT : P_LFO_AMT, "INITIAL AMT"),
-                 L(P(l ? P_L2_DEST : P_LFO_DEST), {"Freq 1+2", "Freq 1", "Freq 2", "PW 1+2", "Low-pass", "High-pass", "Amp"}, 66, 10.5f),
-                 B(P(l ? P_L2_RETRIG : P_L1_RETRIG), "RETRIG")}};
+                {K(l ? P_L2_RATE : P_LFO_RATE, "FREQUENCY"), K(l ? P_L2_SYNC : P_L1_SYNC, "SYNC"), step(shape, "WAVE", 5),
+                 L(shape, {"Triangle", "Sawtooth", "Ramp", "Square", "Random"}, 70, 15.0f),
+                 K(l ? P_L2_AMT : P_LFO_AMT, "INITIAL AMT"), step(dest, "DEST", 7),
+                 L(dest, {"Freq 1+2", "Freq 1", "Freq 2", "PW 1+2", "Low-pass", "High-pass", "Amp"}, 72, 12.5f),
+                 B(P(l ? P_L2_RETRIG : P_L1_RETRIG), "RETRIG")},
+                600};
     }
     Sec afterTouch()
     {
@@ -272,7 +347,7 @@ struct Builder {
     Sec lowSplit()
     {
         /* (the MPC's: SPLIT, POINT and LOW HOLD; the scales, KEY, FOLLOW and BALANCE stay at their defaults) */
-        return {"LOW SPLIT", {GK("split", "SPLIT"), L("split", {"Off", "-1 Oct", "-2 Oct", "-3 Oct"}, 42), GK("split_point", "POINT"),
+        return {"LOW SPLIT", {GK("split", "SPLIT"), L("split", {"Off", "-1 Oct", "-2 Oct", "-3 Oct"}, 42), Item{62, [this](int x, int y) { add(new NoteKnob(proc.apvts, "split_point"), {x, y + 12, 62, 98}); }},
                               B("low_hold", "LOW HOLD")}};
     }
     Sec arp()
@@ -317,16 +392,15 @@ struct Builder {
         return {"EFFECTS",
                 {Item{106, [this](int x, int y) { add(new FxSel(&page.fx), {x, y + 22, 106, 82})->getProperties().set("role", "fxselect"); }},
                  Item{84, [this](int x, int y) {
-                     add(new SegDisplay(3, [this] { return String(FX_CODE[page.fx]); }), {x + 4, y + 26, 76, 36})
+                     add(new LcdDisplay([this] { return String(FX_NAME[page.fx]).toUpperCase(); }), {x + 2, y + 26, 80, 36})
                          ->getProperties().set("role", "fxcode");
-                     add(new SegDisplay(3, [this] {   /* (fxValueText: the effect's first knob) */
+                     add(new LcdDisplay([this] {   /* (the effect's first knob: its number, or its choice's name) */
                              auto *p = proc.apvts.getParameter(P(sets[page.fx][0]));
-                             int v = (int)std::lround(p->convertFrom0to1(p->getValue()));
                              if (dynamic_cast<AudioParameterChoice *>(p))
-                                 return p->getCurrentValueAsText().toUpperCase().substring(0, 3);
-                             return String(v).paddedLeft('0', 3);
-                         }),
-                         {x + 4, y + 64, 76, 36})
+                                 return p->getCurrentValueAsText().toUpperCase();
+                             return String((int)std::lround(p->convertFrom0to1(p->getValue())));
+                         }, 20.0f),
+                         {x + 2, y + 64, 80, 36})
                          ->getProperties().set("role", "fxvalue");
                  }},
                  Item{KW * 4, [this](int x, int y) {
@@ -734,7 +808,7 @@ int main(int argc, char **argv)
                          b.polyMod(), b.arp()});
              b.row(252, {{nullptr, {b.keyButton("init", "INIT", true), b.keyButton("arp_hold", "HOLD"), b.K(P_GLIDE, "GLIDE AMT"), b.keyButton(Builder::P(P_UNISON), "UNISON"),
                                     b.wideKnob(P_BEND, "BEND RANGE", 64)}},
-                         b.afterTouch(), {"QUALITY", {b.L("quality", {"High", "Eco"}, 60)}}, b.lowSplit()});
+                         b.afterTouch(), {"QUALITY", {Item{56, [&b](int x, int y) { b.add(new QualityButton(b.extra.apvts), {x, y + 22, 56, 80}); }}}}, b.lowSplit()});
          }},
         {"OSC", 2, [](Builder &b) {
              b.row(0, {b.osc1(), b.osc2()});

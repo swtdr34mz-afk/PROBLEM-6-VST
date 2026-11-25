@@ -30,14 +30,14 @@ to choose (the LFOs' shapes and destinations, AFTERTOUCH's DEST, the arp's rate,
 
 | Page | On it | The Q-Links (top row first) |
 |---|---|---|
-| HOME | LOW-PASS FILTER, MIXER, FX MIX · VINTAGE & VOICE SPREAD, POLY MOD, ARPEGGIATOR · INIT (grey: the INIT program's sound), HOLD, GLIDE, UNISON, BEND RANGE, AFTERTOUCH, QUALITY, LOW SPLIT (SPLIT, POINT, LOW HOLD) | CUTOFF, RESONANCE, ENV AMOUNT, HP CUTOFF · OSC 1, OSC 2, SUB, NOISE · VINTAGE, VOICE SPREAD, REVERB, DELAY · CHORUS, DISTORT, ARP ON/OFF, QUALITY |
+| HOME | LOW-PASS FILTER, MIXER, FX MIX · VINTAGE & VOICE SPREAD, POLY MOD, ARPEGGIATOR · INIT (grey: the INIT program's sound), HOLD, GLIDE, UNISON, BEND RANGE, AFTERTOUCH, QUALITY (a HIGH / ECO button), LOW SPLIT (SPLIT, POINT with its note, LOW HOLD) | CUTOFF, RESONANCE, ENV AMOUNT, HP CUTOFF · OSC 1, OSC 2, SUB, NOISE · VINTAGE, VOICE SPREAD, REVERB, DELAY · CHORUS, DISTORT, ARP ON/OFF, QUALITY |
 | OSC | OSCILLATOR 1, OSCILLATOR 2 · MIXER | OSC 1 · OSC 2 · MIXER |
 | FLT/ENV | HIGH-PASS FILTER, FILTER ENVELOPE · LOW-PASS FILTER, AMPLIFIER ENVELOPE | HIGH-PASS · FILTER ENV · LOW-PASS · AMP ENV |
-| LFO | LFO 1 · LFO 2 (POLY MOD is on HOME) | LFO 1 · LFO 2 · their DESTs and RETRIGs |
-| FX | EFFECTS: SELECT and its LEDs choose CHORUS, REVERB, SPACE, DELAY or DLY MOD, as on the VST | CHORUS · REVERB · DELAY · DLY MOD and SYNC |
+| LFO | LFO 1 · LFO 2, each with WAVE and DEST buttons that step through the LEDs (POLY MOD is on HOME) | LFO 1 · LFO 2 · their DESTs and RETRIGs |
+| FX | EFFECTS: SELECT and its LEDs choose CHORUS, REVERB, SPACE, DELAY or DLY MOD, as on the VST; the effect and its first value in a soft, sharp display | CHORUS · REVERB · DELAY · DLY MOD and SYNC |
 
 The tempo and the programs are the MPC's own (the factory programs are in its preset list); the keyboard is its pads.
-LOW SPLIT's scales, KEY, FOLLOW and BALANCE are not on the pages (at their defaults: an octave split); they are in
+POINT shows its note as the MPC names notes (C1 = note 36, so middle C, 60, the default, is C3). LOW SPLIT's scales, KEY, FOLLOW and BALANCE are not on the pages (at their defaults: an octave split); they are in
 the MPC's parameter list.
 
 The 16 factory programs are the plugin's presets (the MPC's preset list); the MPC saves the sound with the project,
