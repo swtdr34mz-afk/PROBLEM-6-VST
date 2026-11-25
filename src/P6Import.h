@@ -4,7 +4,9 @@
 /* LOAD P6 SYSEX: programs from a Prophet-6 SysEx file (a program dump, a bank, or the whole 500), turned into PROPHET 67
  * programs as near as its panel allows. Nothing of the file is kept in the plugin: the programs are written as the
  * user's own files (PluginProcessor::importP6). No JUCE here, so the tests can use it as it is. */
+extern "C" {
 #include "engine.h"
+}
 #include <cstddef>
 #include <cstdint>
 #include <string>
