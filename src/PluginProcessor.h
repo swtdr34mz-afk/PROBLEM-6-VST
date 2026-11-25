@@ -56,11 +56,15 @@ public:
         juce::String name;
         uint8_t p[NPARAM];
         int hpVel = 0, hpKt = 0, fenvVel = 0;
+        int p6 = -1;                      /* LOAD P6 SYSEX's: the Prophet-6's program number (else -1, WRITE's) */
     };
     std::vector<UserPreset> userPresets;
     static juce::File presetFolder();
     void loadUserPresets();
     int writePreset(const juce::String &name);   /* the sound as it is now, kept under this name: its program number */
+    /* LOAD P6 SYSEX: a Prophet-6 SysEx file's programs, written as the user's own (Presets/P6 LIBRARY): how many */
+    int importP6(const juce::File &syx);
+    static juce::File p6Folder() { return presetFolder().getChildFile("P6 LIBRARY"); }
     const uint8_t *programData(int index) const;   /* DELAY SYNC on: TIME shows notes (for the host's and the editor's text) */
     juce::AudioProcessorValueTreeState apvts;
     static juce::String paramId(int i) { return "p" + juce::String(i); }

@@ -23,6 +23,10 @@ public:
     int tens = 0;                        /* TENS SELECT */
     void selectFx(int f);
     void presetMenu();
+    void loadP6();                     /* LOAD P6 SYSEX (the program menu) */
+    std::unique_ptr<juce::FileChooser> chooser;
+    static constexpr int LOAD_P6 = 100000;
+    
     juce::String fxValueText() const;
 
 private:

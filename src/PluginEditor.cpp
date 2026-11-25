@@ -767,17 +767,66 @@ void Prophet67Panel::presetMenu()
         m.addSubMenu(VST_GROUPS[g].name, sub, true, nullptr, here);
     }
     m.addSectionHeader("YOUR PROGRAMS");
+    bool own = false;
     for (int i = Prophet67Processor::NFACTORY; i < proc.getNumPrograms(); i++)
-        item(m, i);
-    if (proc.userPresets.empty())
+        if (proc.userPresets[(size_t)(i - Prophet67Processor::NFACTORY)].p6 < 0) {
+            item(m, i);
+            own = true;
+        }
+    if (!own)
         m.addItem(-1, "(WRITE keeps the sound as a program of your own)", false, false);
+    /* LOAD P6 SYSEX's: by the Prophet-6's banks, numbered as on it */
+    juce::PopupMenu bank[10];
+    bool bankHere[10] = {}, any = false;
+    for (int i = Prophet67Processor::NFACTORY; i < proc.getNumPrograms(); i++) {
+        int num = proc.userPresets[(size_t)(i - Prophet67Processor::NFACTORY)].p6;
+        if (num < 0)
+            continue;
+        int b = juce::jlimit(0, 9, num / 100);
+        bank[b].addItem(i + 1, juce::String(num).paddedLeft('0', 3) + "   " + proc.getProgramName(i), true, i == proc.getCurrentProgram());
+        bankHere[b] |= i == proc.getCurrentProgram();
+        any = true;
+    }
+    if (any) {
+        m.addSectionHeader("P6 LIBRARY");
+        for (int b = 0; b < 10; b++)
+            if (bank[b].getNumItems() > 0)
+                m.addSubMenu(b == 9 ? juce::String("EDIT BUFFER") : "BANK " + juce::String(b) + "   (" + juce::String(b * 100).paddedLeft('0', 3) + "-"
+                                 + juce::String(b * 100 + 99) + ")", bank[b], true, nullptr, bankHere[b]);
+    }
+    m.addSeparator();
+    m.addItem(LOAD_P6, "LOAD P6 SYSEX...");
     juce::Component::SafePointer<Prophet67Panel> self(this);
     auto area = nameDisplay ? nameDisplay->getScreenBounds() : getScreenBounds();
     m.showMenuAsync(juce::PopupMenu::Options().withTargetScreenArea(area).withMinimumWidth(240), [self](int r) {
-        if (self && r > 0) {
+        if (!self)
+            return;
+        if (r == LOAD_P6)
+            self->loadP6();
+        else if (r > 0) {
             self->proc.setCurrentProgram(r - 1);
             self->repaint();
         }
+    });
+}
+
+void Prophet67Panel::loadP6()
+{
+    chooser = std::make_unique<juce::FileChooser>("LOAD P6 SYSEX: a Prophet-6 program file",
+                                                  juce::File::getSpecialLocation(juce::File::userHomeDirectory), "*.syx");
+    juce::Component::SafePointer<Prophet67Panel> self(this);
+    chooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [self](const juce::FileChooser &fc) {
+        if (!self)
+            return;
+        auto f = fc.getResult();
+        if (f == juce::File())
+            return;
+        int n = self->proc.importP6(f);
+        juce::String msg = n > 0 ? juce::String(n) + " Prophet-6 programs are now in the program menu, under P6 LIBRARY.\n\n"
+                                       "They are kept in Documents/PROPHET 67/Presets/P6 LIBRARY, as programs of your own."
+                                 : juce::String("No Prophet-6 programs were found in this file.");
+        juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "LOAD P6 SYSEX", msg);
+        self->repaint();
     });
 }
 
