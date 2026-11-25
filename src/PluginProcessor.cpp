@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 swtdr34mz (PROPHET 67) */
 #include "PluginProcessor.h"
+#include "P6Import.h"
 #include "PluginEditor.h"
 #include "Sections.h"
 
@@ -97,6 +98,9 @@ void Prophet67Processor::loadUserPresets()
     userPresets.clear();
     auto files = presetFolder().findChildFiles(juce::File::findFiles, false, "*.p67");
     files.sort();
+    auto p6 = p6Folder().findChildFiles(juce::File::findFiles, false, "*.p67");   /* after WRITE's: "000 NAME.p67" */
+    p6.sort();
+    files.addArray(p6);
     for (auto &f : files)
         if (auto xml = juce::XmlDocument::parse(f)) {
             if (!xml->hasTagName("PROPHET67PRESET"))
@@ -108,6 +112,7 @@ void Prophet67Processor::loadUserPresets()
             u.hpVel = juce::jlimit(0, 127, xml->getIntAttribute("hp_vel", u.p[P_FVEL]));
             u.hpKt = juce::jlimit(0, 2, xml->getIntAttribute("hp_keytrk", u.p[P_KEYTRK]));
             u.fenvVel = juce::jlimit(0, 127, xml->getIntAttribute("fenv_vel", 0));
+            u.p6 = f.getParentDirectory() == p6Folder() ? juce::jlimit(-1, 999, xml->getIntAttribute("p6_program", -1)) : -1;
             userPresets.push_back(u);
         }
 }
@@ -132,12 +137,45 @@ int Prophet67Processor::writePreset(const juce::String &name)
         return -1;
     loadUserPresets();
     for (size_t i = 0; i < userPresets.size(); i++)
-        if (userPresets[i].name == clean) {
+        if (userPresets[i].name == clean && userPresets[i].p6 < 0) {
             program = NFACTORY + (int)i;
             updateHostDisplay(ChangeDetails().withProgramChanged(true));
             return program;
         }
     return -1;
+}
+
+int Prophet67Processor::importP6(const juce::File &syx)
+{
+    juce::MemoryBlock mb;
+    if (!syx.loadFileAsData(mb))
+        return 0;
+    auto progs = p6ReadSysex((const uint8_t *)mb.getData(), mb.getSize());
+    auto folder = p6Folder();
+    folder.createDirectory();
+    int n = 0, edit = 0;
+    for (auto &pr : progs) {
+        int num = pr.number >= 0 ? pr.number : 900 + juce::jmin(99, edit++);   /* an edit buffer: 900.. */
+        auto name = juce::String(pr.name).toUpperCase();
+        juce::XmlElement xml("PROPHET67PRESET");
+        xml.setAttribute("name", name);
+        xml.setAttribute("version", 1);
+        xml.setAttribute("p6_program", num);   /* ("p6" alone is a parameter's) */
+        for (int i = 0; i < NPARAM; i++)
+            xml.setAttribute("p" + juce::String(i), (int)pr.p[i]);
+        xml.setAttribute("hp_vel", pr.hpVel);
+        xml.setAttribute("hp_keytrk", pr.hpKt);
+        xml.setAttribute("fenv_vel", pr.fenvVel);
+        /* the same program number again (a second file, or the same file twice): the newer in its place */
+        for (auto &old : folder.findChildFiles(juce::File::findFiles, false, juce::String(num).paddedLeft('0', 3) + " *.p67"))
+            old.deleteFile();
+        auto file = folder.getChildFile(juce::String(num).paddedLeft('0', 3) + " " + juce::File::createLegalFileName(name) + ".p67");
+        if (xml.writeTo(file))
+            n++;
+    }
+    loadUserPresets();
+    updateHostDisplay(ChangeDetails().withProgramChanged(true));
+    return n;
 }
 
 const uint8_t *Prophet67Processor::programData(int index) const

@@ -10,6 +10,7 @@
  * Built by CMake (-DP67_TESTS=ON) or by hand: see tests/CMakeLists.txt. */
 #include "P67Engine.h"
 #include "vst_presets.h"
+#include "P6Import.h"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -692,6 +693,62 @@ void bench()
 }
 } // namespace
 
+/* LOAD P6 SYSEX: a made-up Prophet-6 program (no factory data here), packed as the Prophet-6 sends it, read back */
+static void testP6Import()
+{
+    std::printf("\nP6 SYSEX\n");
+    uint8_t u[1024] = {};
+    u[0] = 12; u[1] = 24; u[2] = 127;            /* osc 1 an octave down, osc 2 the note, fine at the centre */
+    u[3] = 127; u[4] = 254; u[6] = 127;          /* saw; pulse, square */
+    u[7] = 127; u[8] = 100; u[27] = 127;         /* levels, VOLUME */
+    u[19] = 82; u[20] = 0; u[29] = 254; u[21] = 2;   /* cutoff halfway, the envelope full up, full tracking */
+    u[40] = 127; u[38] = 60;                     /* amp sustain, decay */
+    u[59] = 127; u[63] = 128; u[64] = 1; u[67] = 1;  /* LFO on osc 1 and the low-pass */
+    u[46] = 1; u[45] = 6; u[49] = 50; u[51] = 200;   /* FX on: B a hall */
+    u[84] = 1;                                   /* unison */
+    const char *nm = "Test Brass";
+    for (int i = 0; nm[i]; i++) u[107 + i] = (uint8_t)nm[i];
+    for (int i = (int)std::strlen(nm); i < 20; i++) u[107 + i] = ' ';
+    std::vector<uint8_t> syx = {0xF0, 0x01, 0x2D, 0x02, 3, 42};
+    for (int k = 0; k < 1024; k += 7) {
+        uint8_t ms = 0;
+        for (int j = 0; j < 7 && k + j < 1024; j++) ms |= (uint8_t)((u[k + j] >> 7) << j);
+        syx.push_back(ms);
+        for (int j = 0; j < 7 && k + j < 1024; j++) syx.push_back(u[k + j] & 0x7f);
+    }
+    syx.push_back(0xF7);
+    std::vector<uint8_t> two = syx;               /* and an edit buffer after it */
+    two.insert(two.end(), {0xF0, 0x01, 0x2D, 0x03});
+    two.insert(two.end(), syx.begin() + 6, syx.end());
+    auto progs = p6ReadSysex(two.data(), two.size());
+    check(progs.size() == 2, "two programs read", fmt("%d", (int)progs.size()));
+    if (progs.size() != 2)
+        return;
+    const P6Program &a = progs[0];
+    check(a.number == 342 && a.name == "Test Brass" && progs[1].number == -1, "number and name",
+          fmt("%d '%s'", a.number, a.name.c_str()));
+    check(a.p[P_O1_FREQ] == 12 && a.p[P_O2_FREQ] == 24 && a.p[P_O2_FINE] == 64, "oscillator pitches");
+    check(a.p[P_O1_SHAPE] == 63 && a.p[P_O2_SHAPE] == 127 && a.p[P_O2_PW] <= 1, "shapes: saw, a square pulse");
+    check(a.p[P_ENV_AMT] == 127 && a.p[P_KEYTRK] == KT_FULL && a.p[P_CUTOFF] > 80 && a.p[P_CUTOFF] < 200, "the filter",
+          fmt("cutoff %d env %d", a.p[P_CUTOFF], a.p[P_ENV_AMT]));
+    check(a.p[P_LFO_DEST] == LD_FREQ1 && a.p[P_L2_DEST] == LD_LPF && a.p[P_LFO_AMT] > 60 && a.p[P_L2_AMT] == a.p[P_LFO_AMT],
+          "the LFO's two destinations on LFO 1 and 2");
+    check(a.p[P_RV_TYPE] == RV_HALL && a.p[P_RV_MIX] == 50 && a.p[P_CH_MIX] == 0 && a.p[P_DL_MIX] == 0, "FX B a hall, nothing else");
+    check(a.p[P_UNISON] == 1 && a.p[P_AS] == 127, "unison, the amp envelope");
+    bool inRange = true;
+    for (auto &pr : progs)
+        for (int i = 0; i < NPARAM; i++)
+            inRange &= pr.p[i] <= PARAMS[i].max;
+    check(inRange, "every value in its range");
+    Patch pt;
+    std::memcpy(pt.p, a.p, NPARAM);
+    pt.hpKt = a.hpKt;
+    pt.fenvVel = a.fenvVel;
+    Out o = render(pt, 44100, S(2.0, 44100), {{0, Ev::ON, 48, 0.8f, {}}, {S(1.0, 44100), Ev::OFF, 48, 0, {}}});
+    double r = rms(o.L, 0);
+    check(r > 1e-3 && r < 1.0 && std::isfinite(r), "it plays", fmt("rms %.4f", r));
+}
+
 int main(int argc, char **argv)
 {
     if (argc > 1 && !std::strcmp(argv[1], "bench")) {
@@ -752,6 +809,7 @@ int main(int argc, char **argv)
         else if (t == "filter") testFilter();
         else if (t == "switches") testSwitches();
         else if (t == "fxswitch") testFxSwitch();
+        else if (t == "p6") testP6Import();
         std::printf("\n%d checks, %d failed\n", checks, failures);
         return failures ? 1 : 0;
     }
@@ -763,6 +821,7 @@ int main(int argc, char **argv)
     testSwitches();
     testFxSwitch();
     testFilter();
+    testP6Import();
     bench();
     std::printf("\n%d checks, %d failed\n", checks, failures);
     return failures ? 1 : 0;

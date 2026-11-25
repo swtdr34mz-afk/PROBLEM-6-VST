@@ -61,6 +61,7 @@ juce_add_binary_data(P67Fonts SOURCES
 
 target_sources(Prophet67 PRIVATE
     src/P67Engine.cpp
+    src/P6Import.cpp
     src/PluginProcessor.cpp
     src/PluginEditor.cpp
     src/ui/Look.cpp

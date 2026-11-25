@@ -13,6 +13,7 @@ set(R ${CMAKE_CURRENT_SOURCE_DIR}/..)
 add_executable(engine_tests
     engine_tests.cpp
     ${R}/src/P67Engine.cpp
+    ${R}/src/P6Import.cpp
     ${R}/dsp/params.c
     ${R}/dsp/presets.c
     ${R}/src/vst_presets.c)

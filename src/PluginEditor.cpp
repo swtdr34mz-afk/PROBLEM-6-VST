@@ -260,6 +260,58 @@ private:
     bool down = false;
 };
 
+/* PREV / NEXT: under the name, a program back or on (in the menu's order, round at the ends); held, they run on */
+class StepKey : public juce::Component, private juce::Timer
+{
+public:
+    StepKey(Prophet67Panel &p, int d) : panel(p), dir(d) { setRepaintsOnMouseActivity(true); }
+    void paint(juce::Graphics &g) override
+    {
+        auto r = getLocalBounds().toFloat().reduced(2.0f, 1.0f);
+        drawKeycap(g, r, false, false, down, isMouseOver());
+        auto c = r.withTrimmedBottom(r.getHeight() * 0.18f);   /* (the cap's face above its lip) */
+        juce::Path tri;
+        float cx = dir < 0 ? c.getX() + 18.0f : c.getRight() - 18.0f, cy = c.getCentreY(), w = 6.0f, h = 6.5f;
+        tri.addTriangle(cx - dir * w, cy - h, cx - dir * w, cy + h, cx + dir * w, cy);
+        g.setColour(juce::Colour(0xff3a3a3a));
+        g.fillPath(tri);
+        g.setFont(font(Face::label, 13.0f));
+        g.drawText(dir < 0 ? "PREV" : "NEXT", c.withTrimmedLeft(dir < 0 ? 22.0f : 0.0f).withTrimmedRight(dir < 0 ? 0.0f : 22.0f),
+                   juce::Justification::centred);
+    }
+    void mouseDown(const juce::MouseEvent &) override
+    {
+        down = true;
+        step();
+        startTimer(450);
+    }
+    void mouseUp(const juce::MouseEvent &) override
+    {
+        down = false;
+        stopTimer();
+        repaint();
+    }
+
+private:
+    void timerCallback() override
+    {
+        step();
+        startTimer(110);
+    }
+    void step()
+    {
+        int n = panel.proc.getNumPrograms();
+        if (n <= 0)
+            return;
+        int cur = panel.proc.getCurrentProgram();
+        panel.proc.setCurrentProgram(((cur + dir) % n + n) % n);
+        panel.repaint();
+    }
+    Prophet67Panel &panel;
+    int dir;
+    bool down = false;
+};
+
 /* WRITE: the red key; asks a name, keeps the sound as a program of your own */
 class WriteKey : public juce::Component
 {
@@ -575,6 +627,8 @@ void Prophet67Panel::build()
     name->onClick = [this] { presetMenu(); };
     add(new WriteKey(*this), {1090, 540, 50, 80});
     nameDisplay = add(name, {1150, 546, 230, 52});
+    add(new StepKey(*this, -1), {1150, 602, 113, 30});
+    add(new StepKey(*this, 1), {1267, 602, 113, 30});
 
     /* ---- the keyboard and the wheels ---- */
     auto *k = new Keys(proc.keyboardState);
@@ -767,17 +821,66 @@ void Prophet67Panel::presetMenu()
         m.addSubMenu(VST_GROUPS[g].name, sub, true, nullptr, here);
     }
     m.addSectionHeader("YOUR PROGRAMS");
+    bool own = false;
     for (int i = Prophet67Processor::NFACTORY; i < proc.getNumPrograms(); i++)
-        item(m, i);
-    if (proc.userPresets.empty())
+        if (proc.userPresets[(size_t)(i - Prophet67Processor::NFACTORY)].p6 < 0) {
+            item(m, i);
+            own = true;
+        }
+    if (!own)
         m.addItem(-1, "(WRITE keeps the sound as a program of your own)", false, false);
+    /* LOAD P6 SYSEX's: by the Prophet-6's banks, numbered as on it */
+    juce::PopupMenu bank[10];
+    bool bankHere[10] = {}, any = false;
+    for (int i = Prophet67Processor::NFACTORY; i < proc.getNumPrograms(); i++) {
+        int num = proc.userPresets[(size_t)(i - Prophet67Processor::NFACTORY)].p6;
+        if (num < 0)
+            continue;
+        int b = juce::jlimit(0, 9, num / 100);
+        bank[b].addItem(i + 1, juce::String(num).paddedLeft('0', 3) + "   " + proc.getProgramName(i), true, i == proc.getCurrentProgram());
+        bankHere[b] |= i == proc.getCurrentProgram();
+        any = true;
+    }
+    if (any) {
+        m.addSectionHeader("P6 LIBRARY");
+        for (int b = 0; b < 10; b++)
+            if (bank[b].getNumItems() > 0)
+                m.addSubMenu(b == 9 ? juce::String("EDIT BUFFER") : "BANK " + juce::String(b) + "   (" + juce::String(b * 100).paddedLeft('0', 3) + "-"
+                                 + juce::String(b * 100 + 99) + ")", bank[b], true, nullptr, bankHere[b]);
+    }
+    m.addSeparator();
+    m.addItem(LOAD_P6, "LOAD P6 SYSEX...");
     juce::Component::SafePointer<Prophet67Panel> self(this);
     auto area = nameDisplay ? nameDisplay->getScreenBounds() : getScreenBounds();
     m.showMenuAsync(juce::PopupMenu::Options().withTargetScreenArea(area).withMinimumWidth(240), [self](int r) {
-        if (self && r > 0) {
+        if (!self)
+            return;
+        if (r == LOAD_P6)
+            self->loadP6();
+        else if (r > 0) {
             self->proc.setCurrentProgram(r - 1);
             self->repaint();
         }
+    });
+}
+
+void Prophet67Panel::loadP6()
+{
+    chooser = std::make_unique<juce::FileChooser>("LOAD P6 SYSEX: a Prophet-6 program file",
+                                                  juce::File::getSpecialLocation(juce::File::userHomeDirectory), "*.syx");
+    juce::Component::SafePointer<Prophet67Panel> self(this);
+    chooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [self](const juce::FileChooser &fc) {
+        if (!self)
+            return;
+        auto f = fc.getResult();
+        if (f == juce::File())
+            return;
+        int n = self->proc.importP6(f);
+        juce::String msg = n > 0 ? juce::String(n) + " Prophet-6 programs are now in the program menu, under P6 LIBRARY.\n\n"
+                                       "They are kept in Documents/PROPHET 67/Presets/P6 LIBRARY, as programs of your own."
+                                 : juce::String("No Prophet-6 programs were found in this file.");
+        juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "LOAD P6 SYSEX", msg);
+        self->repaint();
     });
 }
 
