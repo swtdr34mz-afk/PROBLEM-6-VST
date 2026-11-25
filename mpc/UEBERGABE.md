@@ -71,6 +71,16 @@ Stand: 24.11.2026, Mittag. Für eine neue Unterhaltung: dieses Protokoll anhäng
 Offene Kleinigkeiten: SPACE (4 Regler) hat keine Q-Links; SWING (aus CLOCK) ist auf keiner Seite; LOW SPLITs
 Scales/Key/Follow/Balance nur in der Parameterliste.
 
+## Touch-Bedienung (25.11.2026, nach Toms Test auf der MPC XL)
+
+- QUALITY: ein Button (HIGH / ECO, LEDs darüber) statt nur der LED-Liste.
+- LOW SPLIT: POINT zeigt die Note in MPC-Schreibweise (C1 = 36, also 60 = C3; Standard bleibt 60 = C3). Das VST nennt
+  dieselbe Note C4.
+- LFO: je LFO ein WAVE- und ein DEST-Button, die die LEDs durchschalten; die Abschnitte fast seitenbreit.
+- FX: statt der roten Siebensegment-Anzeige ein ruhiges, scharfes Display (Effektname ausgeschrieben, Wert als Zahl bzw.
+  Name des Reverb-Typs). Nur auf der MPC, das VST bleibt rot.
+- `mpc/skin/CMakeLists.txt` kennt jetzt auch `src/P6Import.cpp` (sonst baut der Skin-Renderer nicht mehr).
+
 ## Release und Katalog: nächste Schritte
 
 0. PR #3 mergen (GitHub → Pull requests → #3 → Merge).

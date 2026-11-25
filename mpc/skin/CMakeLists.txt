@@ -39,7 +39,8 @@ target_sources(p67_skin_render PRIVATE
     ${R}/src/ui/Controls.cpp
     ${R}/dsp/params.c
     ${R}/dsp/presets.c
-    ${R}/src/vst_presets.c)
+    ${R}/src/vst_presets.c
+    ${R}/src/P6Import.cpp)
 target_include_directories(p67_skin_render PRIVATE ${R}/shim ${R}/dsp ${R}/src)
 target_compile_definitions(p67_skin_render PRIVATE
     P67_PLUGIN=1 PLAT_HOST=1
