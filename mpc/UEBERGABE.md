@@ -30,7 +30,7 @@ Stand: 24.11.2026, Mittag. Für eine neue Unterhaltung: dieses Protokoll anhäng
 - `main` enthält: Audit/Optimierung der Engine (PR #1), MPC-Plugin mit Skin (PR #2). **PR #3 muss Tom noch mergen**
   (Claude darf es nicht): CI hängt die Zips an ein auf GitHub veröffentlichtes Release, LFO-Seite übereinander,
   grauer INIT-Schalter, `tested.json`, dieses Protokoll.
-- **Auf der MPC XL (MPC OS 3.10.1) getestet, 24.11.2026: „spielt sich hervorragend“** (Stand vor INIT und der neuen
+- **v1.0.4 auf der MPC XL (MPC OS 3.10.1) getestet, 25.11.2026: funktioniert** (vorher 1.0.0 am 24.11.: „spielt sich hervorragend“) (Stand vor INIT und der neuen
   LFO-Seite; die nach dem Release kurz nachprüfen). Eingetragen in `tested.json` (Gen2).
 - CI (`.github/workflows/build.yml`): Engine-Tests, MPC-Build (SDK gepinnt auf `a5949cf6fe2c…`, arm32 + arm64 +
   native), Akais Validator (zuletzt **0 Fehler, 0 Warnungen**), eigener Host-Test (16 Checks), Windows-Build mit
@@ -95,6 +95,9 @@ Scales/Key/Follow/Balance nur in der Parameterliste.
 - Die CI macht mit den Werkzeugen des Katalogs (`open-mpc/mpc-vst-plugins` gepinnt auf `aa81004…`, `tools/sdk_release.py`)
   `PROPHETIC-6-<v>-mpc-armv7.zip` und `-mpc-aarch64.zip`, prüft sie mit `catalog_check.py --catalog` und schreibt
   Ausgabe + SHA-256 in die Job-Zusammenfassung des `mpc`-Jobs. Ans Release kommen beide plus `-mpc-sdk.zip`.
+- **Im Katalog seit 25.11.2026** (open-mpc/mpc-vst-plugins#1158 gemergt). Bei jedem Release: neuen Gerätetest in
+  `tested.json` eintragen (nur wenn wirklich auf der MPC getestet) und den Screenshot-Pin in `catalog/plugins/prophetic-6.json`
+  des Katalogs auf den neuen Tag ziehen (eigener kleiner PR dort).
 - Katalog-Eintrag: `asset_pattern` = `PROPHETIC-6-*-mpc-armv7.zip` (das aarch64-Zip findet der Katalog daneben).
 - Review in #1158 (24.11. abends): Summary mit „A port of the PROPHET 67 firmware for the M-VAVE FM-1“, asset_pattern,
   catalog_check-Ausgabe + SHA-256 im PR. Der Name PROPHETIC 6 darf bleiben (Korrektur der Betreuer).
