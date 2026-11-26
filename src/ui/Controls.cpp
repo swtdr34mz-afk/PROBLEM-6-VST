@@ -6,6 +6,18 @@ namespace p67
 {
 static const float LEGEND_H = 14.0f;
 
+/* a right-click: the host's own menu for the parameter (MIDI learn, automation, ...), where the host offers one */
+static bool hostMenu(juce::Component &c, juce::RangedAudioParameter &p, const juce::MouseEvent &e)
+{
+    if (!e.mods.isPopupMenu())
+        return false;
+    if (auto *ed = c.findParentComponentOfClass<juce::AudioProcessorEditor>())
+        if (auto *host = ed->getHostContext())
+            if (auto menu = host->getContextMenuForParameter(&p))
+                menu->showNativeMenu(ed->getMouseXYRelative());
+    return true;                         /* (a right-click never changes the value) */
+}
+
 /* ---------------------------------------------------------------------------------- knob --- */
 Knob::Knob(APVTS &s, const juce::String &id, const juce::String &legend, Touch *t)
     : param(*s.getParameter(id)), legend(legend), touch(t)
@@ -22,6 +34,18 @@ Knob::Knob(APVTS &s, const juce::String &id, const juce::String &legend, Touch *
         if (touch && (isMouseButtonDown() || isMouseOver()))
             touch->touched(param);
     };
+}
+
+void Knob::mouseDown(const juce::MouseEvent &e)
+{
+    if (!hostMenu(*this, param, e))
+        juce::Slider::mouseDown(e);
+}
+
+void Knob::mouseDrag(const juce::MouseEvent &e)
+{
+    if (!e.mods.isPopupMenu())
+        juce::Slider::mouseDrag(e);
 }
 
 void Knob::mouseEnter(const juce::MouseEvent &e)
@@ -133,6 +157,8 @@ void LedList::paint(juce::Graphics &g)
 
 void LedList::mouseDown(const juce::MouseEvent &e)
 {
+    if (hostMenu(*this, param, e))
+        return;
     for (int i = 0; i < names.size(); i++)
         if (item(i).contains(e.position)) {
             set(lo + i);
@@ -179,8 +205,10 @@ void Button::paint(juce::Graphics &g)
         drawLegend(g, legend, lg);
 }
 
-void Button::mouseDown(const juce::MouseEvent &)
+void Button::mouseDown(const juce::MouseEvent &e)
 {
+    if (hostMenu(*this, param, e))
+        return;
     pressed = true;
     set(next(value));
 }

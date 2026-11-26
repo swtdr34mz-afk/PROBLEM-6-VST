@@ -96,6 +96,7 @@ void P67Engine::sustain(bool on) { d->eng_sustain(on ? 1 : 0); }
 void P67Engine::bend(float v) { d->eng_bend(v); }
 void P67Engine::modWheel(float v) { d->eng_mod(v); }
 void P67Engine::cutoffCC(int v) { d->eng_cutoff_cc(v); }
+void P67Engine::cutoffMod(float oct) { d->eng_cutoff_mod(oct); }
 void P67Engine::hpExtra(int vel, int keytrk, int fenvVel) { d->eng_hp_extra(vel, keytrk, fenvVel); }
 void P67Engine::quality(bool high) { d->eng_quality(high ? 1 : 0); }
 void P67Engine::allOff() { d->eng_all_off(); }

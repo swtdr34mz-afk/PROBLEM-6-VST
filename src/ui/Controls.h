@@ -21,6 +21,8 @@ class Knob : public juce::Slider
 public:
     Knob(APVTS &, const juce::String &id, const juce::String &legend, Touch *);
     void paint(juce::Graphics &) override;
+    void mouseDown(const juce::MouseEvent &) override;   /* right-click: the host's menu (MIDI learn ...) */
+    void mouseDrag(const juce::MouseEvent &) override;
     void mouseEnter(const juce::MouseEvent &) override;
     juce::RangedAudioParameter &param;
     juce::String legend;
