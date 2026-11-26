@@ -1,20 +1,28 @@
-# PROPHETIC 6: PROPHET 67 for the MPC
+# PROBLEM 6 for the MPC
 
-The PROPHET 67 synth as a plugin for Akai MPC standalone hardware, named PROPHETIC 6 there: the same engine as the PROPHET 67 VST3 and the
-M-Vave FM-1 firmware, built with Akai's MPC Plugin SDK. A 7-voice analogue-style poly after the Sequential
-Prophet-6: two oscillators (triangle - saw - pulse, sub octave, noise, hard sync, LOW FREQ), poly mod, a resonant
-high-pass into a creamy 4-pole low-pass, filter and amp envelopes, VINTAGE and SPREAD, two LFOs (LFO 1 into the
-audio range; on S+H at the top, the Prophet-6's noise), distortion, chorus, delay, five reverbs (ROOM, HALL, PLATE,
-SPRING, SPACE), an arpeggiator on the MPC's tempo and the LOW SPLIT with its scales.
+The PROBLEM 6 synth (formerly PROPHET 67; on the MPC formerly PROPHETIC 6) as a plugin for Akai MPC standalone
+hardware: the same engine as the PROBLEM 6 VST3 and the M-Vave FM-1 firmware, built with Akai's MPC Plugin SDK. A
+7-voice analogue-style poly in the spirit of the classic American analogue polys: two oscillators (triangle - saw -
+pulse, sub octave, noise, hard sync, LOW FREQ), poly mod, a resonant high-pass into a creamy 4-pole low-pass, filter and
+amp envelopes, VINTAGE and SPREAD, two LFOs (LFO 1 into the audio range; noise on S+H at the top), distortion, chorus,
+delay, five reverbs (ROOM, HALL, PLATE, SPRING, SPACE), an arpeggiator on the MPC's tempo and the LOW SPLIT with its
+scales.
+
+Unofficial: not made, endorsed or supported by Sequential, Akai Professional or M-VAVE.
+
+**Renamed in 1.0.8:** the plugin folder is now `swtdr34mz - VST - PROBLEM 6`. Its id on the MPC (uid `Pr6c`) is the
+same, so it is still the same plugin; the Plugin Manager removes the old `swtdr34mz - VST - PROPHETIC 6` folder when it
+installs the new one. If you copied the folder by hand, delete the old one yourself. A project saved with PROPHETIC 6
+may ask for the plugin again: pick PROBLEM 6.
 
 ## Installieren (kurz auf Deutsch)
 
 1. MPC OS **3.10.1 oder neuer**. Auf der MPC: **Preferences → Enhancements (Beta) → Enable Enhancements** und
    **External Plugin Support** einschalten.
-2. Den Ordner **`swtdr34mz - VST - PROPHETIC 6`** (aus dem Download `PROPHETIC6-MPC.zip`) auf einen USB-Stick, eine
+2. Den Ordner **`swtdr34mz - VST - PROBLEM 6`** (aus dem Download `PROBLEM6-MPC.zip`) auf einen USB-Stick, eine
    SD-Karte oder das interne Laufwerk der MPC kopieren, in einen Ordner namens **`VST2 Plugins`** ganz oben auf dem
-   Laufwerk: `VST2 Plugins/swtdr34mz - VST - PROPHETIC 6/`.
-3. Die MPC neu starten. PROPHETIC 6 steht dann im Plugin-Browser unter **External Plugins** (als Plugin-Programm
+   Laufwerk: `VST2 Plugins/swtdr34mz - VST - PROBLEM 6/`.
+3. Die MPC neu starten. PROBLEM 6 steht dann im Plugin-Browser unter **External Plugins** (als Plugin-Programm
    laden).
 
 Die MPC XL, Live III (64 Bit) und die 32-Bit-Geräte (X, X SE, Live, Live II, One, One+, Key 61, Key 37, Force)
@@ -66,7 +74,7 @@ MPC keeps presets with its own preset save.
 ## Build
 
 See `mpc/build.py` in the repository: it makes the SDK project from the shared engine and runs the SDK's build. On
-GitHub, every push builds it (Actions → the run → Artifacts → `PROPHETIC6-MPC`).
+GitHub, every push builds it (Actions → the run → Artifacts → `PROBLEM6-MPC`).
 
 Third-party plugins run on the MPC without protection: a fault in one can stop the MPC. PROPHET 67's engine is
 tested on every build (`tests/engine_tests.cpp`, `mpc/test/mpc_host_test.cpp`), but as with any new plugin, save

@@ -26,7 +26,7 @@ jobs:
       - name: run
         run: build-tests/engine_tests
 
-  # PROPHET 67 for the MPC, named PROPHETIC 6 there (mpc/): the SDK project made from the shared engine, built with Akai's MPC Plugin SDK
+  # PROBLEM 6 for the MPC (formerly PROPHETIC 6; mpc/): the SDK project made from the shared engine, built with Akai's MPC Plugin SDK
   # (its Zig cross compiler: arm32 and arm64), checked by the SDK's own validator and host simulator and by
   # mpc/test/mpc_host_test.cpp (the MPC's host contract); the plugin folder zipped with its README
   mpc:
@@ -54,17 +54,17 @@ jobs:
       - name: host test (the native build)
         run: |
           g++ -std=c++17 -O2 -Impc-sdk/framework mpc/test/mpc_host_test.cpp -ldl -o mpc_host_test
-          ./mpc_host_test "mpc/build/PROPHETIC 6/build/native/prophetic-6.so"
+          ./mpc_host_test "mpc/build/PROBLEM 6/build/native/problem-6.so"
       - name: package
         run: |
-          cd "mpc/build/PROPHETIC 6/build"
-          file "swtdr34mz - VST - PROPHETIC 6/VST/"*.so
-          cp "../README.md" "swtdr34mz - VST - PROPHETIC 6/README.md"
-          zip -qr "$GITHUB_WORKSPACE/PROPHETIC6-MPC.zip" "swtdr34mz - VST - PROPHETIC 6"
+          cd "mpc/build/PROBLEM 6/build"
+          file "swtdr34mz - VST - PROBLEM 6/VST/"*.so
+          cp "../README.md" "swtdr34mz - VST - PROBLEM 6/README.md"
+          zip -qr "$GITHUB_WORKSPACE/PROBLEM6-MPC.zip" "swtdr34mz - VST - PROBLEM 6"
       - uses: actions/upload-artifact@v4
         with:
-          name: PROPHETIC6-MPC
-          path: PROPHETIC6-MPC.zip
+          name: PROBLEM6-MPC
+          path: PROBLEM6-MPC.zip
       # the Open MPC catalog's own zips: its tools (pinned) turn the SDK folder into one zip per CPU
       # (<Name>-<version>-mpc-armv7.zip / -mpc-aarch64.zip, with install.sh and mpc-plugin.json), checked with its
       # catalog_check.py --catalog; the output and each zip's SHA-256 go in the job summary (for the catalog PR)
@@ -77,9 +77,10 @@ jobs:
       - name: catalog zips (per CPU) and the SDK zip
         run: |
           v=$(python3 -c "import json; print(json.load(open('mpc/plugin/plugin.json'))['version'])")
-          python3 openmpc/tools/sdk_release.py "mpc/build/PROPHETIC 6/build/swtdr34mz - VST - PROPHETIC 6" --version "$v" \
-            --id prophetic-6 --repo swtdr34mz-afk/PROPHET-67-VST --license MPL-2.0 -o dist
-          cp PROPHETIC6-MPC.zip "dist/PROPHETIC-6-$v-mpc-sdk.zip"
+          python3 openmpc/tools/sdk_release.py "mpc/build/PROBLEM 6/build/swtdr34mz - VST - PROBLEM 6" --version "$v" \
+            --id prophetic-6 --repo swtdr34mz-afk/PROPHET-67-VST --license MPL-2.0 -o dist \
+            -- --retire "swtdr34mz - VST - PROPHETIC 6"
+          cp PROBLEM6-MPC.zip "dist/PROBLEM-6-$v-mpc-sdk.zip"
           {
             echo "## Open MPC catalog zips ($v)"
             for z in dist/*-mpc-armv7.zip dist/*-mpc-aarch64.zip; do
@@ -94,7 +95,7 @@ jobs:
           done
       - uses: actions/upload-artifact@v4
         with:
-          name: PROPHETIC6-catalog
+          name: PROBLEM6-catalog
           path: dist/*.zip
       - uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v') && (github.event_name == 'release' || github.event_name == 'push')

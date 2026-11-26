@@ -1,5 +1,12 @@
 # Übergabe: PROPHETIC 6, das MPC-Plugin von PROPHET 67
 
+
+> **26.11.2026: umbenannt in PROBLEM 6** (wegen der Marke „Prophet“ von Sequential). Ordner auf der MPC jetzt
+> `swtdr34mz - VST - PROBLEM 6`, Dateien `VST/problem-6-arm32.so` / `-arm64.so`, Release-Zips `PROBLEM-6-<v>-mpc-*.zip`.
+> **Gleich geblieben:** die uid `Pr6c` und die Katalog-id `prophetic-6` (eine id darf sich nie ändern). Die Katalog-Zips
+> räumen den alten Ordner `swtdr34mz - VST - PROPHETIC 6` beim Installieren weg (`--retire`). Danach im Katalog
+> `catalog/plugins/prophetic-6.json` = `mpc/catalog/prophetic-6.json` (neuer Name, `asset_pattern` `PROBLEM-6-*`).
+> Weiter unten steht noch der alte Name: gemeint ist dasselbe Plugin.
 Stand: 24.11.2026, Mittag. Für eine neue Unterhaltung: dieses Protokoll anhängen oder einfügen, dazu das Repository
 `swtdr34mz-afk/PROPHET-67-VST` verbinden.
 

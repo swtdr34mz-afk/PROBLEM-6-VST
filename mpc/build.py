@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (C) 2026 swtdr34mz (PROPHET 67)
-"""PROPHETIC 6 (PROPHET 67 for the MPC): builds the plugin folder with Akai's MPC Plugin SDK.
+"""PROBLEM 6 for the MPC (formerly PROPHETIC 6): builds the plugin folder with Akai's MPC Plugin SDK.
 
 The MPC SDK builds a project of C++ files in one src/ folder. This script makes that project from this repository,
 so the MPC plugin always has the same engine as the VST3 (nothing copied by hand, nothing in two places):
 
-  1. mpc/build/PROPHETIC 6/      the SDK project: plugin.json, README.md and skins/ (the VST3's panel as the MPC's
+  1. mpc/build/PROBLEM 6/      the SDK project: plugin.json, README.md and skins/ (the VST3's panel as the MPC's
                                  screen: mpc/skin/) from mpc/plugin/, and in src/
                                  mpc/plugin/src/*, the engine (src/P67Engine.*, dsp/engine.c, fx.c, clock.c and their
                                  headers, shim/plat.h) and p67_data.cpp
@@ -18,7 +18,7 @@ so the MPC plugin always has the same engine as the VST3 (nothing copied by hand
     python3 mpc/build.py --sdk /path/to/mpc-plugin-builder-sdk [--target native|arm32|arm64|all] [--toolchain zig|gcc]
 
 The SDK: https://github.com/inmusic-software/mpc-plugin-builder-sdk (or MPC_SDK=/path). The result:
-mpc/build/PROPHETIC 6/build/swtdr34mz - VST - PROPHETIC 6/ (copy it into "VST2 Plugins" on a drive of the MPC).
+mpc/build/PROBLEM 6/build/swtdr34mz - VST - PROBLEM 6/ (copy it into "VST2 Plugins" on a drive of the MPC).
 """
 import argparse
 import os
@@ -28,7 +28,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-NAME = "PROPHETIC 6"
+NAME = "PROBLEM 6"
 ENGINE = [  # (from the repository, into the project's src/)
     "src/P67Engine.cpp", "src/P67Engine.h", "src/KeySplit.h",
     "dsp/engine.c", "dsp/fx.c", "dsp/clock.c", "dsp/engine.h", "dsp/core.h", "dsp/fastmath.h",
