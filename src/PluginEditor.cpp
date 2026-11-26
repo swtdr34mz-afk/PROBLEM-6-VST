@@ -880,7 +880,7 @@ void Prophet67Panel::loadP6()
             return;
         int n = self->proc.importP6(f);
         juce::String msg = n > 0 ? juce::String(n) + " Prophet-6 programs are now in the program menu, under P6 LIBRARY.\n\n"
-                                       "They are kept in Documents/PROPHET 67/Presets/P6 LIBRARY, as programs of your own."
+                                       "They are kept in Documents/PROBLEM 6/Presets/P6 LIBRARY, as programs of your own."
                                  : juce::String("No Prophet-6 programs were found in this file.");
         juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "LOAD P6 SYSEX", msg);
         self->repaint();

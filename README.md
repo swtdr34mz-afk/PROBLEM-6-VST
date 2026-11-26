@@ -1,6 +1,6 @@
-# PROPHET 67 — plugin
+# PROBLEM 6 — plugin
 
-The [PROPHET 67](https://github.com/swtdr34mz-afk/PROPHET-67) polysynth for the M-VAVE FM-1, on the computer: a
+**PROBLEM 6** (until version 1.0.8 called PROPHET 67): the [PROPHET 67](https://github.com/swtdr34mz-afk/PROPHET-67) polysynth for the M-VAVE FM-1, on the computer: a
 **VST3** for Windows and the Mac, an **AU** for the Mac (Logic, GarageBand, and Ableton Live if you prefer it), and a
 **standalone app** for both. By **swtdr34mz**.
 
@@ -14,17 +14,21 @@ Unofficial: not made, endorsed or supported by Sequential or M-VAVE.
 ## Download
 
 [Actions](https://github.com/swtdr34mz-afk/PROPHET-67-VST/actions) → the newest green run → **Artifacts** at the
-bottom: `PROPHET67-Windows` or `PROPHET67-macOS` (a GitHub sign-in is needed for artifacts). A release (a tag `v1.0`
+bottom: `PROBLEM6-Windows` or `PROBLEM6-macOS` (a GitHub sign-in is needed for artifacts). A release (a tag `v1.0`
 and so on) carries the same zips under [Releases](https://github.com/swtdr34mz-afk/PROPHET-67-VST/releases).
 
 ## Installieren (kurz auf Deutsch)
 
+**Von PROPHET 67 kommend:** die alte `PROPHET 67.vst3` (und auf dem Mac `PROPHET 67.component`) löschen, dann PROBLEM 6
+installieren. Projekte laden PROBLEM 6 an seiner Stelle, mit allen Einstellungen; die eigenen Programme ziehen beim
+ersten Start von `Dokumente/PROPHET 67` nach `Dokumente/PROBLEM 6` um.
+
 **Windows (Cubase):**
 1. Zip entpacken.
-2. Den Ordner `PROPHET 67.vst3` nach `C:\Program Files\Common Files\VST3\` kopieren.
-3. Cubase starten (oder *Studio → VST-PlugIn-Manager → Aktualisieren*). PROPHET 67 steht unter den Instrumenten,
+2. Den Ordner `PROBLEM 6.vst3` nach `C:\Program Files\Common Files\VST3\` kopieren.
+3. Cubase starten (oder *Studio → VST-PlugIn-Manager → Aktualisieren*). PROBLEM 6 steht unter den Instrumenten,
    Hersteller swtdr34mz.
-4. `PROPHET 67.exe` ist die Standalone-App, sie läuft von überall. Audio- und MIDI-Gerät stellt man unter *Options*
+4. `PROBLEM 6.exe` ist die Standalone-App, sie läuft von überall. Audio- und MIDI-Gerät stellt man unter *Options*
    ein.
 
 Windows SmartScreen kann beim ersten Start der App warnen (sie ist nicht signiert): *Weitere Informationen →
@@ -32,17 +36,17 @@ Trotzdem ausführen*.
 
 **Mac (Ableton Live):**
 1. Zip entpacken.
-2. `PROPHET 67.vst3` nach `~/Library/Audio/Plug-Ins/VST3/` kopieren, `PROPHET 67.component` (AU) nach
-   `~/Library/Audio/Plug-Ins/Components/`, die App `PROPHET 67.app` nach *Programme*.
+2. `PROBLEM 6.vst3` nach `~/Library/Audio/Plug-Ins/VST3/` kopieren, `PROBLEM 6.component` (AU) nach
+   `~/Library/Audio/Plug-Ins/Components/`, die App `PROBLEM 6.app` nach *Programme*.
    (Im Finder: *Gehe zu → Gehe zum Ordner …* und `~/Library/Audio/Plug-Ins` eingeben.)
 3. Die Dateien sind nicht von Apple beglaubigt (notarisiert). Einmal im Terminal freigeben:
    ```
-   xattr -cr ~/Library/Audio/Plug-Ins/VST3/"PROPHET 67.vst3"
-   xattr -cr ~/Library/Audio/Plug-Ins/Components/"PROPHET 67.component"
-   xattr -cr /Applications/"PROPHET 67.app"
+   xattr -cr ~/Library/Audio/Plug-Ins/VST3/"PROBLEM 6.vst3"
+   xattr -cr ~/Library/Audio/Plug-Ins/Components/"PROBLEM 6.component"
+   xattr -cr /Applications/"PROBLEM 6.app"
    ```
 4. Ableton: *Einstellungen → Plug-Ins → VST3-Plug-In-Systemordner verwenden: an* (für AU: *Audio Units: an*), dann
-   *Neu scannen*. PROPHET 67 steht unter *Plug-Ins → swtdr34mz*.
+   *Neu scannen*. PROBLEM 6 steht unter *Plug-Ins → swtdr34mz*.
 
 Läuft auf Apple Silicon und Intel (macOS 10.13 und neuer), Windows 10/11 64-bit.
 
@@ -61,7 +65,7 @@ or later, Preferences → Enhancements (Beta) → Enable Enhancements and Extern
   parameters, as on the FM-1; the plugin settings below stay.
 - **WRITE** (the red key next to 9) keeps the sound as a program of your own: give it a name, and it comes after
   the factory programs (016, 017, …; TENS SELECT, the keys and the name display's menu reach them). They are files in
-  `Documents/PROPHET 67/Presets` (one `.p67` each), shared by every project and the standalone app; the same name
+  `Documents/PROBLEM 6/Presets` (one `.p67` each), shared by every project and the standalone app; the same name
   again replaces one, and deleting a file there removes it.
 - **HIGH-PASS VELOCITY and KEYBOARD** are the plugin's own (two more host parameters): on the FM-1 the high-pass
   follows the low-pass's. A factory program sets them as its low-pass's, so it sounds as on the FM-1; WRITE keeps them.
@@ -134,7 +138,7 @@ C++ class, so each plugin instance has its own voices and effects. `shim/plat.h`
 
 ## Licence
 
-The PROPHET 67 code is under the [Mozilla Public License 2.0](LICENSE). The plugin is built with
+The PROBLEM 6 code is under the [Mozilla Public License 2.0](LICENSE). The plugin is built with
 [JUCE](https://juce.com) 8, used under the AGPLv3 (JUCE's open-source licence), so the plugin binaries are distributed
 under the AGPLv3 with this source. Sequential and Prophet-6 are trademarks of Sequential LLC, named here only to
 describe the inspiration. VST is a trademark of Steinberg Media Technologies GmbH.

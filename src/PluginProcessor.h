@@ -25,7 +25,7 @@ public:
     juce::AudioProcessorEditor *createEditor() override;
     bool hasEditor() const override { return true; }
 
-    const juce::String getName() const override { return "PROPHET 67"; }
+    const juce::String getName() const override { return "PROBLEM 6"; }
     bool acceptsMidi() const override { return true; }
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
@@ -51,7 +51,7 @@ public:
     std::atomic<int> uiPage{0};
     std::atomic<bool> dlSynced{false};
 
-    /* the user's own programs (WRITE): files in Documents/PROPHET 67/Presets, after the 16 factory programs */
+    /* the user's own programs (WRITE): files in Documents/PROBLEM 6/Presets, after the 16 factory programs */
     struct UserPreset {
         juce::String name;
         uint8_t p[NPARAM];

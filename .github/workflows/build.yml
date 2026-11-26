@@ -1,4 +1,4 @@
-# Builds PROPHET 67 for Windows (VST3, Standalone) and the Mac (VST3, AU, Standalone; Apple Silicon and Intel) on
+# Builds PROBLEM 6 (formerly PROPHET 67) for Windows (VST3, Standalone) and the Mac (VST3, AU, Standalone; Apple Silicon and Intel) on
 # every push. The zips are under the run's "Artifacts"; a tag v* (or a release published on GitHub) also puts them
 # in its release.
 name: build
@@ -133,7 +133,7 @@ jobs:
         run: |
           Invoke-WebRequest -Uri https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_Windows.zip -OutFile pluginval.zip
           Expand-Archive pluginval.zip -DestinationPath pluginval
-          $p = Start-Process -FilePath pluginval/pluginval.exe -ArgumentList '--strictness-level','8','--timeout-ms','600000','--output-dir','pluginval-log','--validate','"build/Prophet67_artefacts/Release/VST3/PROPHET 67.vst3"' -Wait -PassThru -NoNewWindow
+          $p = Start-Process -FilePath pluginval/pluginval.exe -ArgumentList '--strictness-level','8','--timeout-ms','600000','--output-dir','pluginval-log','--validate','"build/Prophet67_artefacts/Release/VST3/PROBLEM 6.vst3"' -Wait -PassThru -NoNewWindow
           Get-ChildItem pluginval-log -ErrorAction SilentlyContinue | ForEach-Object { Get-Content $_.FullName | Select-Object -Last 60 }
           if ($p.ExitCode -ne 0) { throw "pluginval failed ($($p.ExitCode))" }
 
@@ -149,12 +149,12 @@ jobs:
         shell: pwsh
         run: |
           $a = "build/Prophet67_artefacts/Release"
-          $o = "PROPHET67-Windows"
+          $o = "PROBLEM6-Windows"
           New-Item -ItemType Directory -Force $o | Out-Null
-          Copy-Item -Recurse "$a/VST3/PROPHET 67.vst3" $o/
-          Copy-Item "$a/Standalone/PROPHET 67.exe" $o/
+          Copy-Item -Recurse "$a/VST3/PROBLEM 6.vst3" $o/
+          Copy-Item "$a/Standalone/PROBLEM 6.exe" $o/
           Copy-Item README.md $o/
-          Compress-Archive -Path $o -DestinationPath PROPHET67-Windows.zip
+          Compress-Archive -Path $o -DestinationPath PROBLEM6-Windows.zip
 
       - name: auval (macOS)
         # the Audio Unit checked as Logic and Ableton check it (informative: a failure here does not stop the build)
@@ -163,7 +163,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p ~/Library/Audio/Plug-Ins/Components
-          cp -R "build/Prophet67_artefacts/Release/AU/PROPHET 67.component" ~/Library/Audio/Plug-Ins/Components/
+          cp -R "build/Prophet67_artefacts/Release/AU/PROBLEM 6.component" ~/Library/Audio/Plug-Ins/Components/
           killall -9 AudioComponentRegistrar || true
           auval -v aumu Ph67 Swtd
 
@@ -172,21 +172,21 @@ jobs:
         shell: bash
         run: |
           a="build/Prophet67_artefacts/Release"
-          o=PROPHET67-macOS
+          o=PROBLEM6-macOS
           mkdir -p $o
-          cp -R "$a/VST3/PROPHET 67.vst3" "$a/AU/PROPHET 67.component" "$a/Standalone/PROPHET 67.app" $o/
+          cp -R "$a/VST3/PROBLEM 6.vst3" "$a/AU/PROBLEM 6.component" "$a/Standalone/PROBLEM 6.app" $o/
           for b in $o/*.vst3 $o/*.component $o/*.app; do codesign --force --deep -s - "$b"; done
-          lipo -info "$o/PROPHET 67.vst3/Contents/MacOS/PROPHET 67"
+          lipo -info "$o/PROBLEM 6.vst3/Contents/MacOS/PROBLEM 6"
           cp README.md $o/
           ditto -c -k --sequesterRsrc --keepParent $o $o.zip
 
       - uses: actions/upload-artifact@v4
         with:
-          name: PROPHET67-${{ matrix.name }}
-          path: PROPHET67-*.zip
+          name: PROBLEM6-${{ matrix.name }}
+          path: PROBLEM6-*.zip
 
       - name: release
         if: startsWith(github.ref, 'refs/tags/v') && (github.event_name == 'release' || github.event_name == 'push')
         uses: softprops/action-gh-release@v2
         with:
-          files: PROPHET67-*.zip
+          files: PROBLEM6-*.zip

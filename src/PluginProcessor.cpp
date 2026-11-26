@@ -90,7 +90,12 @@ Prophet67Processor::Prophet67Processor()
 /* ------------------------------------------------------------------------- user presets --- */
 juce::File Prophet67Processor::presetFolder()
 {
-    return juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("PROPHET 67").getChildFile("Presets");
+    /* PROBLEM 6 (until 1.0.8 PROPHET 67): the old folder's programs come along once, the old folder left as it was */
+    auto docs = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory);
+    auto now = docs.getChildFile("PROBLEM 6").getChildFile("Presets"), old = docs.getChildFile("PROPHET 67").getChildFile("Presets");
+    if (!now.isDirectory() && old.isDirectory())
+        old.copyDirectoryTo(now);
+    return now;
 }
 
 void Prophet67Processor::loadUserPresets()
