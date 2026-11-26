@@ -13,9 +13,9 @@ Unofficial: not made, endorsed or supported by Sequential or M-VAVE.
 
 ## Download
 
-[Actions](https://github.com/swtdr34mz-afk/PROPHET-67-VST/actions) → the newest green run → **Artifacts** at the
+[Actions](https://github.com/swtdr34mz-afk/PROBLEM-6-VST/actions) → the newest green run → **Artifacts** at the
 bottom: `PROBLEM6-Windows` or `PROBLEM6-macOS` (a GitHub sign-in is needed for artifacts). A release (a tag `v1.0`
-and so on) carries the same zips under [Releases](https://github.com/swtdr34mz-afk/PROPHET-67-VST/releases).
+and so on) carries the same zips under [Releases](https://github.com/swtdr34mz-afk/PROBLEM-6-VST/releases).
 
 ## Installieren (kurz auf Deutsch)
 
