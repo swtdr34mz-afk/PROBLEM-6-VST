@@ -1,10 +1,10 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 swtdr34mz (PROPHET 67) */
-/* The editor: a Prophet-6's front panel, drawn at 1560 x 900 and scaled to the window (drag the corner). Four rows
+/* The editor: a Prophet-6's front panel, drawn at 1560 x 640 and scaled to the window (drag the corner). Four rows
  * of sections as on the P6 (POLY MOD, ARPEGGIATOR, AFTERTOUCH; the oscillators, VINTAGE, MIXER, HIGH-PASS
  * FILTER, FILTER ENVELOPE; the two LFOs, LOW-PASS FILTER, MISC PARAMETERS; DISTORT, EFFECTS, AMPLIFIER ENVELOPE,
- * LOW SPLIT), the program strip (HOLD, GLIDE AMT, UNISON, the program display, TENS SELECT, 0-9, INIT, WRITE, the name) and a
- * four-octave keyboard with pitch and mod wheels. */
+ * LOW SPLIT), the program strip (HOLD, GLIDE AMT, UNISON, the program display, TENS SELECT, 0-9, INIT, WRITE, the name); no keyboard
+ * or wheels (played from the DAW or a MIDI keyboard). */
 #pragma once
 #include "PluginProcessor.h"
 #include "ui/Controls.h"
@@ -12,7 +12,7 @@
 class Prophet67Panel : public juce::Component, public p67::Touch, private juce::Timer
 {
 public:
-    static constexpr int W = 1560, H = 900;
+    static constexpr int W = 1560, H = 640;
     explicit Prophet67Panel(Prophet67Processor &);
     ~Prophet67Panel() override;
     void paint(juce::Graphics &) override;
@@ -43,7 +43,6 @@ private:
     juce::OwnedArray<juce::Component> controls;
     std::vector<Section> sections;
     std::vector<std::pair<juce::Component *, int>> fxControls;   /* EFFECTS: a knob and the effect it is for */
-    juce::OwnedArray<juce::Component> keys;                       /* the keyboard and the wheels */
     juce::Component *fxDisplay = nullptr, *nameDisplay = nullptr;
     juce::Array<juce::Component *> progButtons;
 

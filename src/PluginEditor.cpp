@@ -15,116 +15,6 @@ bool bipolarKind(int i)
 const char *const FX_NAME[5] = {"Chorus", "Reverb", "Space", "Delay", "Dly Mod"};
 const char *const FX_CODE[5] = {"CHO", "REV", "SPC", "DLY", "MOD"};
 
-/* ---------------------------------------------------------------------------- the keyboard --- */
-class Keys : public juce::MidiKeyboardComponent
-{
-public:
-    explicit Keys(juce::MidiKeyboardState &s) : MidiKeyboardComponent(s, horizontalKeyboard)
-    {
-        setBlackNoteLengthProportion(0.62f);
-        setBlackNoteWidthProportion(0.62f);
-        setWantsKeyboardFocus(false);
-        setMouseClickGrabsKeyboardFocus(false);
-        setScrollButtonsVisible(false);
-        setColour(whiteNoteColourId, juce::Colour(0xff0c0c0d));   /* (the bed between the keys) */
-        setColour(shadowColourId, juce::Colours::transparentBlack);
-    }
-    void drawWhiteNote(int, juce::Graphics &g, juce::Rectangle<float> a, bool down, bool, juce::Colour, juce::Colour) override
-    {
-        using namespace juce;
-        auto r = a.reduced(0.8f, 0.0f);
-        float lip = down ? 3.0f : 9.0f;
-        g.setGradientFill(ColourGradient(down ? Colour(0xffd9d6cc) : Colour(0xfff7f5ef), r.getX(), r.getY(),
-                                         down ? Colour(0xffc9c6bb) : Colour(0xffe6e3da), r.getX(), r.getBottom(), false));
-        g.fillRect(r.withTrimmedBottom(lip));
-        g.setGradientFill(ColourGradient(Colour(0xffd2cfc5), r.getX(), r.getBottom() - lip, Colour(0xffa9a69c), r.getX(), r.getBottom(), false));
-        g.fillRect(r.withTop(r.getBottom() - lip));
-        g.setGradientFill(ColourGradient(Colours::black.withAlpha(0.45f), r.getX(), r.getY(), Colours::transparentBlack, r.getX(),
-                                         r.getY() + 14.0f, false));
-        g.fillRect(r.withHeight(14.0f));
-        if (down) {
-            g.setColour(Colours::black.withAlpha(0.08f));
-            g.fillRect(r);
-        }
-    }
-    void drawBlackNote(int, juce::Graphics &g, juce::Rectangle<float> a, bool down, bool, juce::Colour) override
-    {
-        using namespace juce;
-        g.setColour(Colours::black.withAlpha(0.5f));
-        g.fillRect(a.translated(2.0f, 3.0f));
-        g.setColour(Colour(0xff050505));
-        g.fillRect(a);
-        auto top = a.reduced(a.getWidth() * 0.14f, 0.0f).withTrimmedBottom(down ? a.getHeight() * 0.05f : a.getHeight() * 0.12f);
-        g.setGradientFill(ColourGradient(Colour(0xff1b1b1d), top.getX(), top.getY(), Colour(0xff2e2e31), top.getX(), top.getBottom(), false));
-        g.fillRect(top);
-        g.setColour(Colours::white.withAlpha(0.16f));
-        g.fillRect(top.withWidth(1.5f).translated(1.0f, 0.0f));
-        g.setColour(Colours::white.withAlpha(0.08f));
-        g.fillRect(top.withTop(top.getBottom() - 2.0f));
-    }
-};
-
-/* ------------------------------------------------------------------- the pitch and mod wheels --- */
-class Wheel : public juce::Component
-{
-public:
-    Wheel(bool spring, std::function<void(float)> send) : spring(spring), send(std::move(send)) { pos = spring ? 0.5f : 0.0f; }
-    void paint(juce::Graphics &g) override
-    {
-        using namespace juce;
-        auto r = getLocalBounds().toFloat();
-        auto well = r.withTrimmedBottom(18.0f);
-        g.setColour(Colour(0xff030303));
-        g.fillRoundedRectangle(well, 4.0f);
-        auto glow = well.reduced(3.0f);           /* the red light in the well */
-        g.setGradientFill(ColourGradient(col::redLed.withAlpha(0.75f), glow.getCentreX(), glow.getBottom() - 6.0f,
-                                         Colours::transparentBlack, glow.getCentreX(), glow.getY() + glow.getHeight() * 0.25f, false));
-        g.fillRoundedRectangle(glow, 3.0f);
-        auto wheel = well.reduced(6.0f, 8.0f);
-        float h = wheel.getHeight();
-        for (float y = 0.0f; y < h; y += 1.0f) {  /* a cylinder, its ribs turning with the position */
-            float t = (y / h) * 2.0f - 1.0f, shade = std::sqrt(jmax(0.0f, 1.0f - t * t));
-            float rib = std::fmod((std::asin(jlimit(-1.0f, 1.0f, t)) * 9.0f + pos * 18.0f) + 100.0f, 1.0f);
-            float v = 0.05f + 0.20f * shade * (rib < 0.5f ? 1.0f : 0.55f);
-            g.setColour(Colour::fromFloatRGBA(v, v, v * 1.02f, 1.0f));
-            g.fillRect(wheel.getX(), wheel.getY() + y, wheel.getWidth(), 1.0f);
-        }
-        g.setColour(Colours::black);
-        g.drawRect(wheel, 1.0f);
-        float my = wheel.getBottom() - h * pos;   /* the marker */
-        g.setColour(Colours::white.withAlpha(0.6f));
-        g.fillRect(wheel.getX() + 2.0f, my - 1.0f, wheel.getWidth() - 4.0f, 2.0f);
-        drawLegend(g, spring ? "PITCH" : "MOD", r.removeFromBottom(14.0f), 9.5f);
-    }
-    void mouseDown(const juce::MouseEvent &e) override
-    {
-        start = pos;
-        startY = e.position.y;
-    }
-    void mouseDrag(const juce::MouseEvent &e) override
-    {
-        set(juce::jlimit(0.0f, 1.0f, start - (e.position.y - startY) / ((float)getHeight() * 0.8f)));
-    }
-    void mouseUp(const juce::MouseEvent &) override
-    {
-        if (spring)
-            set(0.5f);
-    }
-
-private:
-    void set(float p)
-    {
-        if (p == pos)
-            return;
-        pos = p;
-        send(p);
-        repaint();
-    }
-    bool spring;
-    std::function<void(float)> send;
-    float pos, start = 0.0f, startY = 0.0f;
-};
-
 /* ------------------------------------------------------------------- EFFECTS: SELECT and LEDs --- */
 class FxSelect : public juce::Component
 {
@@ -265,19 +155,18 @@ class StepKey : public juce::Component, private juce::Timer
 {
 public:
     StepKey(Prophet67Panel &p, int d) : panel(p), dir(d) { setRepaintsOnMouseActivity(true); }
-    void paint(juce::Graphics &g) override
+    void paint(juce::Graphics &g) override   /* a small dark panel button, as SELECT or SYNC, an arrow on it, its legend below */
     {
-        auto r = getLocalBounds().toFloat().reduced(2.0f, 1.0f);
-        drawKeycap(g, r, false, false, down, isMouseOver());
-        auto c = r.withTrimmedBottom(r.getHeight() * 0.18f);   /* (the cap's face above its lip) */
+        auto r = getLocalBounds().toFloat();
+        auto lg = r.removeFromBottom(13.0f);
+        auto b = r.withSizeKeepingCentre(34.0f, 17.0f);
+        drawButton(g, b, false, down, isMouseOver());
         juce::Path tri;
-        float cx = dir < 0 ? c.getX() + 18.0f : c.getRight() - 18.0f, cy = c.getCentreY(), w = 6.0f, h = 6.5f;
+        float cx = b.getCentreX(), cy = b.getCentreY() + (down ? 0.5f : 0.0f), w = 3.2f, h = 3.6f;
         tri.addTriangle(cx - dir * w, cy - h, cx - dir * w, cy + h, cx + dir * w, cy);
-        g.setColour(juce::Colour(0xff3a3a3a));
+        g.setColour(col::legend.withAlpha(0.85f));
         g.fillPath(tri);
-        g.setFont(font(Face::label, 13.0f));
-        g.drawText(dir < 0 ? "PREV" : "NEXT", c.withTrimmedLeft(dir < 0 ? 22.0f : 0.0f).withTrimmedRight(dir < 0 ? 0.0f : 22.0f),
-                   juce::Justification::centred);
+        drawLegend(g, dir < 0 ? "PREV" : "NEXT", lg, 9.5f);
     }
     void mouseDown(const juce::MouseEvent &) override
     {
@@ -630,31 +519,8 @@ void Prophet67Panel::build()
     name->onClick = [this] { presetMenu(); };
     add(new WriteKey(*this), {1090, 540, 50, 80});
     nameDisplay = add(name, {1150, 546, 230, 52});
-    add(new StepKey(*this, -1), {1150, 602, 113, 30});
-    add(new StepKey(*this, 1), {1267, 602, 113, 30});
-
-    /* ---- the keyboard and the wheels ---- */
-    auto *k = new Keys(proc.keyboardState);
-    keys.add(k);
-    addAndMakeVisible(k);
-    k->setBounds(168, 648, 1336, 244);
-    k->setAvailableRange(36, 84);
-    k->setKeyWidth(1336.0f / 29.0f);
-    k->setLowestVisibleKey(36);
-    auto *pitch = keys.add(new Wheel(true, [this](float v) {
-        auto m = juce::MidiMessage::pitchWheel(1, juce::jlimit(0, 16383, (int)std::lround(v * 16383.0f)));
-        m.setTimeStamp(juce::Time::getMillisecondCounterHiRes() * 0.001);
-        proc.uiMidi.addMessageToQueue(m);
-    }));
-    auto *mod = keys.add(new Wheel(false, [this](float v) {
-        auto m = juce::MidiMessage::controllerEvent(1, 1, juce::jlimit(0, 127, (int)std::lround(v * 127.0f)));
-        m.setTimeStamp(juce::Time::getMillisecondCounterHiRes() * 0.001);
-        proc.uiMidi.addMessageToQueue(m);
-    }));
-    addAndMakeVisible(pitch);
-    addAndMakeVisible(mod);
-    pitch->setBounds(72, 690, 34, 170);
-    mod->setBounds(116, 690, 34, 170);
+    add(new StepKey(*this, -1), {1222, 601, 40, 33});
+    add(new StepKey(*this, 1), {1268, 601, 40, 33});
 }
 
 void Prophet67Panel::selectFx(int f)
@@ -716,16 +582,7 @@ void Prophet67Panel::paintBackground(juce::Graphics &g)
     using namespace juce;
     auto all = Rectangle<float>(0.0f, 0.0f, (float)W, (float)H);
     auto panel = all.reduced(40.0f, 0.0f);
-    drawPanelFace(g, panel.withBottom(640.0f), 9000);
-    /* the keyboard's bed and the wheels' block */
-    g.setColour(Colour(0xff0f0f10));
-    g.fillRect(panel.withTop(640.0f));
-    g.setGradientFill(ColourGradient(Colour(0xff1d1e20), 56.0f, 648.0f, Colour(0xff111112), 56.0f, 892.0f, false));
-    g.fillRect(Rectangle<float>(56.0f, 648.0f, 106.0f, 244.0f));
-    g.setColour(Colours::black.withAlpha(0.7f));
-    g.fillRect(Rectangle<float>(40.0f, 638.0f, panel.getWidth(), 4.0f));
-    g.setColour(Colours::white.withAlpha(0.06f));
-    g.drawHorizontalLine(637, 40.0f, (float)W - 40.0f);
+    drawPanelFace(g, panel, 9000);
 
     paintWood(g, all.withWidth(40.0f), 1);
     paintWood(g, all.withLeft((float)W - 40.0f), 2);
