@@ -8,7 +8,7 @@
 > `catalog/plugins/prophetic-6.json` = `mpc/catalog/prophetic-6.json` (neuer Name, `asset_pattern` `PROBLEM-6-*`).
 > Weiter unten steht noch der alte Name: gemeint ist dasselbe Plugin.
 Stand: 24.11.2026, Mittag. Für eine neue Unterhaltung: dieses Protokoll anhängen oder einfügen, dazu das Repository
-`swtdr34mz-afk/PROPHET-67-VST` verbinden.
+`swtdr34mz-afk/PROBLEM-6-VST` verbinden.
 
 ## Worum es geht
 

@@ -2,10 +2,10 @@
   "id": "prophetic-6",
   "name": "PROBLEM 6",
   "author": "swtdr34mz",
-  "repo": "swtdr34mz-afk/PROPHET-67-VST",
+  "repo": "swtdr34mz-afk/PROBLEM-6-VST",
   "kind": "instrument",
   "license": "MPL-2.0",
-  "summary": "PROBLEM 6 (formerly PROPHETIC 6), a port of the PROBLEM 6 firmware for the M-VAVE FM-1: a 7-voice analogue-style poly with two oscillators (sub, noise, sync, poly mod), a high-pass into a resonant 4-pole low-pass, two LFOs, distortion, chorus, delay, five reverbs, an arp on the MPC tempo and a low split. HIGH and ECO quality for the CPU. Panel-style touch pages.",
+  "summary": "Formerly PROPHETIC 6. A port of the PROBLEM 6 firmware for the M-VAVE FM-1: a 7-voice analogue-style poly with two oscillators (sub, noise, sync, poly mod), a high-pass into a resonant 4-pole low-pass, two LFOs, distortion, chorus, delay, five reverbs, an arp on the MPC tempo and a low split. HIGH and ECO quality. Panel-style touch pages.",
   "style": "polysynth",
   "tags": [
     "analog-modelling",
@@ -14,5 +14,5 @@
     "arpeggiator"
   ],
   "asset_pattern": "PROBLEM-6-*-mpc-armv7.zip",
-  "screenshot": "https://raw.githubusercontent.com/swtdr34mz-afk/PROPHET-67-VST/v1.0.0/mpc/catalog/screenshot.png"
+  "screenshot": "https://raw.githubusercontent.com/swtdr34mz-afk/PROBLEM-6-VST/v1.1.0/mpc/catalog/screenshot.png"
 }

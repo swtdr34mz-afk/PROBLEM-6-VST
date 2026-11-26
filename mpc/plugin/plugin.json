@@ -12,6 +12,6 @@
   "file64": "VST/problem-6-arm64.so",
   "description": "PROBLEM 6 (formerly PROPHETIC 6): a 7-voice analogue-style poly in the spirit of the classic American analogue polys. Two oscillators with sub and noise, poly mod, a resonant high-pass into a creamy 4-pole low-pass, two LFOs (LFO 1 to audio rate and noise), distortion, chorus, delay, five reverbs, an arp. The same engine as the PROBLEM 6 VST3 and the FM-1 firmware.",
   "author": "swtdr34mz",
-  "url": "https://github.com/swtdr34mz-afk/PROPHET-67-VST",
+  "url": "https://github.com/swtdr34mz-afk/PROBLEM-6-VST",
   "license": "MPL-2.0"
 }

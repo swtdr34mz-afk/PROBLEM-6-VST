@@ -78,20 +78,20 @@ jobs:
         run: |
           v=$(python3 -c "import json; print(json.load(open('mpc/plugin/plugin.json'))['version'])")
           python3 openmpc/tools/sdk_release.py "mpc/build/PROBLEM 6/build/swtdr34mz - VST - PROBLEM 6" --version "$v" \
-            --id prophetic-6 --repo swtdr34mz-afk/PROPHET-67-VST --license MPL-2.0 -o dist \
+            --id prophetic-6 --repo swtdr34mz-afk/PROBLEM-6-VST --license MPL-2.0 -o dist \
             -- --retire "swtdr34mz - VST - PROPHETIC 6"
           cp PROBLEM6-MPC.zip "dist/PROBLEM-6-$v-mpc-sdk.zip"
           {
             echo "## Open MPC catalog zips ($v)"
             for z in dist/*-mpc-armv7.zip dist/*-mpc-aarch64.zip; do
               echo; echo "### $(basename "$z")"; echo '```'
-              python3 openmpc/tools/catalog_check.py "$z" --catalog --expect-id prophetic-6 --expect-repo swtdr34mz-afk/PROPHET-67-VST 2>&1
+              python3 openmpc/tools/catalog_check.py "$z" --catalog --expect-id prophetic-6 --expect-repo swtdr34mz-afk/PROBLEM-6-VST 2>&1
               echo '```'
             done
             echo; echo "### SHA-256"; echo '```'; (cd dist && sha256sum *.zip); echo '```'
           } | tee -a "$GITHUB_STEP_SUMMARY"
           for z in dist/*-mpc-armv7.zip dist/*-mpc-aarch64.zip; do
-            python3 openmpc/tools/catalog_check.py "$z" --catalog --expect-id prophetic-6 --expect-repo swtdr34mz-afk/PROPHET-67-VST > /dev/null
+            python3 openmpc/tools/catalog_check.py "$z" --catalog --expect-id prophetic-6 --expect-repo swtdr34mz-afk/PROBLEM-6-VST > /dev/null
           done
       - uses: actions/upload-artifact@v4
         with:
