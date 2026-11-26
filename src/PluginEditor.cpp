@@ -469,6 +469,9 @@ void Prophet67Panel::build()
                         add(k, {x, y + 22, KW, 80});
                     }};
     };
+    auto BIGK = [&](int i, const char *leg) {   /* the low-pass CUTOFF: larger, the knob most played */
+        return Item{80, [=, &s](int x, int y) { add(new Knob(s, P(i), leg, this), {x, y + 16, 80, 92}); }};
+    };
     auto GK = [&](const char *id, const char *leg) { return Item{KW, [=, &s](int x, int y) { add(new Knob(s, id, leg, this), {x, y + 22, KW, 80}); }}; };
     auto L = [&](juce::String id, juce::StringArray names, int w, float rowH = 13.0f) {
         return Item{w, [=, &s](int x, int y) {
@@ -600,7 +603,7 @@ void Prophet67Panel::build()
     /* ---- row 4: MIXER, LOW-PASS FILTER, HIGH-PASS FILTER, AMPLIFIER ENVELOPE ---- */
     row(400, {
         {"MIXER", {K(P_MIX_O1, "OSC 1"), K(P_MIX_O2, "OSC 2"), K(P_O1_SUB, "SUB OCTAVE"), K(P_NOISE, "NOISE")}},
-        {"LOW-PASS FILTER", {K(P_CUTOFF, "CUTOFF"), K(P_RESO, "RESONANCE"), K(P_ENV_AMT, "ENV AMOUNT"), VEL(P(P_FVEL)), KB(P(P_KEYTRK))}},
+        {"LOW-PASS FILTER", {BIGK(P_CUTOFF, "CUTOFF"), K(P_RESO, "RESONANCE"), K(P_ENV_AMT, "ENV AMOUNT"), VEL(P(P_FVEL)), KB(P(P_KEYTRK))}},
         {"HIGH-PASS FILTER", {K(P_HPF, "CUTOFF"), K(P_HP_RESO, "RESONANCE"), K(P_HP_ENV, "ENV AMOUNT"), VEL("hp_vel"), KB("hp_keytrk")}},
         {"AMPLIFIER ENVELOPE", {VEL(P(P_AVEL)), K(P_AA, "ATTACK"), K(P_AD, "DECAY"), K(P_AS, "SUSTAIN"), K(P_AR, "RELEASE")}, ENV_W},
     });
