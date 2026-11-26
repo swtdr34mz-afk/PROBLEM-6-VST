@@ -281,8 +281,9 @@ void Prophet67Processor::handleMidi(const juce::MidiMessage &m)
         int cc = m.getControllerNumber(), v = m.getControllerValue();
         if (cc == 1)
             engine.modWheel((float)v / 127.0f);
-        else if (cc == 74)
-            engine.cutoffCC(v);
+        else if (cc == 74)   /* brightness: around the CUTOFF knob, 64 the knob as it is (FL Studio sends Mod X as
+                              * CC 74 with every note, 64 unless drawn; an MPE key's slide too), +-4.5 octaves */
+            engine.cutoffMod((float)(juce::jlimit(0, 127, v) - 64) * (4.5f / 63.0f));
         else if (cc == 120 || cc == 123) {   /* ALL SOUND OFF: silent at once; ALL NOTES OFF: let go (their release) */
             if (cc == 120)
                 engine.panic();
@@ -295,7 +296,7 @@ void Prophet67Processor::handleMidi(const juce::MidiMessage &m)
             pedal = false;                 /* (HOLD, if on, still holds) */
             sustainUpdate();
             engine.pressAll(0.0f);
-            engine.cutoffCC(-1);
+            engine.cutoffMod(0.0f);
         }
     } else if (m.isAllNotesOff() || m.isAllSoundOff())
         engine.allOff();
@@ -339,10 +340,6 @@ void Prophet67Processor::processBlock(juce::AudioBuffer<float> &buffer, juce::Mi
             change = true;
         }
         if (change) {
-            /* CUTOFF turned (the knob, automation, a program): it takes over again from a MIDI CC 74 (the last one
-             * touched wins; CC 74 had held the cutoff until the plugin was loaded again) */
-            if (patched && p[P_CUTOFF] != sent[P_CUTOFF])
-                engine.cutoffCC(-1);
             engine.patch(p);
             std::memcpy(sent, p, sizeof sent);
             patched = true;

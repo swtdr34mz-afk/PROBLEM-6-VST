@@ -102,6 +102,7 @@ void eng_cutoff_cc(int v);              /* MIDI CC 74 (-1: the patch's own) */
 #ifdef P67_PLUGIN
 void eng_hp_extra(int vel, int keytrk, int fenvVel); /* the plugin's own HIGH-PASS VELOCITY (0..127) and KEYBOARD (KT_*)
                                                       * and FILTER ENVELOPE VELOCITY (0..127), at the next patch */
+void eng_cutoff_mod(float oct);           /* the plugin's MIDI CC 74: octaves added to CUTOFF (0: none) */
 void eng_quality(int high);              /* 1: the low-pass at 2x (default); 0: at the rate (less CPU: the MPC's ECO) */
 #endif
 void eng_all_off(void);                 /* every note let go */

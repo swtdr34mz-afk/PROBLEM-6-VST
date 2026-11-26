@@ -174,6 +174,9 @@ static float chan_press;                 /* MIDI channel pressure, curved (every
 static uint8_t sustain;
 static float bend_v, mod_v;
 static int cc_cut = -1;
+#ifdef P67_PLUGIN
+static float cc_cut_oct;               /* the plugin's CC 74: octaves on top of the knob (eng_cutoff_mod) */
+#endif
 static float lvl_out;
 static uint8_t duck_on;
 #ifdef P67_PLUGIN
@@ -1509,6 +1512,9 @@ static void lfo_block(uint32_t n)
             const float k = k_sr(SMOOTH_K);   /* two stages, each a chunk's share: a detent's step becomes an S-curve
                                           * (no corner to hear at its start), 90 % there in about 6 ms */
             float tc = P.cut_oct + (cc_cut >= 0 ? cutoff_oct((float)cc_cut * (255.0f / 127.0f)) - P.cut_oct : 0.0f);
+#ifdef P67_PLUGIN
+            tc += cc_cut_oct;
+#endif
             if (!SM.init) {
                 SM.cut = tc;
                 SM.res = P.res_k;
@@ -1731,6 +1737,9 @@ void eng_panic(void) { ev_put(EV_PANIC, 0, 0, 0.0f); }
 void eng_bend(float v) { bend_v = v; }
 void eng_mod(float v) { mod_v = v; }
 void eng_cutoff_cc(int v) { cc_cut = v; }
+#ifdef P67_PLUGIN
+void eng_cutoff_mod(float oct) { cc_cut_oct = oct; }
+#endif
 #ifdef P67_PLUGIN
 void eng_hp_extra(int vel, int keytrk, int fenvVel)   /* (taken at the next patch) */
 {
