@@ -155,19 +155,18 @@ class StepKey : public juce::Component, private juce::Timer
 {
 public:
     StepKey(Prophet67Panel &p, int d) : panel(p), dir(d) { setRepaintsOnMouseActivity(true); }
-    void paint(juce::Graphics &g) override
+    void paint(juce::Graphics &g) override   /* a small dark panel button, as SELECT or SYNC, an arrow on it, its legend below */
     {
-        auto r = getLocalBounds().toFloat().reduced(2.0f, 1.0f);
-        drawKeycap(g, r, false, false, down, isMouseOver());
-        auto c = r.withTrimmedBottom(r.getHeight() * 0.18f);   /* (the cap's face above its lip) */
+        auto r = getLocalBounds().toFloat();
+        auto lg = r.removeFromBottom(13.0f);
+        auto b = r.withSizeKeepingCentre(34.0f, 17.0f);
+        drawButton(g, b, false, down, isMouseOver());
         juce::Path tri;
-        float cx = dir < 0 ? c.getX() + 18.0f : c.getRight() - 18.0f, cy = c.getCentreY(), w = 6.0f, h = 6.5f;
+        float cx = b.getCentreX(), cy = b.getCentreY() + (down ? 0.5f : 0.0f), w = 3.2f, h = 3.6f;
         tri.addTriangle(cx - dir * w, cy - h, cx - dir * w, cy + h, cx + dir * w, cy);
-        g.setColour(juce::Colour(0xff3a3a3a));
+        g.setColour(col::legend.withAlpha(0.85f));
         g.fillPath(tri);
-        g.setFont(font(Face::label, 13.0f));
-        g.drawText(dir < 0 ? "PREV" : "NEXT", c.withTrimmedLeft(dir < 0 ? 22.0f : 0.0f).withTrimmedRight(dir < 0 ? 0.0f : 22.0f),
-                   juce::Justification::centred);
+        drawLegend(g, dir < 0 ? "PREV" : "NEXT", lg, 9.5f);
     }
     void mouseDown(const juce::MouseEvent &) override
     {
@@ -520,8 +519,8 @@ void Prophet67Panel::build()
     name->onClick = [this] { presetMenu(); };
     add(new WriteKey(*this), {1090, 540, 50, 80});
     nameDisplay = add(name, {1150, 546, 230, 52});
-    add(new StepKey(*this, -1), {1150, 602, 113, 30});
-    add(new StepKey(*this, 1), {1267, 602, 113, 30});
+    add(new StepKey(*this, -1), {1222, 601, 40, 33});
+    add(new StepKey(*this, 1), {1268, 601, 40, 33});
 }
 
 void Prophet67Panel::selectFx(int f)
