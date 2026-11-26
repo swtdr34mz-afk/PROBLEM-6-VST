@@ -1,4 +1,4 @@
-# PROPHET 67 — the plugin (VST3, AU on the Mac) and the standalone app, with JUCE 8.
+# PROBLEM 6 (formerly PROPHET 67) — the plugin (VST3, AU on the Mac) and the standalone app, with JUCE 8.
 #   cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release
 # JUCE comes from GitHub (or -DP67_JUCE_DIR=/path/to/JUCE).
 cmake_minimum_required(VERSION 3.22)
@@ -36,7 +36,7 @@ if(APPLE)
 endif()
 
 juce_add_plugin(Prophet67
-    PRODUCT_NAME "PROPHET 67"
+    PRODUCT_NAME "PROBLEM 6"
     COMPANY_NAME "swtdr34mz"
     BUNDLE_ID "com.swtdr34mz.prophet67"
     PLUGIN_MANUFACTURER_CODE Swtd
