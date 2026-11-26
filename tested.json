@@ -1,2 +1,3 @@
 [ { "id": "prophetic-6", "version": "1.0.0", "device": "MPC XL (Gen2)", "firmware": "3.10.1", "date": "2026-11-24" },
-  { "id": "prophetic-6", "version": "1.0.4", "device": "MPC XL (Gen2)", "firmware": "3.10.1", "date": "2026-11-25" } ]
+  { "id": "prophetic-6", "version": "1.0.4", "device": "MPC XL (Gen2)", "firmware": "3.10.1", "date": "2026-11-25" },
+  { "id": "prophetic-6", "version": "1.0.7", "device": "MPC XL (Gen2)", "firmware": "3.10.1", "date": "2026-11-26" } ]
