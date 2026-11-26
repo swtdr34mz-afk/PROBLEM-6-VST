@@ -10,7 +10,7 @@ scales.
 
 Unofficial: not made, endorsed or supported by Sequential, Akai Professional or M-VAVE.
 
-**Renamed in 1.0.8:** the plugin folder is now `swtdr34mz - VST - PROBLEM 6`. Its id on the MPC (uid `Pr6c`) is the
+**Renamed in 1.1.0:** the plugin folder is now `swtdr34mz - VST - PROBLEM 6`. Its id on the MPC (uid `Pr6c`) is the
 same, so it is still the same plugin; the Plugin Manager removes the old `swtdr34mz - VST - PROPHETIC 6` folder when it
 installs the new one. If you copied the folder by hand, delete the old one yourself. A project saved with PROPHETIC 6
 may ask for the plugin again: pick PROBLEM 6.
