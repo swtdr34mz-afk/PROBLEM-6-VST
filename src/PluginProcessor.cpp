@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 swtdr34mz (PROPHET 67) */
 #include "PluginProcessor.h"
+#include "PanelDialog.h"
 #include "P6Import.h"
 #include "PluginEditor.h"
 #include "Sections.h"
@@ -91,7 +92,7 @@ Prophet67Processor::Prophet67Processor()
 juce::File Prophet67Processor::presetFolder()
 {
     /* PROBLEM 6 (until 1.0.8 PROPHET 67): the old folder's programs come along once, the old folder left as it was */
-    auto docs = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory);
+    auto docs = pdlg::docsOrAppData();
     auto now = docs.getChildFile("PROBLEM 6").getChildFile("Presets"), old = docs.getChildFile("PROPHET 67").getChildFile("Presets");
     if (!now.isDirectory() && old.isDirectory())
         old.copyDirectoryTo(now);

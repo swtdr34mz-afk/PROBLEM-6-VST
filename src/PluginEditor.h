@@ -62,6 +62,7 @@ class Prophet67Editor : public juce::AudioProcessorEditor
 public:
     explicit Prophet67Editor(Prophet67Processor &);
     void resized() override;
+    bool sized = false;                      /* (resizes during the constructor keep nothing) */
 
 private:
     Prophet67Processor &proc;
