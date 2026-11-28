@@ -4,6 +4,10 @@ The newest first. To release a new version: raise the number in VERSION and put 
 "## <the new number>". After the merge into main the release is made by itself (auto-release.yml), the
 downloads are built into it, and the website and the Discord post follow.
 
+## 1.1.4
+LOW SPLIT: POINT now shows its note on a small display right above the knob (default C3). Note names now follow Cubase and the MPC: middle C is C3.
+The text that popped up under the program display (now hidden behind PREV / NEXT) is gone.
+
 ## 1.1.3
 New: PROBLEM 6 for Linux - VST3, LV2 and a standalone app (64-bit, built on Ubuntu 22.04). Checked with pluginval like the Windows version.
 

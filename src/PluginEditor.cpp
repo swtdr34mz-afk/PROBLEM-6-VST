@@ -487,7 +487,13 @@ void Prophet67Panel::build()
                               add(new p67::Button(s, P(P_O2_MODE), "LOW FREQ", this, isLow, low), {x, y + 16, BW + 6, 48});
                               add(new p67::Button(s, P(P_O2_MODE), "KEYBOARD", this, isKeyb, keyb), {x, y + 64, BW + 6, 48});
                           }}}},
-        {"LOW SPLIT", {GK("split", "SPLIT"), L("split", {"Off", "-1 Oct", "-2 Oct", "-3 Oct"}, 42), GK("split_point", "POINT"),
+        {"LOW SPLIT", {GK("split", "SPLIT"), L("split", {"Off", "-1 Oct", "-2 Oct", "-3 Oct"}, 42), Item{KW, [&](int x, int y) {   /* POINT: its note on a small display above the knob */
+                           pointDisplay = add(new SegDisplay(3, [this] {
+                               auto *p = proc.apvts.getParameter("split_point");
+                               return p->getCurrentValueAsText();
+                           }, true), {x + 5, y + 12, KW - 10, 24});
+                           add(new Knob(s, "split_point", "POINT", this), {x, y + 36, KW, 66});
+                       }},
                        B("low_hold", "LOW HOLD")}},
         {"FILTER ENVELOPE", {VEL("fenv_vel"), K(P_FA, "ATTACK"), K(P_FD, "DECAY"), K(P_FS, "SUSTAIN"), K(P_FR, "RELEASE")}, ENV_W},
     });
@@ -618,12 +624,6 @@ void Prophet67Panel::paint(juce::Graphics &g)
     }
     g.drawImage(background, getLocalBounds().toFloat(), juce::RectanglePlacement::stretchToFit);
 
-    /* the readout: what is in hand, else nothing (as on the panel) */
-    if (shown && juce::Time::getMillisecondCounter() - shownAt < 3000) {
-        g.setColour(col::legend);
-        g.setFont(font(Face::label, 11.0f));
-        g.drawText(shown->getName(40) + ":  " + shown->getCurrentValueAsText(), readoutR, juce::Justification::centred, true);
-    }
 }
 
 /* ------------------------------------------------------------------------------- the rest --- */
@@ -637,7 +637,8 @@ void Prophet67Panel::touched(juce::RangedAudioParameter &p)
             if (fxDisplay)
                 fxDisplay->repaint();
         }
-    repaint(readoutR.expanded(2));
+    if (pointDisplay && p.getParameterID() == "split_point")
+        pointDisplay->repaint();
 }
 
 void Prophet67Panel::timerCallback()
@@ -658,9 +659,13 @@ void Prophet67Panel::timerCallback()
         if (fxDisplay)
             fxDisplay->repaint();
     }
-    auto age = juce::Time::getMillisecondCounter() - shownAt;
-    if (shown && age > 3000 && age < 3300)
-        repaint(readoutR.expanded(2));
+    if (pointDisplay) {                  /* (POINT turned by the host, automation, a MIDI learn) */
+        int pt = (int)proc.apvts.getRawParameterValue("split_point")->load();
+        if (pt != pointShown) {
+            pointShown = pt;
+            pointDisplay->repaint();
+        }
+    }
 }
 
 void Prophet67Panel::presetMenu()
