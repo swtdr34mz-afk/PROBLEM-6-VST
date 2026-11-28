@@ -66,6 +66,19 @@ public:
     std::vector<UserPreset> userPresets;
     static juce::File presetFolder();
     void loadUserPresets();
+    /* the folder read again (after an import): the sound playing keeps its number */
+    void rescanUser()
+    {
+        auto cur = getProgramName(program);
+        loadUserPresets();
+        if (getProgramName(program) != cur)
+            for (int i = programCount(); --i >= 0;)
+                if (getProgramName(i) == cur) {
+                    program = i;
+                    break;
+                }
+        updateHostDisplay(ChangeDetails().withProgramChanged(true));
+    }
     int writePreset(const juce::String &name);   /* the sound as it is now, kept under this name: its program number */
     /* LOAD P6 SYSEX: a Prophet-6 SysEx file's programs, written as the user's own (Presets/P6 LIBRARY): how many */
     int importP6(const juce::File &syx);

@@ -2,6 +2,7 @@
  * Copyright (C) 2026 swtdr34mz (PROPHET 67) */
 #include "PluginEditor.h"
 #include "PanelDialog.h"
+#include "PatchFolderIO.h"
 #include "WindowSize.h"
 
 using namespace p67;
@@ -261,9 +262,12 @@ private:
         }
         w->addButton("WRITE", 1, juce::KeyPress(juce::KeyPress::returnKey));
         w->addButton("CANCEL", 0, juce::KeyPress(juce::KeyPress::escapeKey));
+        pfio::addButtons(*w);   /* Folder, Import... */
         juce::Component::SafePointer<Prophet67Panel> self(&panel);
         pdlg::showInside(panel, w);
         w->enterModalState(true, juce::ModalCallbackFunction::create([self, w](int r) {
+                               if (self && pfio::handle(r, *self, Prophet67Processor::presetFolder(), ".p67", "preset", [self] { if (self) { self->proc.rescanUser(); self->repaint(); } }))
+                                   return;
                                if (self && r == 1) {
                                    int at = self->proc.writePreset(w->getTextEditorContents("name"));
                                    if (at < 0)
