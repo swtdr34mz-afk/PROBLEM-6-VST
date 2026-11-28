@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 swtdr34mz (PROPHET 67) */
 #include "PluginEditor.h"
+#include "PanelDialog.h"
+#include "WindowSize.h"
 
 using namespace p67;
 
@@ -260,11 +262,12 @@ private:
         w->addButton("WRITE", 1, juce::KeyPress(juce::KeyPress::returnKey));
         w->addButton("CANCEL", 0, juce::KeyPress(juce::KeyPress::escapeKey));
         juce::Component::SafePointer<Prophet67Panel> self(&panel);
+        pdlg::showInside(panel, w);
         w->enterModalState(true, juce::ModalCallbackFunction::create([self, w](int r) {
                                if (self && r == 1) {
                                    int at = self->proc.writePreset(w->getTextEditorContents("name"));
                                    if (at < 0)
-                                       juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::WarningIcon, "WRITE",
+                                       pdlg::message(*self, "WRITE",
                                                                               "The program could not be written to\n"
                                                                                   + Prophet67Processor::presetFolder().getFullPathName());
                                    else
@@ -750,10 +753,14 @@ Prophet67Editor::Prophet67Editor(Prophet67Processor &p) : AudioProcessorEditor(&
     addAndMakeVisible(panel);
     panel.setBounds(0, 0, Prophet67Panel::W, Prophet67Panel::H);
     const double W = Prophet67Panel::W, H = Prophet67Panel::H;
+    /* the size it was left at, read before the limits below resize the empty window; a new instance (still at the
+     * default size): the size last used anywhere */
+    const float kept = proc.uiScale.load();
     setResizable(true, true);
     setResizeLimits((int)(W * 0.5), (int)(H * 0.5), (int)(W * 1.6), (int)(H * 1.6));
     getConstrainer()->setFixedAspectRatio(W / H);
-    float s = juce::jlimit(0.5f, 1.6f, proc.uiScale.load());
+    float s = juce::jlimit(0.5f, 1.6f, std::abs(kept - 0.82f) < 1e-4f ? (float)winsize::last("PROBLEM-6", 0.82) : kept);
+    sized = true;
     setSize((int)std::lround(W * s), (int)std::lround(H * s));
 }
 
@@ -761,5 +768,8 @@ void Prophet67Editor::resized()
 {
     float s = (float)getWidth() / (float)Prophet67Panel::W;
     panel.setTransform(juce::AffineTransform::scale(s));
+    if (!sized)
+        return;
     proc.uiScale = s;
+    winsize::remember("PROBLEM-6", (double)s);
 }
