@@ -70,7 +70,7 @@ public:
         auto r = getLocalBounds().toFloat();
         auto lg = r.removeFromBottom(14.0f);
         int prog = panel.tens * 10 + digit;
-        bool on = panel.proc.getCurrentProgram() == prog, there = prog < panel.proc.getNumPrograms();
+        bool on = panel.proc.getCurrentProgram() == prog, there = prog < panel.proc.programCount();
         drawKeycap(g, r.withSizeKeepingCentre(44.0f, r.getHeight() - 6.0f), on, true, down, isMouseOver() && there);
         drawLegend(g, juce::String(digit), lg, 11.0f);
     }
@@ -78,7 +78,7 @@ public:
     {
         int prog = panel.tens * 10 + digit;
         down = true;
-        if (prog < panel.proc.getNumPrograms())
+        if (prog < panel.proc.programCount())
             panel.proc.setCurrentProgram(prog);
         panel.repaint();
     }
@@ -109,7 +109,7 @@ public:
     void mouseDown(const juce::MouseEvent &) override
     {
         down = true;
-        panel.tens = (panel.tens + 1) % ((panel.proc.getNumPrograms() + 9) / 10);
+        panel.tens = (panel.tens + 1) % ((panel.proc.programCount() + 9) / 10);
         panel.repaint();
     }
     void mouseUp(const juce::MouseEvent &) override
@@ -191,7 +191,7 @@ private:
     }
     void step()
     {
-        int n = panel.proc.getNumPrograms();
+        int n = panel.proc.programCount();
         if (n <= 0)
             return;
         int cur = panel.proc.getCurrentProgram();
@@ -690,7 +690,7 @@ void Prophet67Panel::presetMenu()
     }
     m.addSectionHeader("YOUR PROGRAMS");
     bool own = false;
-    for (int i = Prophet67Processor::NFACTORY; i < proc.getNumPrograms(); i++)
+    for (int i = Prophet67Processor::NFACTORY; i < proc.programCount(); i++)
         if (proc.userPresets[(size_t)(i - Prophet67Processor::NFACTORY)].p6 < 0) {
             item(m, i);
             own = true;
@@ -700,7 +700,7 @@ void Prophet67Panel::presetMenu()
     /* LOAD P6 SYSEX's: by the Prophet-6's banks, numbered as on it */
     juce::PopupMenu bank[10];
     bool bankHere[10] = {}, any = false;
-    for (int i = Prophet67Processor::NFACTORY; i < proc.getNumPrograms(); i++) {
+    for (int i = Prophet67Processor::NFACTORY; i < proc.programCount(); i++) {
         int num = proc.userPresets[(size_t)(i - Prophet67Processor::NFACTORY)].p6;
         if (num < 0)
             continue;
