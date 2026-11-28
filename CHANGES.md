@@ -4,6 +4,9 @@ The newest first. To release a new version: raise the number in VERSION and put 
 "## <the new number>". After the merge into main the release is made by itself (auto-release.yml), the
 downloads are built into it, and the website and the Discord post follow.
 
+## 1.1.5
+After saving a sound of your own, the plugin now stays on it (before, Cubase, FL Studio and other VST3 hosts switched to another patch, so the new one had to be loaded again).
+
 ## 1.1.4
 LOW SPLIT: POINT now shows its note on a small display right above the knob (default C3). Note names now follow Cubase and the MPC: middle C is C3.
 The text that popped up under the program display (now hidden behind PREV / NEXT) is gone.

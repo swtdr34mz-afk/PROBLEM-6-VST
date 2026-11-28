@@ -33,7 +33,12 @@ public:
 
     /* the programs: the 16 factory programs (the FM-1's and the MPC's), the VST's own 50, then the user's own */
     static constexpr int NFACTORY = NPRESETS + NVST_PRESETS;
-    int getNumPrograms() override { return NFACTORY + (int)userPresets.size(); }
+    /* A VST3 host (Cubase, FL Studio) sizes its program parameter when the plugin opens: a patch saved later lay
+     * past that size, so the host answered the save with another patch. The VST3 host is told a fixed number
+     * of slots instead; the slots past the real patches are empty. */
+    static constexpr int HOST_PROGRAMS = 1024;
+    int getNumPrograms() override { return wrapperType == wrapperType_VST3 ? juce::jmax(HOST_PROGRAMS, programCount()) : programCount(); }
+    int programCount() const { return NFACTORY + (int)userPresets.size(); }
     int getCurrentProgram() override { return program; }
     void setCurrentProgram(int index) override;
     const juce::String getProgramName(int index) override;
