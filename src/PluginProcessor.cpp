@@ -9,7 +9,7 @@
 /* LOW SPLIT's scales and the rest: KeySplit.h (shared with the MPC plugin) */
 using namespace p67split;
 namespace {
-juce::String noteName(int n) { return juce::String(NOTE[n % 12]) + juce::String(n / 12 - 1); }
+juce::String noteName(int n) { return juce::String(NOTE[n % 12]) + juce::String(n / 12 - 2); }   /* 60: C3 (as Cubase and the MPC) */
 } // namespace
 
 /* ------------------------------------------------------------------------------- parameters --- */

@@ -398,6 +398,7 @@ unsigned seg14(juce::juce_wchar ch)
     case 'X': return SH | SJ | SK | SM;
     case 'Y': return SH | SJ | SL;
     case 'Z': return SA | SD | SJ | SK;
+    case '#': return SB | SC | SG1 | SG2 | SI | SL;   /* (a sharp: C#3) */
     case '+': return SG1 | SG2 | SI | SL;
     case '-': return SG1 | SG2;
     case '/': return SJ | SK;

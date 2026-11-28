@@ -54,7 +54,8 @@ private:
     int shownProgram = -1;
     bool shownEdited = false;
     int tick = 0;
-    const juce::Rectangle<int> readoutR{1120, 600, 290, 16};
+    juce::Component *pointDisplay = nullptr;   /* LOW SPLIT POINT's note, above its knob */
+    int pointShown = -1;
 };
 
 class Prophet67Editor : public juce::AudioProcessorEditor
