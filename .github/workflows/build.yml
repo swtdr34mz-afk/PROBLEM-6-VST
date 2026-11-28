@@ -14,6 +14,12 @@ on:
 permissions:
   contents: write
 
+env:
+  # what JUCE needs to build on Linux
+  LINUX_DEPS: >-
+    libasound2-dev libjack-jackd2-dev libx11-dev libxext-dev libxrandr-dev libxinerama-dev libxcursor-dev
+    libxcomposite-dev libxrender-dev libfreetype-dev libfontconfig1-dev libgl1-mesa-dev
+
 jobs:
   # the engine's tests (tests/engine_tests.cpp): every preset at every rate, any buffer size, automation, a fuzz of
   # notes, the filter's tuning, the CPU; no JUCE needed
@@ -113,10 +119,16 @@ jobs:
           # built for both Apple Silicon and Intel in one file (CMAKE_OSX_ARCHITECTURES), as for NIQUE D0
           - os: macos-15-intel
             name: macOS
+          - os: ubuntu-22.04
+            name: Linux
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+
+      - name: dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq $LINUX_DEPS
 
       - name: configure
         shell: bash
@@ -180,13 +192,37 @@ jobs:
           cp README.md $o/
           ditto -c -k --sequesterRsrc --keepParent $o $o.zip
 
+      - name: pluginval (Linux)
+        # the same check as on Windows, in a virtual screen
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          curl -sSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_Linux.zip
+          unzip -q pluginval.zip
+          xvfb-run -a ./pluginval --strictness-level 8 --timeout-ms 600000 --validate "build/Prophet67_artefacts/Release/VST3/PROBLEM 6.vst3"
+
+      - name: package (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          a="build/Prophet67_artefacts/Release"
+          o=PROBLEM6-Linux
+          mkdir -p $o
+          cp -R "$a/VST3/PROBLEM 6.vst3" "$a/LV2/PROBLEM 6.lv2" "$a/Standalone/PROBLEM 6" $o/
+          cp README.md $o/
+          tar czf $o.tar.gz $o
+
       - uses: actions/upload-artifact@v4
         with:
           name: PROBLEM6-${{ matrix.name }}
-          path: PROBLEM6-*.zip
+          path: |
+            PROBLEM6-*.zip
+            PROBLEM6-*.tar.gz
 
       - name: release
         if: startsWith(github.ref, 'refs/tags/v') && (github.event_name == 'release' || github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         uses: softprops/action-gh-release@v2
         with:
-          files: PROBLEM6-*.zip
+          files: |
+            PROBLEM6-*.zip
+            PROBLEM6-*.tar.gz

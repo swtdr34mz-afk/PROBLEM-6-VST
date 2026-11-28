@@ -50,6 +50,8 @@ Trotzdem ausführen*.
 
 Läuft auf Apple Silicon und Intel (macOS 10.13 und neuer), Windows 10/11 64-bit.
 
+**Linux (Bitwig, Reaper, Ardour, ...):** Die `.tar.gz` entpacken. `PROBLEM 6.vst3` nach `~/.vst3/` kopieren, `PROBLEM 6.lv2` nach `~/.lv2/`. Die App `PROBLEM 6` startet auch ohne DAW. 64 Bit, gebaut auf Ubuntu 22.04.
+
 ## On the MPC
 
 PROPHET 67 also runs on Akai MPC standalone hardware (MPC XL, Live III, and the 32-bit MPCs), built with Akai's MPC
