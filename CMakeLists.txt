@@ -34,11 +34,15 @@ set(P67_FORMATS VST3 Standalone)
 if(APPLE)
     list(APPEND P67_FORMATS AU)
 endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    list(APPEND P67_FORMATS LV2)
+endif()
 
 juce_add_plugin(Prophet67
     PRODUCT_NAME "PROBLEM 6"
     COMPANY_NAME "swtdr34mz"
     BUNDLE_ID "com.swtdr34mz.prophet67"
+    LV2URI "https://github.com/swtdr34mz-afk/PROBLEM-6-VST"
     PLUGIN_MANUFACTURER_CODE Swtd
     PLUGIN_CODE Ph67
     FORMATS ${P67_FORMATS}
